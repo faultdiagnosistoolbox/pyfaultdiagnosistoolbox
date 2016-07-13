@@ -8,8 +8,8 @@ def CSCDict(A):
      'm': A.shape[0],
      'n': A.shape[1],
      'p': A.indptr.astype(np.int64),
-     'i': A.indices.astype('int64'),
-     'x': A.data.astype('float64'),
+     'i': A.indices.astype(np.int64),
+     'x': A.data.astype(np.float64),
      'nz': -1}  
 
 def dmperm(A):
@@ -25,6 +25,8 @@ class DMResult:
         self.Mp = []
         self.rowp = []
         self.colp = []
+        self.M0eqs = []
+        self.M0vars = []
     
 class EqBlock:
     row = []
@@ -73,4 +75,13 @@ def GetDMParts(X):
             res.Mp = EqBlock([],[])
         res.rowp = p
         res.colp = q
-        return res
+
+        res.M0eqs = []
+        res.M0vars = []
+
+        for hc in res.M0:
+            res.M0eqs = np.concatenate((res.M0eqs,hc.row))
+            res.M0vars = np.concatenate((res.M0vars,hc.col))
+        res.M0eqs = np.sort(res.M0eqs).astype(np.int64) # Ugly!
+        res.M0vars = np.sort(res.M0vars).astype(np.int64) # Ugly!
+    return res

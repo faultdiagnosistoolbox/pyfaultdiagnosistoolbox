@@ -38,3 +38,6 @@ def PlotDM(X) :
     y2 = y1+nr;
     plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
 
+  plt.xticks(np.arange(0,X.shape[0]),[self.x[i] for i in dm.colp])
+  plt.yticks(np.arange(0,X.shape[1]),[self.e[i] for i in dm.rowp])
+    

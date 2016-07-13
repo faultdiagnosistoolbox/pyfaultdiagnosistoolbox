@@ -27,7 +27,7 @@ structuralanalysis_dmperminternal(PyObject *self, PyObject * args)
   Py_DECREF((PyArrayObject *)PyDict_GetItemString(x, "i"));  
   Py_DECREF((PyArrayObject *)PyDict_GetItemString(x, "p"));  
 
-  free( dm );
+  // free( dm );
 
   return res;
 }
@@ -106,7 +106,7 @@ DictToCS( PyObject *csDict, cs **sm )
 PyObject*
 CreateOutput( csd* dm, cs* sm )
 {
-  PyObject* p=PyArray_SimpleNewFromData(1, &(sm->m), NPY_INT64, (void *)dm->p);
+  PyObject* p=PyArray_SimpleNewFromData(1, &(sm->m), NPY_INT64, (void *)dm->p); 
   PyObject* q=PyArray_SimpleNewFromData(1, &(sm->n), NPY_INT64, (void *)dm->q);
 
   npy_intp numBlocks = dm->nb+1;
