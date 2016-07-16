@@ -21,7 +21,7 @@ structuralanalysis_dmperminternal(PyObject *self, PyObject * args)
   csd *dm = cs_dmperm(a, 0);
   PyObject* res=CreateOutput(dm,a);
   
-  free( a );
+  //  free( a );
 
   Py_DECREF((PyArrayObject *)PyDict_GetItemString(x, "x"));  
   Py_DECREF((PyArrayObject *)PyDict_GetItemString(x, "i"));  
@@ -70,17 +70,17 @@ DictToCS( PyObject *csDict, cs **sm )
   // nzmax - number of non-zero elements
   PyObject *pnzmax = PyDict_GetItemString(csDict, "nzmax");
   (*sm)->nzmax = PyInt_AS_LONG(pnzmax);
-  Py_DECREF(pnzmax);
+  //  Py_DECREF(pnzmax);
 
   // m - number of rows
   PyObject *pm = PyDict_GetItemString(csDict, "m");
   (*sm)->m = PyInt_AS_LONG(pm);
-  Py_DECREF(pm);
+  // Py_DECREF(pm);
 
   // n - number of columns
   PyObject *pn = PyDict_GetItemString(csDict, "n");
   (*sm)->n = PyInt_AS_LONG(pn);
-  Py_DECREF(pn);
+  // Py_DECREF(pn);
 
   // nz - -1 for compressed formate
   (*sm)->nz = -1;
@@ -119,3 +119,4 @@ CreateOutput( csd* dm, cs* sm )
 
   return Py_BuildValue("{s:O,s:O,s:O,s:O,s:O,s:O}", "p", p, "q", q, "r", r, "s", s, "rr", rr, "cc", cc);
 }
+

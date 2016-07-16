@@ -3,7 +3,6 @@ import scipy.sparse as sp
 import numpy as np
 
 def CSCDict(A):
-    A=sp.csc_matrix(A)
     return {'nzmax':A.nnz,
      'm': A.shape[0],
      'n': A.shape[1],
@@ -13,6 +12,9 @@ def CSCDict(A):
      'nz': -1}  
 
 def dmperm(A):
+    return sa.dmperm_internal(CSCDict(A))
+
+def safedmperm(A):
     return sa.dmperm_internal(CSCDict(A))
 
 def sprank(A):
@@ -29,15 +31,18 @@ class DMResult:
         self.M0vars = []
     
 class EqBlock:
-    row = []
-    col = []
+    row = np.array([],dtype=np.int64)
+    col = np.array([],dtype=np.int64)
 
     def __init__(self,r,c):
         self.row = r
         self.col = c;
-
 def GetDMParts(X):
-    dm = dmperm(X)
+    if sp.issparse(X):
+        dm = dmperm(X)
+    else:
+        dm = dmperm(sp.csc_matrix(X))
+        
     m = X.shape[0]
     n = X.shape[1]
     p = dm['p']
@@ -76,12 +81,10 @@ def GetDMParts(X):
         res.rowp = p
         res.colp = q
 
-        res.M0eqs = []
-        res.M0vars = []
+        res.M0eqs = np.array([],dtype=np.int64)
+        res.M0vars = np.array([],dtype=np.int64)
 
         for hc in res.M0:
             res.M0eqs = np.concatenate((res.M0eqs,hc.row))
             res.M0vars = np.concatenate((res.M0vars,hc.col))
-        res.M0eqs = np.sort(res.M0eqs).astype(np.int64) # Ugly!
-        res.M0vars = np.sort(res.M0vars).astype(np.int64) # Ugly!
     return res
