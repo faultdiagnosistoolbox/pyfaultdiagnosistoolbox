@@ -106,7 +106,7 @@ def PSODecomposition(X):
 
     delrows=np.arange(0,n)
     eqclass = []
-    trivclass = []
+    trivclass = np.array([],dtype=np.int64)
     Mi = np.array([]);
 
     while len(delrows)>0:
@@ -120,7 +120,7 @@ def PSODecomposition(X):
             Mi = np.concatenate((Mi,ec.col)).astype(np.int64)
             delrows = [x for x in delrows if x not in ec.row]
         else:
-            trivclass.append(delrows[0])
+            trivclass = np.concatenate((trivclass,[delrows[0]]))
             delrows = delrows[1:len(delrows)]
     X0 = np.sort([x for x in np.arange(0,m) if not x in Mi])
     if len(X0)==0:
@@ -130,14 +130,14 @@ def PSODecomposition(X):
     res['trivclass'] = trivclass
     res['X0'] = X0
 
-    p = [];
-    q = [];
+    p = np.array([],dtype=np.int64)
+    q = np.array([],dtype=np.int64)
     
     for ec in eqclass:
-        p.append(ec.row)
-        q.append(ec.col)
-    p.append(trivclass)
-    q.append(X0)
+        p = np.concatenate((p,ec.row))
+        q = np.concatenate((q,ec.col))
+    p = np.concatenate((p,trivclass))
+    q = np.concatenate((q,X0))
     
     res['p'] = p
     res['q'] = q

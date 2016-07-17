@@ -1,6 +1,8 @@
 import numpy as np
 import dmperm as dmperm
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import scipy.sparse as sp
 
 class DiagnosisModel(object):
@@ -60,6 +62,9 @@ class DiagnosisModel(object):
 
   def MSO(self):
     return dmperm.MSO(self.X)
+
+  def sprank(self):
+    return dmperm.sprank(self.X)
   
   def IsPSO( self, *args ):
     if len(args)>0:
@@ -71,22 +76,61 @@ class DiagnosisModel(object):
     return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
   
   def PlotDM(self, **options) :
-    labelVars = False;
+
+    X = self.X
+    labelVars = False
     if options.has_key('verbose'):
-      labelVars = options['verbose'];
-    elif self.nx()+self.nf()+self.nz()<20:
-      labelVars = True;
+      labelVars = options['verbose']
+    elif X.shape[0]<40:
+      labelVars = True
+    if options.has_key('eqclass'):
+      eqclass=options['eqclass']
+    else:
+      eqclass=False
+    if options.has_key('fault'):
+      fault=options['fault']
+    else:
+      fault=False
+
+    dm = dmperm.GetDMParts(X)
+    rowp = dm.rowp
     
-    dm = dmperm.GetDMParts(self.X)
-    X=self.X[dm.rowp,:][:,dm.colp].todense()
+    if eqclass and len(dm.Mp.row)>0:
+      # Perform PSO decomposition of M+
+      Xp = X[dm.Mp.row,:][:,dm.Mp.col]
+      P = dmperm.PSODecomposition(Xp)
+     
+      # Update PSO decomposition description to correspond to global equation
+      # indices
+      rowp = dm.Mp.row[P['p']]
+      colp = dm.Mp.col[P['q']]
+
+      for idx, ec in enumerate(P['eqclass']):
+        P['eqclass'][idx].row = dm.Mp.row[P['eqclass'][idx].row]
+        P['eqclass'][idx].col = dm.Mp.col[P['eqclass'][idx].col]
+
+      P['trivclass'] = dm.Mp.row[P['trivclass']]
+      P['X0']        = dm.Mp.col[P['X0']]
+      P['p']         = dm.Mp.row[P['p']]
+      P['q']         = dm.Mp.row[P['q']]
     
-    plt.spy(X==1,markersize=4, marker="o")
+      # Update dm.rowp and dm.colp according to PSO decomposition
+      prowstart = len(dm.rowp)-len(P['p'])
+      dm.rowp[prowstart:] = rowp
     
-    for idx,val in enumerate(np.argwhere(X==3)):
-      plt.text(val[1]-0.06,val[0]+0.15, 'I', color='b')
+      pcolstart = len(dm.colp)-len(P['q']);    
+      dm.colp[pcolstart:] = colp;    
+
+    plt.spy(X[dm.rowp,:][:,dm.colp]==1,markersize=4, marker="o")
+    for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==3)):
+      plt.text(val[1]-0.06,val[0]+0.15, 'I',color="b")
       
-    for idx,val in enumerate(np.argwhere(X==2)):
-      plt.text(val[1]-0.06,val[0]+0.15, 'D', color='b')
+    for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==2)):
+      plt.text(val[1]-0.06,val[0]+0.15, 'D',color="b")
+        
+    if labelVars:
+      plt.xticks(np.arange(0,X.shape[1]),dm.colp)
+      plt.yticks(np.arange(0,X.shape[0]),dm.rowp)
 
     if len(dm.Mm.row)>0:
       r = len(dm.Mm.row);
@@ -109,7 +153,7 @@ class DiagnosisModel(object):
       plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')
       r = r+n;
       c = c+n;
-      
+    
     # Plot over determined part  
     if len(dm.Mp.row)>0:
       nr = len(dm.Mp.row);
@@ -120,24 +164,56 @@ class DiagnosisModel(object):
       y2 = y1+nr;
       plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
 
+    if eqclass and len(dm.Mp.row)>0:
+      # Plot equivalence classes in over determined part  
+      r1 = r;
+      c1 = c;
+      for ec in P['eqclass']:
+        nr = len(ec.row);
+        nc = len(ec.col);
+        x1 = c-0.5;
+        x2 = x1+nc;
+        y1 = r-0.5;
+        y2 = y1+nr;
+        plt.gca().add_patch(mpatches.Rectangle((x1,y1), x2-x1, y2-y1, facecolor='0.7'))
+        r = r+nr;
+        c = c+nc;
+
+      plt.plot([c1-0.5, len(dm.colp)+0.5], [r-0.5, r-0.5], 'k--')
+      plt.plot([c-0.5, c-0.5], [r1-0.5, len(dm.rowp)+0.5], 'k--')   
+
+    if fault:
+      fPlotRowIdx = map(lambda f: np.argwhere(dm.rowp==f[0])[0][0],np.argwhere(self.F))
+      nVars = len(dm.colp)
+
+      for ff in np.unique(fPlotRowIdx):
+        fstr=''
+        faultlist = [self.f[x[1]] for x in np.argwhere(self.F[rowp[ff],:])]
+        for fvidx,fv in enumerate(faultlist):
+          if fvidx==0:
+            fstr = fv
+          else:
+            fstr = "%s, %s" % (fstr,fv)
+        plt.plot([-1,nVars],[ff,ff],'r--')
+        plt.text(nVars-0.1,ff+0.17,fstr, color='r')
+    
     # Plot axis ticks
     if labelVars:
-      plt.xticks(np.arange(0,self.X.shape[1]),[self.x[i] for i in dm.colp])
-      plt.yticks(np.arange(0,self.X.shape[0]),[self.e[i] for i in dm.rowp])
+      plt.xticks(np.arange(0,X.shape[1]),[self.x[xidx] for xidx in dm.colp])
+      plt.yticks(np.arange(0,X.shape[0]),[self.e[eidx] for eidx in dm.rowp])
 
     # Change plot range
-    plt.axis([-0.7,self.X.shape[1]-0.3,-0.7,self.X.shape[0]-0.3])
+    plt.axis([-0.7,X.shape[1]-0.3,X.shape[0]-0.3,-0.7])
 
     plt.xlabel('Variables')
     plt.ylabel('Equations')
-
-    
+  
   def PlotModel(self, **options):
 
     labelVars = False;
     if options.has_key('verbose'):
       labelVars = options['verbose'];
-    elif self.nx()+self.nf()+self.nz()<20:
+    elif self.nx()+self.nf()+self.nz()<40:
       labelVars = True;
     
     X = self.X.todense()
@@ -170,8 +246,7 @@ class DiagnosisModel(object):
       plt.title(self.name)
 
     plt.xlabel('Variables')
-    plt.ylabel('Equations')
-      
+    plt.ylabel('Equations')    
 
 def DiffConstraint(dvar,ivar):
   return [dvar, ivar, "diff"];
