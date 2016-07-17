@@ -88,3 +88,59 @@ def GetDMParts(X):
             res.M0eqs = np.concatenate((res.M0eqs,hc.row))
             res.M0vars = np.concatenate((res.M0vars,hc.col))
     return res
+
+def PSODecomposition(X):
+    if not IsPSO(X):
+        print "PSO Decomposition for PSO structures only, exiting..."
+        return;
+
+    n = X.shape[0]
+    m = X.shape[1]
+
+    delrows=np.arange(0,n)
+    eqclass = []
+    trivclass = []
+    Mi = np.array([]);
+
+    while len(delrows)>0:
+        temprow = np.array([x for x in np.arange(0,n) if not x == delrows[0]])
+        dm = GetDMParts(X[temprow,:]);
+
+        if len(dm.M0vars)>0:
+            ec_row = np.sort(np.append(temprow[dm.M0eqs], delrows[0]))
+            ec = EqBlock(ec_row,np.sort(dm.M0vars))
+            eqclass.append(ec)
+            Mi = np.concatenate((Mi,ec.col)).astype(np.int64)
+            delrows = [x for x in delrows if x not in ec.row]
+        else:
+            trivclass.append(delrows[0])
+            delrows = delrows[1:len(delrows)]
+    X0 = np.sort([x for x in np.arange(0,m) if not x in Mi])
+    if len(X0)==0:
+        X0=[]
+    res = {}
+    res['eqclass'] = eqclass
+    res['trivclass'] = trivclass
+    res['X0'] = X0
+
+    p = [];
+    q = [];
+    
+    for ec in eqclass:
+        p.append(ec.row)
+        q.append(ec.col)
+    p.append(trivclass)
+    q.append(X0)
+    
+    res['p'] = p
+    res['q'] = q
+    return res
+
+def IsPSO( X, *args ):
+  if len(args)>0:
+    eq=args[0]
+  else:
+    eq=np.arange(0,X.shape[0])
+      
+  dm = GetDMParts(X[eq,:])    
+  return (len(dm.Mm.row)==0) and (len(dm.M0)==0)

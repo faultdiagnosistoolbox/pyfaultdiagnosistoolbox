@@ -1,8 +1,12 @@
-#include <Python.h>
-#include <cs.h>
 
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/ndarrayobject.h>
+extern "C" {
+  #include <Python.h>
+  #include "cs.h"
+  #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+  #include <numpy/ndarrayobject.h>
+}
+#include <iostream>
+
 
 int DictToCS( PyObject *csDict, cs **sm );
 PyObject* CreateOutput( csd* dm, cs* sm );

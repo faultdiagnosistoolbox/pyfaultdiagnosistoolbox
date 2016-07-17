@@ -1,7 +1,14 @@
 import dmperm as dmperm
 import matplotlib.pyplot as plt
+import numpy as np
 
-def PlotDM(X) :
+def PlotDM(X, **options) :
+  labelVars = False;
+  if options.has_key('verbose'):
+    labelVars = options['verbose'];
+  elif X.shape[0]<30:
+    labelVars = True;
+
   dm = dmperm.GetDMParts(X)
 
   plt.spy(X[dm.rowp,:][:,dm.colp],markersize=2, marker="o")
@@ -38,6 +45,10 @@ def PlotDM(X) :
     y2 = y1+nr;
     plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
 
-  plt.xticks(np.arange(0,X.shape[0]),[self.x[i] for i in dm.colp])
-  plt.yticks(np.arange(0,X.shape[1]),[self.e[i] for i in dm.rowp])
-    
+  if labelVars:
+    plt.xticks(np.arange(0,X.shape[0]), dm.colp)
+    plt.yticks(np.arange(0,X.shape[1]), dm.rowp)
+
+  plt.xlabel('Variables')
+  plt.ylabel('Equations')
+

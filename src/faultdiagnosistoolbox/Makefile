@@ -4,7 +4,7 @@ OPT=-DNDEBUG -O3
 CPPFLAGS=-Wall $(OPT) -I$(CSPARSE)/Include 
 
 $(TARGET): structuralanalysismodule.c setup.py SparseMatrix.o
-	MACOSX_DEPLOYMENT_TARGET=10.11 python setup.py build
+	CC=g++ MACOSX_DEPLOYMENT_TARGET=10.11 python setup.py build
 
 SparseMatrix.o: SparseMatrix.cc SparseMatrix.h
 	g++ -c $< -o $@ $(CPPFLAGS)
