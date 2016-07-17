@@ -73,7 +73,6 @@ operator<<(ostream& s, SparseMatrix M)
   return s;
 };
 
-
 void
 SparseMatrix::Print( ostream& s )
 {

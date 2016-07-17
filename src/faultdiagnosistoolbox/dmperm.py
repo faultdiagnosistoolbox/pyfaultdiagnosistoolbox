@@ -37,6 +37,13 @@ class EqBlock:
     def __init__(self,r,c):
         self.row = r
         self.col = c;
+
+def MSO(X):
+    if sp.issparse(X):
+        return sa.findmso_internal(CSCDict(X))
+    else:
+        return sa.findmso_internal(CSCDict(sp.csc_matrix(X)))
+
 def GetDMParts(X):
     if sp.issparse(X):
         dm = dmperm(X)

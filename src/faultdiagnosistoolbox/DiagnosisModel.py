@@ -58,6 +58,9 @@ class DiagnosisModel(object):
   def _IsDifferentialConstraint( self, rel ):
     return (len(rel)==3 and rel[2]=="diff");
 
+  def MSO(self):
+    return dmperm.MSO(self.X)
+  
   def IsPSO( self, *args ):
     if len(args)>0:
         eq=args[0]
@@ -80,10 +83,10 @@ class DiagnosisModel(object):
     plt.spy(X==1,markersize=4, marker="o")
     
     for idx,val in enumerate(np.argwhere(X==3)):
-      plt.text(val[1]-0.06,val[0]+0.15, 'I')
+      plt.text(val[1]-0.06,val[0]+0.15, 'I', color='b')
       
     for idx,val in enumerate(np.argwhere(X==2)):
-      plt.text(val[1]-0.06,val[0]+0.15, 'D')
+      plt.text(val[1]-0.06,val[0]+0.15, 'D', color='b')
 
     if len(dm.Mm.row)>0:
       r = len(dm.Mm.row);
