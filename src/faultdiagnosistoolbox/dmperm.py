@@ -144,10 +144,24 @@ def PSODecomposition(X):
     return res
 
 def IsPSO( X, *args ):
-  if len(args)>0:
-    eq=args[0]
-  else:
-    eq=np.arange(0,X.shape[0])
+    if len(args)>0:
+        eq=args[0]
+    else:
+        eq=np.arange(0,X.shape[0])
       
-  dm = GetDMParts(X[eq,:])    
-  return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
+    dm = GetDMParts(X[eq,:])    
+    return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
+
+def Mplus( X, **options ):
+    if options.has_key('causality'):
+        causality = options['causality']
+    else:
+        causality = 'mixed';
+
+    if causality is 'mixed':
+        dm = GetDMParts(X);
+        res =  {'row':dm.Mp.row, 'col':dm.Mp.col,'X':X[dm.Mp.row,:][:,dm.Mp.col]}
+    else:
+        res = {}
+
+    return res
