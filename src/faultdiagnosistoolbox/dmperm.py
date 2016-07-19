@@ -12,13 +12,13 @@ def CSCDict(A):
      'nz': -1}  
 
 def dmperm(A):
-    return sa.dmperm_internal(CSCDict(A))
-
-def safedmperm(A):
-    return sa.dmperm_internal(CSCDict(A))
-
+    if sp.issparse(A):
+        return sa.dmperm_internal(CSCDict(A))
+    else:
+        return sa.dmperm_internal(CSCDict(sp.csc_matrix(A)))
 def sprank(A):
-    return dmperm(A)['rr'][3]
+    _,_,_,_,rr,_ = dmperm(A)
+    return rr[3]
 
 class DMResult:
     def __init__(self):
@@ -46,16 +46,12 @@ def MSO(X):
 
 def GetDMParts(X):
     if sp.issparse(X):
-        dm = dmperm(X)
+        p,q,r,s,_,_ = dmperm(X)
     else:
-        dm = dmperm(sp.csc_matrix(X))
+        p,q,r,s,_,_ = dmperm(sp.csc_matrix(X))
         
     m = X.shape[0]
     n = X.shape[1]
-    p = dm['p']
-    q = dm['q']
-    r = dm['r']
-    s = dm['s']
     
     res = DMResult()
     if (p.size==0) or (q.size==0):
@@ -152,16 +148,66 @@ def IsPSO( X, *args ):
     dm = GetDMParts(X[eq,:])    
     return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
 
-def Mplus( X, **options ):
-    if options.has_key('causality'):
-        causality = options['causality']
-    else:
-        causality = 'mixed';
+def Mplus( X, causality='mixed' ):
+    def Gp(Gin):
+        dm = GetDMParts(Gin[2])
+        #print len(dm.Mp.row), len(dm.Mp.col)
+        if len(dm.Mp.row)==0 or len(dm.Mp.col)==0:
+            return (np.array([]),np.array([]),np.array([[]]))
+        return (Gin[0][dm.Mp.row], Gin[1][dm.Mp.col], Gin[2][dm.Mp.row,:][:,dm.Mp.col])        
+
+    def Gm(Gin):
+        dm = GetDMParts(Gin[2])
+        if len(dm.Mm.row)==0 or len(dm.Mm.col)==0:
+            return (np.array([]),np.array([]),np.array([[]]))
+
+        return (Gin[0][dm.Mm.row], Gin[1][dm.Mm.col], Gin[2][dm.Mm.row,:][:,dm.Mm.col])
+
+    def CGX(Gin,X):
+        return np.unique([e[0] for e in np.argwhere(Gin[2][:,X]>0)])
+
+    def GsubC(Gin,C):
+        c,x,A = Gcopy(Gin)
+
+        A = np.delete(A,C,axis=0)
+        x_un_connected = [xi[0] for xi in np.argwhere(np.all(A==0,axis=0))]
+        c = [ci for ci in c if not ci in C]
+        #if len(x_un_connected)>0:
+        #    A = np.delete(A,x_un_connected,axis=1)
+        #    x = np.delete(x,x_un_connected)
+
+        return (c,x,A)
+
+    def Gcopy(Gin):
+        c,x,a = Gin
+        return (c.copy(), x.copy(), a.copy())
+
+    Xc = X.copy().todense();
+    G = (np.arange(0,Xc.shape[0], dtype=np.int64), np.arange(0,Xc.shape[1], dtype=np.int64), Xc)
 
     if causality is 'mixed':
-        dm = GetDMParts(X);
-        res =  {'row':dm.Mp.row, 'col':dm.Mp.col,'X':X[dm.Mp.row,:][:,dm.Mp.col]}
-    else:
-        res = {}
+        return Gp(G)[0]
+    
+    elif causality is 'int':
+        # Represent graph as a tuple G=(constraints,variables, adjacency matrix)
+        while True:
+            # G := G+            
+            G = Gp(G)            
+                
+            # G1 = G - Ed
+            G1 = Gcopy(G) # careful, G1 is the same object as  
+            G1[2][G1[2]==3]=0 # Zero the derivative edges
 
-    return res
+            # G := G - C(G,X(G1-))
+            dm = GetDMParts(G1[2])
+
+            if len(dm.Mm.col)>0 and len(dm.Mm.row)>0:
+                G1m = Gm(G1)
+                G=GsubC(G,CGX(G,G1m[1]))                
+            else:
+                break
+        return G[0]
+    else:
+        return np.array([])
+
+

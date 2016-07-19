@@ -6,15 +6,15 @@ import matplotlib.patches as mpatches
 import scipy.sparse as sp
 
 class DiagnosisModel(object):
-    X = np.zeros((0,0),dtype='float64')
-    F = np.zeros((0,0),dtype='float64')
-    Z = np.zeros((0,0),dtype='float64')
-    x = []
-    f = []
-    z = []
-    name = ""
-
-    def __init__(self, modeldef) : 
+    def __init__(self, modeldef, name='') : 
+        self.X = np.zeros((0,0),dtype='float64')
+        self.F = np.zeros((0,0),dtype='float64')
+        self.Z = np.zeros((0,0),dtype='float64')
+        self.x = []
+        self.f = []
+        self.z = []
+        self.name = name
+        
         self.X = self._ModelStructure( modeldef['rels'], modeldef['x'])
         self.x = modeldef['x']
         self.F = self._ModelStructure( modeldef['rels'], modeldef['f'])
@@ -205,6 +205,7 @@ class DiagnosisModel(object):
             # Change plot range
             plt.axis([-0.7,X.shape[1]-0.3,X.shape[0]-0.3,-0.7])
 
+            plt.gca().xaxis.tick_bottom()
             plt.xlabel('Variables')
             plt.ylabel('Equations')
   
@@ -244,32 +245,24 @@ class DiagnosisModel(object):
         if len(self.name)>0:
             plt.title(self.name)
 
+        plt.gca().xaxis.tick_bottom()
         plt.xlabel('Variables')
         plt.ylabel('Equations')
 
 
-    def IsolabilityAnalysis( self, **options ):
-        plot = False
-        permute = True
-        caus='mixed'
-        
-        if options.has_key('plot'):
-            plot = options['plot'];
-        if options.has_key('permute'):
-            permute = options['permute'];
-        if options.has_key('causality'):
-            caus = options['causality'];
+    def IsolabilityAnalysis( self, plot=False, permute=True, causality='mixed' ):
 
+        MplusCausal = lambda X: dmperm.Mplus(X,causality=causality)
         ne = self.X.shape[0]
         nf = len(self.f)
 
-        dm = dmperm.Mplus( self.X )
+        plusRow = MplusCausal( self.X )
 
         # Determine equations for each fault
         feq = map(lambda fi: np.argwhere(self.F[:,fi])[0][0],np.arange(0,nf))
 
         # Determine non-detectable faults
-        ndrows = [x for x in np.arange(0,ne) if x not in dm['row']]
+        ndrows = [x for x in np.arange(0,ne) if x not in plusRow]
         ndf = [self.f[fi] for fi in np.arange(0,len(self.f)) if feq[fi] in ndrows]        
         df = [self.f[fi] for fi in np.arange(0,len(self.f)) if not feq[fi] in ndrows]
 
@@ -278,16 +271,14 @@ class DiagnosisModel(object):
             # Decouple fi
             fieqs = [x[0] for x in np.argwhere(self.F[:,fi].todense()==0)]
             X = self.X[fieqs,:]
-            G = dmperm.Mplus(X, caus)
-            fisolrows = [fieqs[ei] for ei in G['row']]
+            plusRow = MplusCausal(X)
+            fisolrows = [fieqs[ei] for ei in plusRow]
             idx = [fj for fj in np.arange(0,nf) if np.any(self.F[fisolrows,:].todense(),axis=0)[(0,fj)]]
-            im[fi,idx]=0;
+            im[idx,fi]=0;
 
         if plot:
             if permute:
-                dm = dmperm.GetDMParts(im)
-                p = dm.rowp
-                q = dm.colp
+                p,q,_,_,_,_ = dmperm.dmperm(im)
             else:
                 p = np.arange(0,nf)
                 q = p
@@ -298,16 +289,13 @@ class DiagnosisModel(object):
                 titleString = "Isolability matrix for '%s'" % self.name
             else:
                 titleString = "Isolability matrix"
-            if caus is 'der':
+            if causality is 'der':
                 titleString = "%s (derivative causality)" % titleString
-            elif caus is 'int':
+            elif causality is 'int':
                 titleString = "%s (integral causality)" % titleString
             plt.title( titleString )
+            plt.gca().xaxis.tick_bottom()
         return im        
 
 def DiffConstraint(dvar,ivar):
     return [dvar, ivar, "diff"];
-            
-
-
-            

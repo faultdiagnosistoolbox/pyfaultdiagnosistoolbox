@@ -171,5 +171,6 @@ CreateDMpermOutput( csd* dm, cs* sm )
   PyObject* rr=PyArray_SimpleNewFromData(1, &numBlocks, NPY_INT64, (void *)dm->rr);
   PyObject* cc=PyArray_SimpleNewFromData(1, &numBlocks, NPY_INT64, (void *)dm->cc);
 
-  return Py_BuildValue("{s:O,s:O,s:O,s:O,s:O,s:O}", "p", p, "q", q, "r", r, "s", s, "rr", rr, "cc", cc);
+  return Py_BuildValue("(O,O,O,O,O,O)", p, q, r, s, rr, cc);  
+  //  return Py_BuildValue("{s:O,s:O,s:O,s:O,s:O,s:O}", "p", p, "q", q, "r", r, "s", s, "rr", rr, "cc", cc);
 }

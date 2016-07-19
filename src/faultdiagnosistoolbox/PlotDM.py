@@ -115,5 +115,3 @@ def PlotDM(X, **options) :
     
     plt.xlabel('Variables')
     plt.ylabel('Equations')
-
-  
