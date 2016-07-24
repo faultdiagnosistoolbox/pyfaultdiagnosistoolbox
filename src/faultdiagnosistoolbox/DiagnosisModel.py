@@ -75,6 +75,20 @@ class DiagnosisModel(object):
         dm = dmperm.GetDMParts(self.X[eq,:])    
         return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
   
+    def IsHighIndex(self, **opts):
+        if opts.has_key('eq'):
+            eq = opts['eq']
+        else:
+            eq = np.arange(0,self.X.shape[0])
+        return dmperm.IsHighIndex(self.X,eq=eq)
+
+    def IsLowIndex(self, **opts):
+        if opts.has_key('eq'):
+            eq = opts['eq']
+        else:
+            eq = np.arange(0,self.X.shape[0])
+        return dmperm.IsLowIndex(self.X,eq=eq)
+    
     def PlotDM(self, **options) :
 
         X = self.X

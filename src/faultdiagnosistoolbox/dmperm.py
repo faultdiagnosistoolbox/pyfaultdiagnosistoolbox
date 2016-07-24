@@ -1,6 +1,7 @@
 import structuralanalysis as sa
 import scipy.sparse as sp
 import numpy as np
+import copy
 
 def CSCDict(A):
     return {'nzmax':A.nnz,
@@ -148,55 +149,96 @@ def IsPSO( X, *args ):
     dm = GetDMParts(X[eq,:])    
     return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
 
+def IsHighIndex(X, **opts):
+    if opts.has_key('eq'):
+        eq = opts['eq']
+    else:
+        eq = np.arange(0,X.shape[0])
+    X1 = copy.deepcopy(X)
+    X1 = X1[eq,:]
+    x1 = np.argwhere(X1==3)
+    row_d = x1[:,0]
+    row_a = np.array([r for r in np.arange(0,X1.shape[0]) if not r in row_d])
+    col_d1 = x1[:,1]
+    col_1 = np.argwhere(X1[row_d,:]==2)[:,1]
+    col_2 = np.array([c for c in range(0,X1.shape[1]) if not (c in col_d1 or c in col_1)])
+    col_2 = [c for c in col_2 if np.any(X1[:,c].todense(),axis=0)]
+    Xhod = X1[row_a,:][:,np.concatenate((col_2, col_d1))]
+    
+    return sprank(Xhod)<Xhod.shape[1]
+
+def IsLowIndex(X, **opts):
+    if opts.has_key('eq'):
+        eq = opts['eq']
+    else:
+        eq = np.arange(0,X.shape[0])
+    return not IsHighIndex(X,eq=eq)
+
 def Mplus( X, causality='mixed' ):
-    def Gp(Gin):
-        dm = GetDMParts(Gin[2])
+    def Gp(G):
+        dm = GetDMParts(G[2])
         if len(dm.Mp.row)==0 or len(dm.Mp.col)==0:
             return (np.array([]),np.array([]),np.array([[]]))
-        
-        
-        return (Gin[0][dm.Mp.row], Gin[1][dm.Mp.col], Gin[2][dm.Mp.row,:][:,dm.Mp.col])        
+        G1 = copy.deepcopy(G)
+        return (G1[0][dm.Mp.row], G1[1][dm.Mp.col], G1[2][dm.Mp.row,:][:,dm.Mp.col])
 
-    def Gm(Gin):
-        dm = GetDMParts(Gin[2])
+    def Gm(G):
+        dm = GetDMParts(G[2])
         if len(dm.Mm.row)==0 or len(dm.Mm.col)==0:
             return (np.array([]),np.array([]),np.array([[]]))
+        G1 = copy.deepcopy(G)
+        return (G1[0][dm.Mm.row], G1[1][dm.Mm.col], G1[2][dm.Mm.row,:][:,dm.Mm.col])
 
-        return (Gin[0][dm.Mm.row], Gin[1][dm.Mm.col], Gin[2][dm.Mm.row,:][:,dm.Mm.col])
+    def G0(G):
+        dm = GetDMParts(G[2])
+        if len(dm.M0eqs)==0 or len(dm.M0vars)==0:
+            return (np.array([]),np.array([]),np.array([[]]))
+        G1 = copy.deepcopy(G)
+        return (G1[0][dm.M0eqs], G1[1][dm.M0vars], G1[2][dm.M0eqs,:][:,dm.M0vars])
 
-    def CGX(Gin,X):
-        return np.unique([e[0] for e in np.argwhere(Gin[2][:,X]>0)])
+    def Gadd(G1,G2):
+        c1,x1,A1 = copy.deepcopy(G1)
+        c2,x2,A2 = copy.deepcopy(G2)
 
-    def GsubC(Gin,C):
-        c,x,A = Gcopy(Gin)
+        c1 = np.unique(np.concatenate((c1,c2)))
+        x1 = np.unique(np.concatenate((x1,x2)))
+        A1[A2==1]=1; A1[A2==2]=2
+        return (c1,x1,A1)
+    
+    def CGX(G,X):
+        if len(X)==0:
+            return []
+        return G[0][np.unique([e[0] for e in np.argwhere(G[2][:,X]>0)])]
 
+    def CGE(G,E):
+        return G[0][np.where(np.any(Ei,axis=1))[0]]
+
+    def GsubC(G,C):
+        c,x,A = copy.deepcopy(G)
         A = np.delete(A,C,axis=0)
-        x_un_connected = [xi[0] for xi in np.argwhere(np.all(A==0,axis=0))]
-        c = [ci for ci in c if not ci in C]
-        #if len(x_un_connected)>0:
-        #    A = np.delete(A,x_un_connected,axis=1)
-        #    x = np.delete(x,x_un_connected)
-
+        c = np.array([ci for ci in c if not ci in C])
         return (c,x,A)
 
-    def Gcopy(Gin):
-        c,x,a = Gin
-        return (c.copy(), x.copy(), a.copy())
-
-    Xc = X.copy().todense();
+    def GsubX(G,X):
+        c,x,A = copy.deepcopy(G)        
+        A = np.delete(A,X,axis=1)
+        x = np.array([xi for xi in x if not xi in X])
+        return (c,x,A)
+    
+    Xc = np.array(X.copy().todense())
+    # Represent graph as a tuple G=(constraints,variables, adjacency matrix)
     G = (np.arange(0,Xc.shape[0], dtype=np.int64), np.arange(0,Xc.shape[1], dtype=np.int64), Xc)
 
     if causality is 'mixed':
         return Gp(G)[0]
     
     elif causality is 'int':
-        # Represent graph as a tuple G=(constraints,variables, adjacency matrix)
         while True:
             # G := G+            
             G = Gp(G)            
                 
             # G1 = G - Ed
-            G1 = Gcopy(G) # careful, G1 is the same object as  
+            G1 = copy.deepcopy(G)
             G1[2][G1[2]==3]=0 # Zero the derivative edges
 
             # G := G - C(G,X(G1-))
@@ -208,70 +250,30 @@ def Mplus( X, causality='mixed' ):
             else:
                 break
         return G[0]
+    elif causality is 'der':
+        Xc = [];
+        while True:
+            # Gnc := G - Xc
+            Gnc = GsubX(G,Xc)
+            
+            # Gni := Gnc - C(Gnc,Ei)
+            Ei = Gnc[2].copy()
+            Ei[Ei!=2]=0
+            Gni = GsubC(Gnc,CGE(Gnc,Ei))
+            
+            # Xc:= Xc u X(Gni+ u Gni0)        
+            Gnip = Gp(Gni)
+            Gni0 = G0(Gni)
+            X1 = np.unique(np.concatenate((Gnip[1],Gni0[1]))).astype(np.int64) # X1 = X(Gni+ u Gni0)
+            Xc = np.unique(np.concatenate((Xc,X1))).astype(np.int64)
+
+            if len(X1)==0:
+                break
+            
+        # G := (G-C(G,X\Xc))+
+        X1 = np.array([xi for xi in G[1] if not xi in Xc]) # X1 = X\Xc
+        Gres = Gp(GsubC(G,CGX(G,X1)))
+        return Gres[0]
     else:
         return np.array([])
-
-
-# def Mplus( X, causality='mixed' ):
-#     def Gp(Gin):
-#         dm = GetDMParts(Gin[2])
-#         #print len(dm.Mp.row), len(dm.Mp.col)
-#         if len(dm.Mp.row)==0 or len(dm.Mp.col)==0:
-#             return (np.array([]),np.array([]),np.array([[]]))
-#         return (Gin[0][dm.Mp.row], Gin[1][dm.Mp.col], Gin[2][dm.Mp.row,:][:,dm.Mp.col])        
-
-#     def Gm(Gin):
-#         dm = GetDMParts(Gin[2])
-#         if len(dm.Mm.row)==0 or len(dm.Mm.col)==0:
-#             return (np.array([]),np.array([]),np.array([[]]))
-
-#         return (Gin[0][dm.Mm.row], Gin[1][dm.Mm.col], Gin[2][dm.Mm.row,:][:,dm.Mm.col])
-
-#     def CGX(Gin,X):
-#         return np.unique([e[0] for e in np.argwhere(Gin[2][:,X]>0)])
-
-#     def GsubC(Gin,C):
-#         c,x,A = Gcopy(Gin)
-
-#         A = np.delete(A,C,axis=0)
-#         x_un_connected = [xi[0] for xi in np.argwhere(np.all(A==0,axis=0))]
-#         c = [ci for ci in c if not ci in C]
-#         #if len(x_un_connected)>0:
-#         #    A = np.delete(A,x_un_connected,axis=1)
-#         #    x = np.delete(x,x_un_connected)
-
-#         return (c,x,A)
-
-#     def Gcopy(Gin):
-#         c,x,a = Gin
-#         return (c.copy(), x.copy(), a.copy())
-
-#     Xc = X.copy().todense();
-#     G = (np.arange(0,Xc.shape[0], dtype=np.int64), np.arange(0,Xc.shape[1], dtype=np.int64), Xc)
-
-#     if causality is 'mixed':
-#         return Gp(G)[0]
-    
-#     elif causality is 'int':
-#         # Represent graph as a tuple G=(constraints,variables, adjacency matrix)
-#         while True:
-#             # G := G+            
-#             G = Gp(G)            
-                
-#             # G1 = G - Ed
-#             G1 = Gcopy(G) # careful, G1 is the same object as  
-#             G1[2][G1[2]==3]=0 # Zero the derivative edges
-
-#             # G := G - C(G,X(G1-))
-#             dm = GetDMParts(G1[2])
-
-#             if len(dm.Mm.col)>0 and len(dm.Mm.row)>0:
-#                 G1m = Gm(G1)
-#                 G=GsubC(G,CGX(G,G1m[1]))                
-#             else:
-#                 break
-#         return G[0]
-#     else:
-#         return np.array([])
-
 
