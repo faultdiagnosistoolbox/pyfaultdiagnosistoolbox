@@ -264,6 +264,12 @@ class DiagnosisModel(object):
         plt.ylabel('Equations')
 
 
+    def DetectabilityAnalysis(self):
+        dm = dmperm.GetDMParts(self.X)
+        df = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] in dm.Mp.row]
+        ndf = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] not in dm.Mp.row]
+        return (df,ndf)
+    
     def IsolabilityAnalysis( self, plot=False, permute=True, causality='mixed' ):
 
         MplusCausal = lambda X: dmperm.Mplus(X,causality=causality)
