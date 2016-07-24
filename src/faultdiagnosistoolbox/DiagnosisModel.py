@@ -88,6 +88,12 @@ class DiagnosisModel(object):
         else:
             eq = np.arange(0,self.X.shape[0])
         return dmperm.IsLowIndex(self.X,eq=eq)
+
+    def FSM(self, eqs_sets ):
+        r=np.zeros((len(eqs_sets),self.F.shape[1]),dtype=np.int64)
+        for idx,eqs in enumerate(eqs_sets):
+            r[idx,:] = np.any(self.F[eqs,:].todense(),axis=0)
+        return r
     
     def PlotDM(self, **options) :
 
