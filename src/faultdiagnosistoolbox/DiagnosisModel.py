@@ -94,6 +94,12 @@ class DiagnosisModel(object):
         for idx,eqs in enumerate(eqs_sets):
             r[idx,:] = np.any(self.F[eqs,:].todense(),axis=0)
         return r
+
+    def IsDynamic(self):
+        return np.any(self.X.todense()==2)
+
+    def IsStatic(self):
+        return not self.IsDynamic()
     
     def PlotDM(self, **options) :
 
@@ -323,5 +329,34 @@ class DiagnosisModel(object):
             plt.gca().xaxis.tick_bottom()
         return im        
 
+    def IsolabilityAnalysisArrs(self,arrs,permute=True, plot=False):
+        FSM = self.FSM(arrs)
+        return self.IsolabilityAnalysisFSM(FSM,permute=permute,plot=plot)
+
+    def IsolabilityAnalysisFSM(self,FSM,permute=True, plot=False):
+        nf = FSM.shape[1]
+        nr = FSM.shape[0]
+        im = np.ones((nf,nf),dtype=np.int64)
+        for f in FSM:
+            zIdx = np.array([[x0,y0] for x0 in np.where(f>0)[0] for y0 in np.where(f==0)[0]])
+            if len(zIdx)>0:
+                im[zIdx[:,0],zIdx[:,1]]=0
+
+        if plot:
+            if permute:
+                p,q,_,_,_,_ = dmperm.dmperm(im);
+            else:
+                p = np.arange(0,nf)
+                q = p
+            plt.spy(im[p,:][:,q],markersize=10,marker='o')
+            plt.xticks(np.arange(0,self.nf()),self.f)
+            plt.yticks(np.arange(0,self.nf()),self.f)
+            plt.gca().xaxis.tick_bottom()
+            if len(self.name)>0:
+                plt.title("Isolability matrix for a given FSM in '" + self.name + "'")
+            else:
+                plt.title('Isolability matrix for a given FSM')
+        return im 
+    
 def DiffConstraint(dvar,ivar):
     return [dvar, ivar, "diff"];
