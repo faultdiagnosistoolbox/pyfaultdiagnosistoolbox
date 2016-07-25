@@ -4,6 +4,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import scipy.sparse as sp
+import sympy as sym
 
 class DiagnosisModel(object):
     def __init__(self, modeldef, name='') : 
@@ -13,16 +14,24 @@ class DiagnosisModel(object):
         self.x = []
         self.f = []
         self.z = []
+        self.rels = []
         self.name = name
         
-        self.X = self._ModelStructure( modeldef['rels'], modeldef['x'])
-        self.x = modeldef['x']
-        self.F = self._ModelStructure( modeldef['rels'], modeldef['f'])
-        self.f = modeldef['f']
-        self.Z = self._ModelStructure( modeldef['rels'], modeldef['z'])
-        self.z = modeldef['z']
-        self.e = map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne()))
-    
+        if modeldef['type'] is 'VarStruc' or modeldef['type'] is 'Symbolic':
+            self.X = _ModelStructure( modeldef['rels'], modeldef['x'])
+            self.x = modeldef['x']
+            self.F = _ModelStructure( modeldef['rels'], modeldef['f'])
+            self.f = modeldef['f']
+            self.Z = _ModelStructure( modeldef['rels'], modeldef['z'])
+            self.z = modeldef['z']
+            self.e = map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne()))
+            self.type = modeldef['type']
+        else:
+            print 'Model definition type ' + modeldef['type'] + ' is not supported (yet)'
+
+        if modeldef['type'] is 'Symbolic':
+            self.syme = np.array(_ToEquations(modeldef['rels']))
+
     def ne(self):
         return self.X.shape[0]
 
@@ -37,29 +46,7 @@ class DiagnosisModel(object):
     
     def GetDMParts(self):
         return dmperm.GetDMParts(self.X)
-    
-    def _ModelStructure(self,rels,x) : 
-        ne=len(rels)
-        nx=len(x)
-    
-        X = np.zeros((ne,nx),dtype='int64')
-        for k,rel in enumerate(rels):
-            if self._IsDifferentialConstraint(rel):
-                if (rel[0] in x) and (rel[1] in x):
-                    dvIdx = x.index(rel[0])
-                    ivIdx = x.index(rel[1])
-                    X[k,dvIdx] = 3;
-                    X[k,ivIdx] = 2;
-            else:        
-                X[k, self._RelModelStructure(rel, x)]=1
-        return sp.csc_matrix(X)
-
-    def _RelModelStructure(self,rel,x):
-        return [xi for xi in range(0,len(x)) if x[xi] in rel]
-
-    def _IsDifferentialConstraint( self, rel ):
-        return (len(rel)==3 and rel[2]=="diff");
-
+        
     def MSO(self):
         return dmperm.MSO(self.X)
 
@@ -89,10 +76,17 @@ class DiagnosisModel(object):
             eq = np.arange(0,self.X.shape[0])
         return dmperm.IsLowIndex(self.X,eq=eq)
 
-    def FSM(self, eqs_sets ):
+    def FSM(self, eqs_sets, plot=False ):
         r=np.zeros((len(eqs_sets),self.F.shape[1]),dtype=np.int64)
         for idx,eqs in enumerate(eqs_sets):
             r[idx,:] = np.any(self.F[eqs,:].todense(),axis=0)
+
+        if plot:
+            plt.spy(r, markersize=10, marker='o')
+            plt.xticks(np.arange(0,self.nf()),self.f)
+            plt.yticks(np.arange(0,self.nf()), ["eq. set "+str(k+1) for k in np.arange(0,len(eqs_sets))])
+            plt.gca().xaxis.tick_bottom()
+
         return r
 
     def IsDynamic(self):
@@ -360,3 +354,40 @@ class DiagnosisModel(object):
     
 def DiffConstraint(dvar,ivar):
     return [dvar, ivar, "diff"];
+
+def _ModelStructure(rels,x) : 
+    ne=len(rels)
+    nx=len(x)
+
+    X = np.zeros((ne,nx),dtype='int64')
+    for k,rel in enumerate(rels):
+        if _IsDifferentialConstraint(rel):
+            if (rel[0] in x) and (rel[1] in x):
+                dvIdx = x.index(rel[0])
+                ivIdx = x.index(rel[1])
+                X[k,dvIdx] = 3;
+                X[k,ivIdx] = 2;
+        else:        
+            X[k, _RelModelStructure(rel, x)]=1
+    return sp.csc_matrix(X)
+
+def _RelModelStructure(rel,x):
+    if _IsSymbolic(rel):
+        relVars = [str(e) for e in rel.atoms(sym.Symbol)]
+    else:
+        relVars = rel;
+    return [xi for xi in range(0,len(x)) if x[xi] in relVars]
+
+def _IsDifferentialConstraint( rel ):
+    return isinstance(rel,list) and len(rel)==3 and rel[2] is "diff";
+
+def _IsSymbolic(v):
+    return isinstance(v, tuple(sym.core.all_classes))
+
+def _ToEquations(rels):
+    def _ToEquation(rel):
+        if _IsSymbolic(rel) and not isinstance(rel,sym.Equality):
+            return sym.Eq(rel)
+        else:
+            return rel
+    return map(lambda r: _ToEquation(r), rels)

@@ -1,7 +1,7 @@
 import faultdiagnosistoolbox as fdt
 modelDef={}
 
-modelDef['type'] = 'Symbolic'
+modelDef['type'] = 'VarStruc'
 modelDef['x']= ['p1','p2','p3','q0','q1','q2','q3','dp1','dp2','dp3']
 modelDef['f'] = ['fV1','fV2','fV3','fT1','fT2','fT3']
 modelDef['z'] = ['y1','y2','y3']
