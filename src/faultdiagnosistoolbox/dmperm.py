@@ -277,3 +277,35 @@ def Mplus( X, causality='mixed' ):
     else:
         return np.array([])
 
+def MixedCausalityMatching(Gin):
+    def FindAdmissibleIntEdge(G):
+        X = G[2]
+        dm=GetDMParts(X)
+        for hallComponent in dm.M0:
+            Ei = np.argwhere(X[hallComponent.row,:][:,hallComponent.col]==2)
+            if len(Ei)>0:
+                Ei=Ei[0] # Get the first one
+                return np.array([G[0][hallComponent.row[Ei[0]]], G[1][hallComponent.col[Ei[1]]]])
+        return []
+
+    G = [Gin[0].copy(), Gin[1].copy(), Gin[2].copy()]
+    Gamma = []
+    e = FindAdmissibleIntEdge(G)
+    while len(e)>0:
+        if len(Gamma)==0:
+            Gamma = [e]
+        else:
+            Gamma = np.concatenate((Gamma,[e]),axis=0)
+            
+        # G := G - C({e}) - X({e})
+        rowIdx = np.argwhere(G[0]==e[0])[0,0]
+        colIdx = np.argwhere(G[1]==e[1])[0,0]
+        G[0] = np.delete(G[0],rowIdx)
+        G[1] = np.delete(G[1],colIdx)
+        G[2] = np.delete(G[2],rowIdx, axis=0)
+        G[2] = np.delete(G[2],colIdx, axis=1)
+        e = FindAdmissibleIntEdge(G)
+        
+    dm = GetDMParts(G[2])
+    Gamma_p = np.stack((G[0][dm.rowp][:],G[1][dm.colp][:]), axis=1);
+    return np.concatenate((Gamma,Gamma_p),axis=0)
