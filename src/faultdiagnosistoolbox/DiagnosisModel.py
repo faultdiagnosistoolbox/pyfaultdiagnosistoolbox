@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import scipy.sparse as sp
 import sympy as sym
+import Matching as match
 
 class DiagnosisModel(object):
     def __init__(self, modeldef, name='') : 
@@ -89,11 +90,59 @@ class DiagnosisModel(object):
 
         return r
 
+    def Matching(self,eqs):
+        return match.Matching(self.X.todense(),np.array(eqs))
+
+    def MSOCausalitySweep(self, mso, diffres='int', causality=''):
+        def IsDifferentialStructure( X, eq ):
+            return np.any(X[eq,:]==3)
+
+        if (causality is 'der') and (not diffres is 'der'):
+            diffres = 'der'
+        if (causality is 'int') and (not diffres is 'int'):
+            diffres = 'int'
+        res = []
+        X = self.X.todense()
+        for red in mso:
+            m0 = np.sort([e for e in mso if e != red])
+            Gamma = self.Matching(m0)
+        
+            if not IsDifferentialStructure(X,red):
+                res.append(Gamma.matchType)
+            elif diffres is 'int':
+                if Gamma.matchType is 'der':
+                    res.append('mixed')
+                elif Gamma.matchType is 'int' or Gamma.matchType is 'mixed':
+                    res.append(Gamma.matchType)
+                elif Gamma.matchType is 'algebraic':
+                    res.append('int')
+            elif diffres is 'der':
+                if Gamma.matchType is 'int':
+                    res.append('mixed')
+                elif Gamma.matchType is 'der' or Gamma.matchType is 'mixed':
+                    res.append(Gamma.matchType)
+                elif Gamma.matchType is 'algebraic':
+                    res.append('der')
+        if len(causality)>0:
+            res = np.array(map(lambda c: c is causality or c is 'algebraic', res))
+        return res
+    
     def IsDynamic(self):
         return np.any(self.X.todense()==2)
 
     def IsStatic(self):
         return not self.IsDynamic()
+
+    def Redundancy(self, eqs=''):
+        if len(eqs)==0:
+            eqs = np.arange(0,self.ne())
+        
+        dm = dmperm.GetDMParts( self.X[eqs,:] )
+        return len(dm.Mp.row)-len(dm.Mp.col)
+
+    def MTESRedundancy( self ):
+        eqs = np.argwhere(np.any(self.F.todense(),axis=1))[:,0]
+        return self.Redundancy(eqs) + 1
     
     def PlotDM(self, **options) :
 
@@ -270,6 +319,54 @@ class DiagnosisModel(object):
         plt.ylabel('Equations')
 
 
+    def PlotMatching( self, Gamma, **options):
+        p = np.array([],dtype=np.int64)
+        q = np.array([],dtype=np.int64)
+        for g in Gamma.matching:
+            p = np.concatenate((p,g.row))
+            q = np.concatenate((q,g.col))
+        p = np.flipud(p)
+        q = np.flipud(q)
+        Xm = self.X[p,:][:,q]
+
+        # Determine if axis should be labeled
+        labelVars = False;
+        if options.has_key('verbose'):
+            labelVars = options['verbose'];
+        elif len(q)<40:
+            labelVars = True;
+
+        # Plot structure
+        plt.spy(Xm==1,markersize=4,marker="o", color="b")
+        for idx,val in enumerate(np.argwhere(Xm==3)):
+            plt.text(val[1]-0.06,val[0]+0.15, 'I',color="b")
+            for idx,val in enumerate(np.argwhere(Xm==2)):
+                plt.text(val[1]-0.06,val[0]+0.15, 'D',color="b")
+        
+        # Plot axis ticks
+        if labelVars:
+            plt.xticks(np.arange(0,len(q)), [self.x[xi] for xi in q])
+            plt.yticks(np.arange(0,len(p)), [self.e[ei] for ei in p])
+        else:
+            plt.xticks(np.arange(0,len(q)))
+            plt.yticks(np.arange(0,len(p)))
+
+        # Draw lines for Hall components
+        pos = len(q)-1 # Lower right corner of spy-plot
+        for gi in Gamma.matching:
+            n = len(gi.row)
+            x1 = pos+0.5
+            x2 = pos - n + 0.5
+            y1 = pos + 0.5
+            y2 = pos - n + 0.5
+            plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'k')    
+            pos = pos - n
+
+        plt.axis([-1, len(q), len(q), -1])
+        plt.gca().xaxis.tick_bottom()
+        plt.xlabel('Variables')
+        plt.ylabel('Equations')
+        
     def DetectabilityAnalysis(self):
         dm = dmperm.GetDMParts(self.X)
         df = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] in dm.Mp.row]

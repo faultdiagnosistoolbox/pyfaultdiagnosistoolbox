@@ -307,5 +307,5 @@ def MixedCausalityMatching(Gin):
         e = FindAdmissibleIntEdge(G)
         
     dm = GetDMParts(G[2])
-    Gamma_p = np.stack((G[0][dm.rowp][:],G[1][dm.colp][:]), axis=1);
-    return np.concatenate((Gamma,Gamma_p),axis=0)
+    Gamma_p = np.stack((G[0][dm.rowp][:],G[1][dm.colp][:]), axis=1)
+    return np.flipud(np.concatenate((Gamma,Gamma_p),axis=0))
