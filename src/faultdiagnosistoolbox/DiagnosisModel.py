@@ -17,6 +17,7 @@ class DiagnosisModel(object):
         self.z = []
         self.rels = []
         self.name = name
+        self.parameters = []
         
         if modeldef['type'] is 'VarStruc' or modeldef['type'] is 'Symbolic':
             self.X = _ModelStructure( modeldef['rels'], modeldef['x'])
@@ -27,6 +28,9 @@ class DiagnosisModel(object):
             self.z = modeldef['z']
             self.e = map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne()))
             self.type = modeldef['type']
+
+            if 'parameters' in modeldef:
+                self.parameters = modeldef['parameters']
         else:
             print 'Model definition type ' + modeldef['type'] + ' is not supported (yet)'
 
