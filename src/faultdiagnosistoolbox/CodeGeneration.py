@@ -53,7 +53,7 @@ def SeqResGenCausality( Gamma, e, diffres ):
         if Gamma.matchType is 'der':
             return 'mixed'
         elif Gamma.matchType is 'int' or Gamma.matchType is 'mixed':
-            return Gamma.type
+            return Gamma.matchType
         elif Gamma.matchType is 'algebraic':
             return 'int'
     else:
@@ -145,10 +145,11 @@ def GenerateResidualEquations( model, resEq, diffres, language):
         resvar = 'r[0]'
     else:
         resvar = 'r'
-    fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
-    e = model.syme[resEq].subs(fzSub)
     
+    e = model.syme[resEq]
     if not fdt.IsDifferentialConstraint(e):
+        fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
+        e = e.subs(fzSub)
         resExpr = e.lhs - e.rhs
         genCode = ["%s = %s%s %s %s" % (resvar,ExprToCode(resExpr,language), CodeEOL(language), 
                                        CodeComment(language), np.array(model.e)[resEq])]
@@ -167,14 +168,14 @@ def GenerateResidualEquations( model, resEq, diffres, language):
             iv = IVar(e)
             dv = DVar(e)
             if language is 'Python':
-                genCode = ["%s = %s-state['%s']%s %s %s" % (resvar,v,v,CodeEOL(language),
+                genCode = ["%s = %s-state['%s']%s %s %s" % (resvar,iv,iv,CodeEOL(language),
                                                          CodeComment(language), np.array(model.e)[resEq])]
             else:
-                genCode = ['%s = %s-state.%s%s %s %s' % (resvar,v,v,CodeEOL(language),
+                genCode = ['%s = %s-state.%s%s %s %s' % (resvar,iv,iv,CodeEOL(language),
                                                          CodeComment(language), np.array(model.e)[resEq])]
             iState = [iv];
             dState = []
-            integ = [iv + " = " + CodeApproxInt(v,dv,np.array(model.e)[resEq],language)]
+            integ = [iv + " = " + CodeApproxInt(iv,dv,np.array(model.e)[resEq],language)]
     return (np.array(genCode), iState, dState, integ)
 
 def GenerateExactlyDetermined( model, Gamma, language):

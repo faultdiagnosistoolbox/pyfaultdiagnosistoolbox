@@ -139,90 +139,89 @@ def PlotDM(model, **options) :
         pcolstart = len(dm.colp)-len(P['q']);    
         dm.colp[pcolstart:] = colp;    
 
-        plt.spy(X[dm.rowp,:][:,dm.colp]==1,markersize=4, marker="o")
-        for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==3)):
-            plt.text(val[1]-0.06,val[0]+0.15, 'I',color="b")
+    plt.spy(X[dm.rowp,:][:,dm.colp]==1,markersize=4, marker="o")
+    for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==3)):
+        plt.text(val[1]-0.06,val[0]+0.15, 'I',color="b")
   
-        for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==2)):
-            plt.text(val[1]-0.06,val[0]+0.15, 'D',color="b")
+    for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==2)):
+        plt.text(val[1]-0.06,val[0]+0.15, 'D',color="b")
     
-        if labelVars:
-            plt.xticks(np.arange(0,X.shape[1]),dm.colp)
-            plt.yticks(np.arange(0,X.shape[0]),dm.rowp)
+    if labelVars:
+        plt.xticks(np.arange(0,X.shape[1]),dm.colp)
+        plt.yticks(np.arange(0,X.shape[0]),dm.rowp)
 
-        if len(dm.Mm.row)>0:
-            r = len(dm.Mm.row);
-            c = len(dm.Mm.col);
-            x1 = -0.5;
-            x2 = x1+c;
-            y1 = -0.5;
-            y2 = y1+r;
-            plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
-
-        # Plot exactly determined part
+    if len(dm.Mm.row)>0:
         r = len(dm.Mm.row);
         c = len(dm.Mm.col);
-        for hc in dm.M0:
-            n = len(hc.row);
-            x1 = c-0.5;
-            x2 = x1+n;
-            y1 = r-0.5;
-            y2 = y1+n;
-            plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')
-            r = r+n;
-            c = c+n;
+        x1 = -0.5;
+        x2 = x1+c;
+        y1 = -0.5;
+        y2 = y1+r;
+        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
 
-        # Plot over determined part  
-        if len(dm.Mp.row)>0:
-            nr = len(dm.Mp.row);
-            nc = len(dm.Mp.col);
+    # Plot exactly determined part
+    r = len(dm.Mm.row);
+    c = len(dm.Mm.col);
+    for hc in dm.M0:
+        n = len(hc.row);
+        x1 = c-0.5;
+        x2 = x1+n;
+        y1 = r-0.5;
+        y2 = y1+n;
+        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')
+        r = r+n;
+        c = c+n;
+
+    # Plot over determined part  
+    if len(dm.Mp.row)>0:
+        nr = len(dm.Mp.row);
+        nc = len(dm.Mp.col);
+        x1 = c-0.5;
+        x2 = x1+nc;
+        y1 = r-0.5;
+        y2 = y1+nr;
+        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
+
+    # Plot equivalence classes in over determined part  
+    if eqclass and len(dm.Mp.row)>0:
+        r1 = r;
+        c1 = c;
+        for ec in P['eqclass']:
+            nr = len(ec.row);
+            nc = len(ec.col);
             x1 = c-0.5;
             x2 = x1+nc;
             y1 = r-0.5;
             y2 = y1+nr;
-            plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
-
-        # Plot equivalence classes in over determined part  
-        if eqclass and len(dm.Mp.row)>0:
-            r1 = r;
-            c1 = c;
-            for ec in P['eqclass']:
-                nr = len(ec.row);
-                nc = len(ec.col);
-                x1 = c-0.5;
-                x2 = x1+nc;
-                y1 = r-0.5;
-                y2 = y1+nr;
-                plt.gca().add_patch(mpatches.Rectangle((x1,y1), x2-x1, y2-y1, facecolor='0.7'))
-                r = r+nr;
-                c = c+nc;
+            plt.gca().add_patch(mpatches.Rectangle((x1,y1), x2-x1, y2-y1, facecolor='0.7'))
+            r = r+nr;
+            c = c+nc;
 
         plt.plot([c1-0.5, len(dm.colp)+0.5], [r-0.5, r-0.5], 'k--')
         plt.plot([c-0.5, c-0.5], [r1-0.5, len(dm.rowp)+0.5], 'k--')   
 
-        if fault:
-            fPlotRowIdx = map(lambda f: np.argwhere(dm.rowp==f[0])[0][0],np.argwhere(model.F))
-            nVars = len(dm.colp)
+    if fault:
+        fPlotRowIdx = map(lambda f: np.argwhere(dm.rowp==f[0])[0][0],np.argwhere(model.F))
+        nVars = len(dm.colp)
+        for ff in np.unique(fPlotRowIdx):
+            fstr=''
+            faultlist = [model.f[x[1]] for x in np.argwhere(model.F[dm.rowp[ff],:])]
+            for fvidx,fv in enumerate(faultlist):
+                if fvidx==0:
+                    fstr = fv
+                else:
+                    fstr = "%s, %s" % (fstr,fv)
+                plt.plot([-1,nVars],[ff,ff],'r--')
+                plt.text(nVars-0.1,ff+0.17,fstr, color='r')
 
-            for ff in np.unique(fPlotRowIdx):
-                fstr=''
-                faultlist = [model.f[x[1]] for x in np.argwhere(model.F[rowp[ff],:])]
-                for fvidx,fv in enumerate(faultlist):
-                    if fvidx==0:
-                        fstr = fv
-                    else:
-                        fstr = "%s, %s" % (fstr,fv)
-                    plt.plot([-1,nVars],[ff,ff],'r--')
-                    plt.text(nVars-0.1,ff+0.17,fstr, color='r')
+    # Plot axis ticks
+    if labelVars:
+        plt.xticks(np.arange(0,X.shape[1]),[model.x[xidx] for xidx in dm.colp])
+        plt.yticks(np.arange(0,X.shape[0]),[model.e[eidx] for eidx in dm.rowp])
 
-        # Plot axis ticks
-        if labelVars:
-            plt.xticks(np.arange(0,X.shape[1]),[model.x[xidx] for xidx in dm.colp])
-            plt.yticks(np.arange(0,X.shape[0]),[model.e[eidx] for eidx in dm.rowp])
+    # Change plot range
+    plt.axis([-0.7,X.shape[1]-0.3,X.shape[0]-0.3,-0.7])
 
-        # Change plot range
-        plt.axis([-0.7,X.shape[1]-0.3,X.shape[0]-0.3,-0.7])
-
-        plt.gca().xaxis.tick_bottom()
-        plt.xlabel('Variables')
-        plt.ylabel('Equations')
+    plt.gca().xaxis.tick_bottom()
+    plt.xlabel('Variables')
+    plt.ylabel('Equations')

@@ -32,6 +32,26 @@ class DiagnosisModel(object):
 
             if 'parameters' in modeldef:
                 self.parameters = modeldef['parameters']
+        elif modeldef['type'] is 'MatrixStruc':
+            self.X = sp.csc_matrix(modeldef['X'])
+            self.F = sp.csc_matrix(modeldef['F'])
+            self.Z = sp.csc_matrix(modeldef['Z'])
+
+            if modeldef.has_key('x'):
+                self.x = modeldef['x']
+            else:
+                self.x = map(lambda x:"x"+np.str(x+1),np.arange(0,self.X.shape[1]))
+            if modeldef.has_key('f'):
+                self.f = modeldef['f']
+            else:
+                self.f = map(lambda x:"f"+np.str(x+1),np.arange(0,self.F.shape[1]))
+            if modeldef.has_key('z'):
+                self.z = modeldef['z']
+            else:
+                self.z = map(lambda x:"z"+np.str(x+1),np.arange(0,self.Z.shape[1]))
+
+            self.e = map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne()))
+            self.type = modeldef['type']
         else:
             print 'Model definition type ' + modeldef['type'] + ' is not supported (yet)'
 
