@@ -19,10 +19,11 @@ $(BUILD_DIR)/ResGen3.so: ResGen3.c
 	MACOSX_DEPLOYMENT_TARGET=$(TARGET_VERSION) python $(patsubst %.c, %_setup.py, $<) build
 
 clean:
-	rm -rf build *~
+	rm -rf $(TARGET_DIR) *~
 
 cleanall:
 	make clean
-	rm $(SOURCE)
+	rm -f $(SOURCE) $(patsubst %.c, %_setup.py, $(SOURCE))
+
 
 

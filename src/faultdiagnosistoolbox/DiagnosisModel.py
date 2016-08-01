@@ -269,7 +269,7 @@ class DiagnosisModel(object):
                 plt.title('Isolability matrix for a given FSM')
         return im 
 
-    def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, external=[]):
+    def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, external=[], api='Python'):
         codegen.SeqResGen(self, Gamma, resEq, name, diffres=diffres, language=language, batch=batch, external=external)
     
 def DiffConstraint(dvar,ivar):
