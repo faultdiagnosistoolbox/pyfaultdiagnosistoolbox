@@ -90,7 +90,7 @@ class DiagnosisModel(object):
         if plot:
             plt.spy(r, markersize=10, marker='o')
             plt.xticks(np.arange(0,self.nf()),self.f)
-            plt.yticks(np.arange(0,self.nf()), ["eq. set "+str(k+1) for k in np.arange(0,len(eqs_sets))])
+            plt.yticks(np.arange(0,len(eqs_sets)), ["eq. set "+str(k+1) for k in np.arange(0,len(eqs_sets))])
             plt.gca().xaxis.tick_bottom()
 
         return r

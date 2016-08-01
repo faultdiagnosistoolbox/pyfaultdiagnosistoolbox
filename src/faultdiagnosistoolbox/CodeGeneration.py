@@ -1,8 +1,6 @@
 import numpy as np
 import dmperm as dmperm
-#import scipy.sparse as sp
 import sympy as sym
-#import Matching as match
 import sys
 import faultdiagnosistoolbox as fdt
 from sympy.printing import ccode, octave_code
@@ -13,7 +11,7 @@ def UsedVars(rels, variables):
     for expr in rels:
         if not fdt.IsDifferentialConstraint(expr):
             uv |= set([str(v) for v in expr.atoms() if str(v) in variables])
-    return list(uv)
+    return [v for v in variables if v in uv]
 
 def ExprToCode( expr, language):
     if language is 'C':
@@ -88,6 +86,12 @@ def CodeApproxInt(v,dv,enum,language):
     else:
         return "ApproxInt(%s,state['%s'],Ts)%s %s %s" % (dv,v,CodeEOL(language),CodeComment(language),enum)    
     
+def CodeApproxDer(v,enum,language):
+    if language is 'C' or language is 'Matlab':
+        return 'ApproxDiff(%s,state.%s,Ts)%s %s %s' % (v,v,CodeEOL(language),CodeComment(language),enum)
+    else:
+        return "ApproxDiff(%s,state['%s'],Ts)%s %s %s" % (v,v,CodeEOL(language),CodeComment(language),enum)
+
 def IntegralHallComponent(model, g, language):
     fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
     resGen = []
@@ -124,8 +128,7 @@ def MixedHallComponent(model, g, language):
             integ.append(genCode)
             iState.append(v)
         else: # v is DVar(e)
-            genCode = '%s = ApproxDiff(%s,state.%s,Ts)%s  %s %s' % (DVar(e),IVar(e),IVar(e),CodeEOL(language),
-                                                                    CodeComment(language),enum)
+            genCode = v + " = " + CodeApproxDer(IVar(e),enum,language)
             resGenM0.append(genCode)
             dState.append(Ivar(e))
 
@@ -136,7 +139,9 @@ def GenerateResidualEquations( model, resEq, diffres, language):
         resvar = 'r[0]'
     else:
         resvar = 'r'
-    e = model.syme[resEq]
+    fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
+    e = model.syme[resEq].subs(fzSub)
+    
     if not fdt.IsDifferentialConstraint(e):
         resExpr = e.lhs - e.rhs
         genCode = ["%s = %s%s %s %s" % (resvar,ExprToCode(resExpr,language), CodeEOL(language), 
@@ -148,8 +153,7 @@ def GenerateResidualEquations( model, resEq, diffres, language):
         if diffres is 'der':
             iv = IVar(e)
             dv = DVar(e)
-            genCode = ['%s = %s-ApproxDiff(%s, state.%s,Ts)%s %s %s' % (resvar,dv,iv,iv,CodeEOL(language),
-                                                                       CodeComment(language), np.array(model.e)[resEq])]
+            genCode = ['%s = %s-%s' % (resvar,dv,CodeApproxDer(iv,np.array(model.e)[resEq],language))]
             iState = []
             dState = [dv]
             integ = []
@@ -186,10 +190,9 @@ def GenerateExactlyDetermined( model, Gamma, language):
             integ = np.concatenate((integ, gInteg))
         elif g.matchType is 'der':
             dc = model.syme[g.row[0]];
-            codeGen = '%s = ApproxDiff(%s,state.%s,Ts)%s  %s %s' % (DVar(dc),IVar(dc),IVar(dc),CodeEOL(language),
-                                                                    CodeComment(language),model.e[g.row[0]])
+            codeGen = DVar(dc) + " = " + CodeApproxDer(IVar(dc),model.e[g.row[0]],language)
             resGenM0 = np.concatenate((resGenM0, [codeGen]))
-            dState = np.concatenate((dState, [IVar(e)]))
+            dState = np.concatenate((dState, [IVar(dc)]))
         elif g.matchType is 'mixed':
             codeGen,gInteg,giState,gdState = IntegralHallComponent(model, g, language)
             resGenM0 = np.concatenate((resGenM0, codeGen))    
@@ -216,7 +219,7 @@ def WriteApproxDerFunction(f,language):
         f.write('}\n')
 
     elif language is 'Python':
-        f.write('    def ApproxDer(x,xold,Ts):\n')
+        f.write('    def ApproxDiff(x,xold,Ts):\n')
         f.write('        return (x-xold)/Ts\n')
     elif language is 'Matlab':
         f.write('function dx=ApproxDiff(x,xold,Ts)\n')
@@ -291,13 +294,18 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
         f.write(fSens[-1] + '\n')
         f.write('\n')
         f.write(tab + 'Example of basic usage:\n')
-        f.write(tab + 'Let z be the observations, then the residual generator can be simulated by:\n')
+        f.write(tab + 'Let z be the observations matrix, each column corresponding to a known signal and Ts the sampling time,\n')
+        f.write(tab + 'then the residual generator can be simulated by:\n')
         f.write('\n')
-        f.write(tab + 'for zk in z:\n')
-        f.write(tab + tab + 'rk, state = ResGen_3_8( zk, state, params, 1/fs )\n')
+        f.write(tab + "r = np.zeros(N) # N number of data points\n")
+        f.write(tab + "state = {")
+        for s in state[:-1]:
+            f.write("'" + s + "': " + s + '_0, ')
+        f.write("'" + state[-1] + "': " + state[-1] + '_0}\n')
+        f.write(tab + 'for k,zk in enumerate(z):\n')
+        f.write(tab + tab + 'r[k], state = ' + name + '( zk, state, params, Ts )\n')
         f.write('\n')
-        f.write(tab + 'where state is a structure with the state of the residual generator.\n')
-        f.write(tab + 'The state has fields: ')
+        f.write(tab + 'State is a dictionary with the keys: ')
         for s in state[:-1]:
             f.write(s + ', ')
         f.write(state[-1] + '\n')
@@ -319,7 +327,56 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
         f.write('\n')
         f.write('    return ' + name + '_core(z, state, params, Ts)\n')
     else: # batch
-        pass
+        f.write('import numpy as np\n');
+        f.write('from copy import copy\n');
+        f.write('def ' + name + "(z,state,params,Ts):\n")
+        f.write(tab + '""" ' + name.upper() + " Sequential residual generator for model '" + model.name + "'\n")
+        f.write(tab + 'Causality: ' + resGenCausality + '\n')
+        f.write('\n')
+        
+        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:].todense()),axis=0)]
+        f.write(tab + 'Structurally sensitive to faults: ')
+        for fault in fSens[:-1]:
+            f.write(fault + ', ')
+        f.write(fSens[-1] + '\n')
+        f.write('\n')
+        f.write(tab + 'Example of basic usage:\n')
+        f.write(tab + 'Let z be the observations matrix, each column corresponding to a known signal and Ts the sampling time,\n')
+        f.write(tab + 'then the residual generator can be simulated by:\n')
+        f.write('\n')
+        f.write(tab + "state = {")
+        for s in state[:-1]:
+            f.write("'" + s + "': " + s + '_0, ')
+        f.write("'" + state[-1] + "': " + state[-1] + '_0}\n')
+        f.write(tab + 'r = ' + name + '( zk, state, params, Ts )\n')
+        f.write('\n')
+        f.write(tab + 'State is a dictionary with the keys: ')
+        for s in state[:-1]:
+            f.write(s + ', ')
+        f.write(state[-1] + '\n')
+        f.write('\n')
+        f.write(tab+'File generated ' + time.strftime('%c') + '\n')
+        f.write(tab + '"""') 
+        f.write('\n')
+        
+        if resGenCausality is 'int' or resGenCausality is 'mixed':
+            WriteApproxIntFunction(f,'Python')
+            f.write('\n')
+
+        if resGenCausality is 'der' or resGenCausality is 'mixed':
+            WriteApproxDerFunction(f,'Python')
+            f.write('\n')
+    
+        WriteResGenCorePython(f,name, model,resGen,state, integ,resGenEqs)
+        
+        f.write('\n')
+        f.write(tab + 'N = z.shape[0] # Number of datapoints\n')
+        f.write(tab + 'r = np.zeros(N)\n');
+        f.write(tab + 'state = copy(state)\n')
+        f.write(tab + 'for k,zk in enumerate(z):\n');
+        f.write(tab + tab + 'r[k], state = ' + name + '_core(zk, state, params, Ts)\n')
+        f.write('\n')
+        f.write(tab + 'return r\n');
     f.close()
 
 def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch=False, external=[]):
@@ -327,7 +384,13 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
         print "Code generation only possible for symbolic models"
         return []
     
-    print "Generating residual generator " + name + " (" + language + ")"
+    sys.stdout.write("Generating residual generator " + name + " (" + language + ', ')
+    if batch:
+        sys.stdout.write("batch")
+    else:
+        sys.stdout.write("no batch")
+    sys.stdout.write(")\n")
+    
     sys.stdout.write("  Generating code for the exactly determined part: ")
     m0Code, m0iState, m0dState, m0integ = GenerateExactlyDetermined( model, Gamma, language)
 
@@ -345,7 +408,8 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
     resGenCausality = SeqResGenCausality( Gamma, model.syme[resEq], diffres )
     resGenEqs = np.array([],dtype=np.int64)
     for g in Gamma.matching:
-        resGenEqs = np.concatenate((resGenEqs,g.row))    
+        resGenEqs = np.concatenate((resGenEqs,g.row))
+    resGenEqs = np.concatenate((resGenEqs,[resEq]))
     if language is 'Python':
         WriteResGenPython( model, resGenCode, resGenState, resGenInteg, name, batch, resGenCausality, resGenEqs )
         print 'File ' + name + '.py generated.'
