@@ -102,6 +102,10 @@ class DiagnosisModel(object):
             eq = np.arange(0,self.X.shape[0])
         return dmperm.IsLowIndex(self.X,eq=eq)
 
+    def IsUnderdetermined(self):
+        dm = dmperm.GetDMParts(self.X)
+        return len(dm.Mm.row)>0
+
     def FSM(self, eqs_sets, plot=False ):
         r=np.zeros((len(eqs_sets),self.F.shape[1]),dtype=np.int64)
         for idx,eqs in enumerate(eqs_sets):
