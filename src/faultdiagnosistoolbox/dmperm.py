@@ -208,7 +208,11 @@ def Mplus( X, causality='mixed' ):
     def CGX(G,X):
         if len(X)==0:
             return []
-        return G[0][np.unique([e[0] for e in np.argwhere(G[2][:,X]>0)])]
+        idx = np.unique([e[0] for e in np.argwhere(G[2][:,X]>0)])
+        if len(idx)==0:
+            return []
+        
+        return G[0][idx]
 
     def CGE(G,E):
         return G[0][np.where(np.any(Ei,axis=1))[0]]

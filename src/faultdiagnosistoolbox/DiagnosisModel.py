@@ -2,11 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sp
 import sympy as sym
-
+import copy
 import dmperm as dmperm
 import Matching as match
 import StructurePlotting as smplot
 import CodeGeneration as codegen
+import SensorPlacement as sensplace
+from VarIdGen import VarIdGen
 
 class DiagnosisModel(object):
     def __init__(self, modeldef, name='') : 
@@ -19,6 +21,8 @@ class DiagnosisModel(object):
         self.rels = []
         self.name = name
         self.parameters = []
+
+        self.vGen = VarIdGen()
         
         if modeldef['type'] is 'VarStruc' or modeldef['type'] is 'Symbolic':
             self.X = _ModelStructure( modeldef['rels'], modeldef['x'])
@@ -27,15 +31,23 @@ class DiagnosisModel(object):
             self.f = modeldef['f']
             self.Z = _ModelStructure( modeldef['rels'], modeldef['z'])
             self.z = modeldef['z']
-            self.e = map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne()))
-            self.type = modeldef['type']
+            self.e = map(lambda x:self.vGen.NewE(),np.arange(0,self.ne()))
+            self.modelType = modeldef['type']
 
             if 'parameters' in modeldef:
                 self.parameters = modeldef['parameters']
         elif modeldef['type'] is 'MatrixStruc':
             self.X = sp.csc_matrix(modeldef['X'])
-            self.F = sp.csc_matrix(modeldef['F'])
-            self.Z = sp.csc_matrix(modeldef['Z'])
+            ne = self.X.shape[0]
+            if len(modeldef['F'])>0:
+                self.F = sp.csc_matrix(modeldef['F'])
+            else:
+                self.F = sp.csc_matrix(np.zeros((ne,0),dtype=np.int64))
+                
+            if len(modeldef['Z'])>0:
+                self.Z = sp.csc_matrix(modeldef['Z'])
+            else:
+                self.Z = sp.csc_matrix(np.zeros((ne,0),dtype=np.int64))
 
             if modeldef.has_key('x'):
                 self.x = modeldef['x']
@@ -51,13 +63,19 @@ class DiagnosisModel(object):
                 self.z = map(lambda x:"z"+np.str(x+1),np.arange(0,self.Z.shape[1]))
 
             self.e = map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne()))
-            self.type = modeldef['type']
+            self.modelType = modeldef['type']
         else:
             print 'Model definition type ' + modeldef['type'] + ' is not supported (yet)'
 
         if modeldef['type'] is 'Symbolic':
             self.syme = np.array(_ToEquations(modeldef['rels']))
 
+        self.P = np.arange(0,len(self.x))
+        self.Pfault = []
+
+    def copy(self):
+        return copy.deepcopy(self)
+    
     def ne(self):
         return self.X.shape[0]
 
@@ -211,6 +229,93 @@ class DiagnosisModel(object):
             labelVars = True;
         smplot.PlotMatching(self, Gamma, verbose=labelVars)
         
+    def PossibleSensorLocations(self, x=-1):
+
+        if x==-1:
+            self.P = np.arange(0,len(self.x)) # Assume all possible sensor locations
+        else:
+            if issubclass(type(x[0]),str): # list of strings
+                self.P = np.array([self.x.index(xi) for xi in x if xi in self.x])
+            else:
+                self.P = x.copy()
+
+    def SensorLocationsWithFaults(self, x=[]):
+        if len(x)>0:
+            if issubclass(type(x[0]),str): # list of strings
+                self.Pfault = np.array([self.x.index(xi) for xi in x if xi in self.x])
+            else:
+                self.Pfault = x.copy()
+        else:
+            self.Pfault = []
+
+    def SensorPlacementIsolability(self):
+        return sensplace.SensorPlacementIsolability(self)
+
+    def SensorPlacementDetectability(self):
+        return sensplace.SensorPlacementDetectability(self)
+
+    def AddSensors(self,sensors,name=[],fault=[]):
+        if issubclass(type(sensors[0]),str): # list of strings, convert to indices into self.x
+            s = np.array([self.x.index(xi) for xi in sensors if xi in self.x])
+        else:
+            s = sensors
+            
+        ns = len(s)
+        nx = self.X.shape[1]
+        nz = self.Z.shape[1]
+        nf = self.F.shape[1]
+        ne = self.X.shape[0]
+        Xs = np.zeros((ns,nx),np.int64)
+        Fs = np.zeros((ns,nf),np.int64)
+        Zs = np.zeros((ns,nz+ns),np.int64)
+    
+        fs = np.zeros(ns).astype(np.bool)
+        for sIdx, si in enumerate(s):
+            Xs[sIdx,si] = 1
+            Zs[sIdx,sIdx+nz] = 1
+            if si in self.Pfault:
+                nf = nf+1
+                Fs = np.hstack((Fs,np.zeros((ns,1),dtype=np.int64))) # Add column for new fault
+                Fs[sIdx,-1] = 1 # Add fault
+                fs[sIdx] = True
+            else:
+                Fs[sIdx,:] = np.zeros((1,nf))
+    
+        self.X = sp.csc_matrix(np.vstack((self.X.toarray(),Xs)))
+        self.Z = np.hstack((self.Z.toarray(),np.zeros((ne,ns),dtype=np.int64)))
+        self.Z = sp.csc_matrix(np.vstack((self.Z,Zs)))
+        self.F = self.F.toarray()
+        if np.sum(fs)>0:
+            self.F = np.hstack((self.F,np.zeros((ne,np.sum(fs)),dtype=np.int64)))
+        self.F = sp.csc_matrix(np.vstack((self.F,Fs)))
+    
+        self.e = self.e + map(lambda x:self.vGen.NewE(),s)    
+        
+        for idx,zi in enumerate(s):
+            if len(name)==0:
+                znum = np.sum(np.array(s)[0:idx] == s[idx])+1
+                if znum>1:
+                    zName = "z" + str(znum) + self.x[zi]
+                else:
+                    zName = "z" + self.x[zi]
+            else:
+                zName = name[idx]
+            self.z = self.z + [zName]
+                
+            if fs[idx]:
+                if len(fault)==0:
+                    fName = 'f' + zName
+                else:
+                    fName = fault[idx]
+                self.f = self.f + [fName]
+                
+            if self.modelType is 'Symbolic':
+                if fs[idx]:
+                    rel = sym.Eq(sym.symbols(zName),sym.symbols(self.x[zi])+sym.symbols(fName))
+                else:
+                    rel = sym.Eq(sym.symbols(zName),sym.symbols(self.x[zi]))
+                self.syme = np.concatenate((self.syme,[rel]))
+
     def DetectabilityAnalysis(self):
         dm = dmperm.GetDMParts(self.X)
         df = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] in dm.Mp.row]

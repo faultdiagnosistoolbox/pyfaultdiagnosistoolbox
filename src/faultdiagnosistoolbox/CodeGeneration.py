@@ -390,7 +390,7 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
     f.close()
 
 def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python', external=[]):
-    if not model.type is 'Symbolic':
+    if not model.modelType is 'Symbolic':
         print "Code generation only possible for symbolic models"
         return []
     

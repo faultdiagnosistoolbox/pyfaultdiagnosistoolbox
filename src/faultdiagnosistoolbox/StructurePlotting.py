@@ -14,7 +14,7 @@ def PlotModel(model, **options):
     X = model.X.todense()
     F = model.F.todense()
     Z = model.Z.todense()
-
+    
     plt.spy(np.concatenate((X==1,np.zeros(F.shape),np.zeros(Z.shape)),axis=1),markersize=4,marker="o", color="b")
     plt.spy(np.concatenate((np.zeros(X.shape),F,np.zeros(Z.shape)),axis=1),markersize=4,marker="o",color="r")
     plt.spy(np.concatenate((np.zeros(X.shape),np.zeros(F.shape),Z),axis=1),markersize=4,marker="o",color="k")
@@ -27,7 +27,9 @@ def PlotModel(model, **options):
 
     # Plot axis ticks
     if labelVars:
-        plt.xticks(np.arange(0,model.nx()+model.nf()+model.nz()),model.x + model.f + model.z)
+        plt.xticks(np.arange(0,model.nx()+model.nf()+model.nz()),model.x + model.f + model.z, rotation='vertical')
+        bottomMargin = 0.1 + (np.max(map(lambda v:len(v),model.x))-3)*0.1/6 # ad-hoc expression
+        plt.subplots_adjust(bottom=bottomMargin)
         plt.yticks(np.arange(0,model.X.shape[0]),model.e)
 
     # Plot variable set divisors
