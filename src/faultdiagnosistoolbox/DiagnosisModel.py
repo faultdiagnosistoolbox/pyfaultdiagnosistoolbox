@@ -9,6 +9,7 @@ import StructurePlotting as smplot
 import CodeGeneration as codegen
 import SensorPlacement as sensplace
 from VarIdGen import VarIdGen
+import sys
 
 class DiagnosisModel(object):
     def __init__(self, modeldef, name='') : 
@@ -400,7 +401,91 @@ class DiagnosisModel(object):
 
     def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, external=[], api='Python'):
         codegen.SeqResGen(self, Gamma, resEq, name, diffres=diffres, language=language, batch=batch, external=external)
-    
+
+    def Lint(self):
+        war = False
+        err = False
+
+        dm = dmperm.GetDMParts(self.X)
+
+        if len(self.name)>0:
+            print 'Model: ' + self.name
+        else:
+            print "Model information"
+
+        sys.stdout.write("\n  Type:" + self.modelType)
+
+        nd = np.sum(self.X==3)
+        if nd>0:
+            sys.stdout.write(", dynamic\n")
+        else:
+            sys.stdout.write(", static\n")
+
+        print '\n  Variables and equations'
+        print '    ' + str(self.nx()) + ' unknown variables'
+        print '    ' + str(self.nz()) + ' known variables'
+        print '    ' + str(self.nf()) + ' fault variables'
+        print '    ' + str(self.ne()) + ' equations, including ' + str(nd) + ' differential constraints'
+        print '\n  Degree of redundancy: ' + str(self.Redundancy())
+
+        if self.Redundancy()>0 and len(self.f)>0:
+            print '  Degree of redundancy of MTES set: ' + str(self.MTESRedundancy())
+        print '\n'
+
+
+        if self.ne() != self.F.shape[0] or self.ne() != self.Z.shape[0]:
+            print 'Error! Inconsistent numnber of rows in incidence matrices'
+            err = err+1
+
+        if self.nx() != len(self.x):
+            print 'Error! Inconsistent number of unknown variables'
+            err = err+1
+
+        if self.nz() != len(self.z):
+            print 'Error! Inconsistent number of known variables'
+            err = err+1
+
+        if self.nf() != len(self.f):
+            print 'Error! Inconsistent number of fault variables'
+            err = err+1
+
+        if self.ne()!= len(self.e):
+            print 'Error! Inconsistent number of equations'
+            err = err+1
+
+        if len([v for v in self.P if not v in np.arange(0,self.nx())])>0:
+            print 'Error! Possible sensor locations outside set of unknown variables'
+            err = err+1
+
+        if len([v for v in self.Pfault if not v in np.arange(0,self.nx())])>0:
+            print 'Error! Possible sensor locations with faults outside set of unknown variables'
+            err = err+1
+
+        if np.any(np.sum(self.F>0,axis=0)>1):
+            print 'Error! Fault variables can only appear in 1 equation, rewrite model with intermediate variables'
+            err = err+1;
+
+        xIdx = np.where(np.all(self.X.toarray()==0,axis=0))[0]
+        for ii in xIdx:
+            print 'Warning! Variable ' + self.x[ii] + ' is not included in model'
+            war = war + 1;
+
+        zIdx = np.where(np.all(self.Z.toarray()==0,axis=0))[0]
+        for ii in zIdx:
+            print 'Warning! Variable ' + self.z[ii] + ' is not included in model'
+            war = war + 1;
+
+        fIdx = np.where(np.all(self.F.toarray()==0,axis=0))[0]
+        for ii in fIdx:
+            print 'Warning! Variable ' + self.f[ii] + ' is not included in model'
+            war = war + 1;
+        if self.IsUnderdetermined():
+            print 'Warning! Model is underdetermined'
+            war = war + 1;
+
+        print '  Model validation finished with %d errors and %d warnings.' % (err, war)
+
+        
 def DiffConstraint(dvar,ivar):
     return [dvar, ivar, "diff"];
 
