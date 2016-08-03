@@ -29,7 +29,7 @@ def PlotModel(model, **options):
     if labelVars:
         plt.xticks(np.arange(0,model.nx()+model.nf()+model.nz()),model.x + model.f + model.z, rotation='vertical')
         bottomMargin = 0.1 + (np.max(map(lambda v:len(v),model.x))-3)*0.1/6 # ad-hoc expression
-        plt.subplots_adjust(bottom=bottomMargin)
+        plt.subplots_adjust(bottom=np.max([0.1,bottomMargin]))
         plt.yticks(np.arange(0,model.X.shape[0]),model.e)
 
     # Plot variable set divisors
@@ -72,7 +72,9 @@ def PlotMatching( model, Gamma, **options):
     
     # Plot axis ticks
     if labelVars:
-        plt.xticks(np.arange(0,len(q)), [model.x[xi] for xi in q])
+        bottomMargin = 0.1 + (np.max(map(lambda v:len(v),[model.x[xi] for xi in q]))-3)*0.1/6 # ad-hoc expression
+        plt.xticks(np.arange(0,len(q)), [model.x[xi] for xi in q],rotation='vertical')
+        plt.subplots_adjust(bottom=np.max([0.1,bottomMargin]))        
         plt.yticks(np.arange(0,len(p)), [model.e[ei] for ei in p])
     else:
         plt.xticks(np.arange(0,len(q)))
@@ -218,7 +220,13 @@ def PlotDM(model, **options) :
 
     # Plot axis ticks
     if labelVars:
-        plt.xticks(np.arange(0,X.shape[1]),[model.x[xidx] for xidx in dm.colp])
+        plt.xticks(np.arange(0,X.shape[1]),[model.x[xidx] for xidx in dm.colp], rotation='vertical')
+
+        bottomMargin = 0.1 + (np.max(map(lambda v:len(v),[model.x[xidx] for xidx in dm.colp]))-3)*0.1/6 # ad-hoc expression
+        plt.subplots_adjust(bottom=np.max([0.1,bottomMargin]))
+        plt.yticks(np.arange(0,model.X.shape[0]),model.e)
+
+
         plt.yticks(np.arange(0,X.shape[0]),[model.e[eidx] for eidx in dm.rowp])
 
     # Change plot range
