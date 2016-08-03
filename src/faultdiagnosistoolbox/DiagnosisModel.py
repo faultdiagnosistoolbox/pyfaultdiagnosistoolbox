@@ -19,12 +19,11 @@ class DiagnosisModel(object):
         self.x = []
         self.f = []
         self.z = []
-        self.rels = []
         self.name = name
         self.parameters = []
 
         self.vGen = VarIdGen()
-        
+        self.modelType = 'Structural'
         if modeldef['type'] is 'VarStruc' or modeldef['type'] is 'Symbolic':
             self.X = _ModelStructure( modeldef['rels'], modeldef['x'])
             self.x = modeldef['x']
@@ -33,7 +32,9 @@ class DiagnosisModel(object):
             self.Z = _ModelStructure( modeldef['rels'], modeldef['z'])
             self.z = modeldef['z']
             self.e = map(lambda x:self.vGen.NewE(),np.arange(0,self.ne()))
-            self.modelType = modeldef['type']
+
+            if modeldef['type'] is 'Symbolic':
+                self.modelType = 'Symbolic'
 
             if 'parameters' in modeldef:
                 self.parameters = modeldef['parameters']
@@ -64,7 +65,6 @@ class DiagnosisModel(object):
                 self.z = map(lambda x:"z"+np.str(x+1),np.arange(0,self.Z.shape[1]))
 
             self.e = map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne()))
-            self.modelType = modeldef['type']
         else:
             print 'Model definition type ' + modeldef['type'] + ' is not supported (yet)'
 
@@ -95,8 +95,8 @@ class DiagnosisModel(object):
     def MSO(self):
         return dmperm.MSO(self.X)
 
-    def sprank(self):
-        return dmperm.sprank(self.X)
+    def srank(self):
+        return dmperm.srank(self.X)
   
     def IsPSO( self, *args ):
         if len(args)>0:
@@ -106,7 +106,36 @@ class DiagnosisModel(object):
         
         dm = dmperm.GetDMParts(self.X[eq,:])    
         return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
-  
+
+    def Structural(self):
+        self.modelType = 'Structural'
+        self.syme = []
+
+    def LumpDynamics(self):
+        if self.modelType is 'Symbolic':
+            self.Structural()
+
+        X = self.X.toarray()
+        F = self.F.toarray()
+        Z = self.Z.toarray()
+
+        dvars = np.where(np.any(X==3,axis=0))[0]
+        diffEq = self.DifferentialConstraints()
+        for e in diffEq:
+            iv = np.where(X[e,:]==2)[0][0]
+            dv = np.where(X[e,:]==3)[0][0]
+            X[:,iv] = np.logical_or(X[:,iv]>0, X[:,dv]>0).astype(np.int64)
+
+        self.X = sp.csc_matrix(np.delete(np.delete(X,dvars,axis=1), diffEq, axis=0))
+        self.x = [self.x[xi] for xi in np.arange(0,len(self.x)) if not xi in dvars]
+        self.F = sp.csc_matrix(np.delete(F,diffEq,axis=0))
+        self.Z = sp.csc_matrix(np.delete(Z,diffEq,axis=0))
+        self.e = [self.e[ei] for ei in np.arange(0,len(self.e)) if not ei in diffEq]
+        self.parameters = []
+        self.syme = []
+        self.Pfault = []
+        self.P = np.arange(0,len(self.x))
+        
     def IsHighIndex(self, **opts):
         if opts.has_key('eq'):
             eq = opts['eq']
@@ -124,6 +153,9 @@ class DiagnosisModel(object):
     def IsUnderdetermined(self):
         dm = dmperm.GetDMParts(self.X)
         return len(dm.Mm.row)>0
+
+    def DifferentialConstraints(self):
+        return np.where(np.any(self.X.toarray()==2,axis=1))[0]
 
     def FSM(self, eqs_sets, plot=False ):
         r=np.zeros((len(eqs_sets),self.F.shape[1]),dtype=np.int64)
@@ -175,6 +207,13 @@ class DiagnosisModel(object):
             res = np.array(map(lambda c: c is causality or c is 'algebraic', res))
         return res
     
+    def MeasurementEquations(self, m):
+        mIdx = np.array([self.z.index(zi) for zi in m if zi in self.z])
+        if len(mIdx)>0:
+            return np.where(np.any(self.Z.toarray()[:,mIdx],axis=1))[0]
+        else:
+            return []
+
     def IsDynamic(self):
         return np.any(self.X.todense()==2)
 
@@ -231,7 +270,6 @@ class DiagnosisModel(object):
         smplot.PlotMatching(self, Gamma, verbose=labelVars)
         
     def PossibleSensorLocations(self, x=-1):
-
         if x==-1:
             self.P = np.arange(0,len(self.x)) # Assume all possible sensor locations
         else:

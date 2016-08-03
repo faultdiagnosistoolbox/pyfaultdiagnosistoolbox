@@ -17,7 +17,7 @@ def dmperm(A):
         return sa.dmperm_internal(CSCDict(A))
     else:
         return sa.dmperm_internal(CSCDict(sp.csc_matrix(A)))
-def sprank(A):
+def srank(A):
     _,_,_,_,rr,_ = dmperm(A)
     return rr[3]
 
@@ -165,7 +165,7 @@ def IsHighIndex(X, **opts):
     col_2 = [c for c in col_2 if np.any(X1[:,c].todense(),axis=0)]
     Xhod = X1[row_a,:][:,np.concatenate((col_2, col_d1))]
     
-    return sprank(Xhod)<Xhod.shape[1]
+    return srank(Xhod)<Xhod.shape[1]
 
 def IsLowIndex(X, **opts):
     if opts.has_key('eq'):
