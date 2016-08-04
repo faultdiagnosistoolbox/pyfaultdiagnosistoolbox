@@ -297,7 +297,7 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
         f.write(tab + 'Causality: ' + resGenCausality + '\n')
         f.write('\n')
         
-        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:].todense()),axis=0)]
+        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:]),axis=0)]
         f.write(tab + 'Structurally sensitive to faults: ')
         for fault in fSens[:-1]:
             f.write(fault + ', ')
@@ -344,7 +344,7 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
         f.write(tab + 'Causality: ' + resGenCausality + '\n')
         f.write('\n')
         
-        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:].todense()),axis=0)]
+        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:]),axis=0)]
         f.write(tab + 'Structurally sensitive to faults: ')
         for fault in fSens[:-1]:
             f.write(fault + ', ')
@@ -505,7 +505,7 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
         f.write('// Causality: ' + resGenCausality + '\n')
         f.write('//\n')
         
-        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:].todense()),axis=0)]
+        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:]),axis=0)]
         f.write('// Structurally sensitive to faults: ')
         for fault in fSens[:-1]:
             f.write(fault + ', ')
@@ -668,7 +668,7 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
         f.write('// Causality: ' + resGenCausality + '\n')
         f.write('//\n')
         
-        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:].todense()),axis=0)]
+        fSens = np.array(model.f)[np.any(np.array(model.F[resGenEqs,:]),axis=0)]
         f.write('// Structurally sensitive to faults: ')
         for fault in fSens[:-1]:
             f.write(fault + ', ')

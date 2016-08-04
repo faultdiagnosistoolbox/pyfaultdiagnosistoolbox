@@ -222,7 +222,8 @@ def Mplus( X, causality='mixed' ):
     def CGX(G,X):
         if len(X)==0:
             return []
-        idx = np.unique([e[0] for e in np.argwhere(G[2][:,X]>0)])
+        xIdx = [np.where(G[1]==ii)[0][0] for ii in X]
+        idx = np.unique([e[0] for e in np.argwhere(G[2][:,xIdx]>0)])
         if len(idx)==0:
             return []
         
@@ -243,7 +244,7 @@ def Mplus( X, causality='mixed' ):
         x = np.array([xi for xi in x if not xi in X])
         return (c,x,A)
     
-    Xc = np.array(X.copy().toarray())
+    Xc = np.array(X.copy())
     # Represent graph as a tuple G=(constraints,variables, adjacency matrix)
     G = (np.arange(0,Xc.shape[0], dtype=np.int64), np.arange(0,Xc.shape[1], dtype=np.int64), Xc)
 

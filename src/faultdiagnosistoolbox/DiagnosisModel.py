@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import scipy.sparse as sp
 import sympy as sym
 import copy
 import dmperm as dmperm
@@ -39,17 +38,17 @@ class DiagnosisModel(object):
             if 'parameters' in modeldef:
                 self.parameters = modeldef['parameters']
         elif modeldef['type'] is 'MatrixStruc':
-            self.X = sp.csc_matrix(modeldef['X'])
+            self.X = np.array(modeldef['X'],dtype=np.int64)
             ne = self.X.shape[0]
             if len(modeldef['F'])>0:
-                self.F = sp.csc_matrix(modeldef['F'])
+                self.F = np.array(modeldef['F'],dtype=np.int64)
             else:
-                self.F = sp.csc_matrix(np.zeros((ne,0),dtype=np.int64))
+                self.F = np.zeros((ne,0),dtype=np.int64)
                 
             if len(modeldef['Z'])>0:
-                self.Z = sp.csc_matrix(modeldef['Z'])
+                self.Z = np.array(modeldef['Z'], dtype=np.int64)
             else:
-                self.Z = sp.csc_matrix(np.zeros((ne,0),dtype=np.int64))
+                self.Z = np.zeros((ne,0),dtype=np.int64)
 
             if modeldef.has_key('x'):
                 self.x = modeldef['x']
@@ -115,9 +114,9 @@ class DiagnosisModel(object):
         if self.modelType is 'Symbolic':
             self.Structural()
 
-        X = self.X.toarray()
-        F = self.F.toarray()
-        Z = self.Z.toarray()
+        X = self.X
+        F = self.F
+        Z = self.Z
 
         dvars = np.where(np.any(X==3,axis=0))[0]
         diffEq = self.DifferentialConstraints()
@@ -126,10 +125,10 @@ class DiagnosisModel(object):
             dv = np.where(X[e,:]==3)[0][0]
             X[:,iv] = np.logical_or(X[:,iv]>0, X[:,dv]>0).astype(np.int64)
 
-        self.X = sp.csc_matrix(np.delete(np.delete(X,dvars,axis=1), diffEq, axis=0))
+        self.X = np.delete(np.delete(X,dvars,axis=1), diffEq, axis=0)
         self.x = [self.x[xi] for xi in np.arange(0,len(self.x)) if not xi in dvars]
-        self.F = sp.csc_matrix(np.delete(F,diffEq,axis=0))
-        self.Z = sp.csc_matrix(np.delete(Z,diffEq,axis=0))
+        self.F = np.delete(F,diffEq,axis=0)
+        self.Z = np.delete(Z,diffEq,axis=0)
         self.e = [self.e[ei] for ei in np.arange(0,len(self.e)) if not ei in diffEq]
         self.parameters = []
         self.syme = []
@@ -141,26 +140,26 @@ class DiagnosisModel(object):
             eq = opts['eq']
         else:
             eq = np.arange(0,self.X.shape[0])
-        return dmperm.IsHighIndex(self.X.toarray(),eq=eq)
+        return dmperm.IsHighIndex(self.X,eq=eq)
 
     def IsLowIndex(self, **opts):
         if opts.has_key('eq'):
             eq = opts['eq']
         else:
             eq = np.arange(0,self.X.shape[0])
-        return dmperm.IsLowIndex(self.X.toarray(),eq=eq)
+        return dmperm.IsLowIndex(self.X,eq=eq)
 
     def IsUnderdetermined(self):
         dm = dmperm.GetDMParts(self.X)
         return len(dm.Mm.row)>0
 
     def DifferentialConstraints(self):
-        return np.where(np.any(self.X.toarray()==2,axis=1))[0]
+        return np.where(np.any(self.X==2,axis=1))[0]
 
     def FSM(self, eqs_sets, plot=False ):
         r=np.zeros((len(eqs_sets),self.F.shape[1]),dtype=np.int64)
         for idx,eqs in enumerate(eqs_sets):
-            r[idx,:] = np.any(self.F[eqs,:].todense(),axis=0)
+            r[idx,:] = np.any(self.F[eqs,:],axis=0)
 
         if plot:
             plt.spy(r, markersize=10, marker='o')
@@ -171,7 +170,7 @@ class DiagnosisModel(object):
         return r
 
     def Matching(self,eqs):
-        return match.Matching(self.X.todense(),np.array(eqs))
+        return match.Matching(self.X,np.array(eqs))
 
     def MSOCausalitySweep(self, mso, diffres='int', causality=''):
         def IsDifferentialStructure( X, eq ):
@@ -182,7 +181,7 @@ class DiagnosisModel(object):
         if (causality is 'int') and (not diffres is 'int'):
             diffres = 'int'
         res = []
-        X = self.X.todense()
+        X = self.X
         for red in mso:
             m0 = np.sort([e for e in mso if e != red])
             Gamma = self.Matching(m0)
@@ -210,12 +209,12 @@ class DiagnosisModel(object):
     def MeasurementEquations(self, m):
         mIdx = np.array([self.z.index(zi) for zi in m if zi in self.z])
         if len(mIdx)>0:
-            return np.where(np.any(self.Z.toarray()[:,mIdx],axis=1))[0]
+            return np.where(np.any(self.Z[:,mIdx],axis=1))[0]
         else:
             return []
 
     def IsDynamic(self):
-        return np.any(self.X.todense()==2)
+        return np.any(self.X==2)
 
     def IsStatic(self):
         return not self.IsDynamic()
@@ -228,7 +227,7 @@ class DiagnosisModel(object):
         return len(dm.Mp.row)-len(dm.Mp.col)
 
     def MTESRedundancy( self ):
-        eqs = np.argwhere(np.any(self.F.todense(),axis=1))[:,0]
+        eqs = np.argwhere(np.any(self.F,axis=1))[:,0]
         return self.Redundancy(eqs) + 1
     
     def PlotDM(self, **options) :
@@ -320,13 +319,12 @@ class DiagnosisModel(object):
             else:
                 Fs[sIdx,:] = np.zeros((1,nf))
     
-        self.X = sp.csc_matrix(np.vstack((self.X.toarray(),Xs)))
-        self.Z = np.hstack((self.Z.toarray(),np.zeros((ne,ns),dtype=np.int64)))
-        self.Z = sp.csc_matrix(np.vstack((self.Z,Zs)))
-        self.F = self.F.toarray()
+        self.X = np.vstack((self.X,Xs))
+        self.Z = np.hstack((self.Z,np.zeros((ne,ns),dtype=np.int64)))
+        self.Z = np.vstack((self.Z,Zs))
         if np.sum(fs)>0:
             self.F = np.hstack((self.F,np.zeros((ne,np.sum(fs)),dtype=np.int64)))
-        self.F = sp.csc_matrix(np.vstack((self.F,Fs)))
+        self.F = np.vstack((self.F,Fs))
     
         self.e = self.e + map(lambda x:self.vGen.NewE(),s)    
         
@@ -380,11 +378,11 @@ class DiagnosisModel(object):
         im = np.ones((nf,nf),dtype=np.int64)
         for fi in np.arange(0,nf):
             # Decouple fi
-            fieqs = [x[0] for x in np.argwhere(self.F[:,fi].todense()==0)]
+            fieqs = [x[0] for x in np.argwhere(self.F[:,fi]==0)]
             X = self.X[fieqs,:]
             plusRow = MplusCausal(X)
             fisolrows = [fieqs[ei] for ei in plusRow]
-            idx = [fj for fj in np.arange(0,nf) if np.any(self.F[fisolrows,:].todense(),axis=0)[(0,fj)]]
+            idx = [fj for fj in np.arange(0,nf) if np.any(self.F[fisolrows,:],axis=0)[fj]]
             im[idx,fi]=0;
 
         if plot:
@@ -503,17 +501,17 @@ class DiagnosisModel(object):
             print 'Error! Fault variables can only appear in 1 equation, rewrite model with intermediate variables'
             err = err+1;
 
-        xIdx = np.where(np.all(self.X.toarray()==0,axis=0))[0]
+        xIdx = np.where(np.all(self.X==0,axis=0))[0]
         for ii in xIdx:
             print 'Warning! Variable ' + self.x[ii] + ' is not included in model'
             war = war + 1;
 
-        zIdx = np.where(np.all(self.Z.toarray()==0,axis=0))[0]
+        zIdx = np.where(np.all(self.Z==0,axis=0))[0]
         for ii in zIdx:
             print 'Warning! Variable ' + self.z[ii] + ' is not included in model'
             war = war + 1;
 
-        fIdx = np.where(np.all(self.F.toarray()==0,axis=0))[0]
+        fIdx = np.where(np.all(self.F==0,axis=0))[0]
         for ii in fIdx:
             print 'Warning! Variable ' + self.f[ii] + ' is not included in model'
             war = war + 1;
@@ -541,7 +539,7 @@ def _ModelStructure(rels,x) :
                 X[k,ivIdx] = 2;
         else:        
             X[k, _RelModelStructure(rel, x)]=1
-    return sp.csc_matrix(X)
+    return X
 
 def _RelModelStructure(rel,x):
     if IsSymbolic(rel):

@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.sparse as sp
 import dmperm
 from MHS import MHS
 
@@ -26,10 +25,10 @@ def SensorPlacementDetectability(model,**options):
         return
     
     dm = dmperm.GetDMParts(model.X)
-    ef = map(lambda fi: np.where(model.F[:,fi].todense())[0][0], fdet)
+    ef = map(lambda fi: np.where(model.F[:,fi])[0][0], fdet)
     nondetIdx = [eIdx for eIdx in np.arange(0,len(ef)) if ef[eIdx] in dm.M0eqs]
     if len(nondetIdx)>0:
-        ds = DetectabilitySets( model.X.toarray(), model.F[:,fdet[nondetIdx]].toarray(), model.P )
+        ds = DetectabilitySets( model.X, model.F[:,fdet[nondetIdx]], model.P )
         sensSets = MHS( ds )
     else:
         sensSets = []
@@ -150,8 +149,8 @@ def SensorPlacementIsolability(model):
     if len(spDet)>0:
         for s in spDet:
             Xs,Fs,fs = NewSensorEqs(s,model.X.shape[1],model.F.shape[1],Pfault)
-            X = model.X.toarray()
-            F = np.hstack((model.F.toarray(),np.zeros((model.F.shape[0],len(fs)),dtype=np.int64)))
+            X = model.X
+            F = np.hstack((model.F,np.zeros((model.F.shape[0],len(fs)),dtype=np.int64)))
             X = np.vstack((X,Xs))
             F = np.vstack((F,Fs))
             P = model.P
@@ -165,8 +164,8 @@ def SensorPlacementIsolability(model):
             sIsolIdx = map(lambda m: np.sort(np.concatenate((m,s))), mhs_s)
             sIdx = sIdx + sIsolIdx
     else:
-        X = model.X.toarray()
-        F = model.F.toarray()
+        X = model.X
+        F = model.F
         P = model.P
 
         detSets = []

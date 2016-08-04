@@ -11,9 +11,9 @@ def PlotModel(model, **options):
     elif model.nx()+model.nf()+model.nz()<40:
         labelVars = True;
 
-    X = model.X.todense()
-    F = model.F.todense()
-    Z = model.Z.todense()
+    X = model.X
+    F = model.F
+    Z = model.Z
     
     plt.spy(np.concatenate((X==1,np.zeros(F.shape),np.zeros(Z.shape)),axis=1),markersize=4,marker="o", color="b")
     plt.spy(np.concatenate((np.zeros(X.shape),F,np.zeros(Z.shape)),axis=1),markersize=4,marker="o",color="r")
@@ -229,7 +229,7 @@ def PlotDM(model, **options) :
         nVars = len(dm.colp)
         for ff in np.unique(fPlotRowIdx):
             fstr=''
-            faultlist = [model.f[x[1]] for x in np.argwhere(model.F[dm.rowp[ff],:])]
+            faultlist = [model.f[x] for x in np.argwhere(model.F[dm.rowp[ff],:])[0]]
             for fvidx,fv in enumerate(faultlist):
                 if fvidx==0:
                     fstr = fv
@@ -255,3 +255,4 @@ def PlotDM(model, **options) :
     plt.gca().xaxis.tick_bottom()
     plt.xlabel('Variables')
     plt.ylabel('Equations')
+

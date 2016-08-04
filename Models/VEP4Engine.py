@@ -293,4 +293,4 @@ modeldef['rels'] = [
     -y_T_amb + T_amb,               # Ambient temperature
     -y_p_amb + p_amb]               # Ambient pressure
 
-model = fdt.DiagnosisModel(modeldef, name='VEP4 model');
+model = fdt.DiagnosisModel(modeldef, name='VEP4');

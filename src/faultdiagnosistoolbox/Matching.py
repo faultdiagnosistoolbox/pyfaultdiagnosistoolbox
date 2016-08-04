@@ -1,6 +1,5 @@
 import numpy as np
 import faultdiagnosistoolbox.dmperm as dmperm
-import scipy.sparse as sp
 
 class HallComponentMatching:
     matchType = ''
@@ -20,10 +19,7 @@ class Matching:
     matching = []
     
     def __init__(self, Xmodel, eqs_in):
-        if sp.issparse(Xmodel):
-            X=Xmodel.copy().todense()
-        else:
-            X = Xmodel.copy()
+        X = Xmodel.copy()
 
         eqs = np.array(eqs_in).copy()
         X=X[eqs,:]
