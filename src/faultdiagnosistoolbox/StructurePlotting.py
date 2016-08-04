@@ -19,11 +19,18 @@ def PlotModel(model, **options):
     plt.spy(np.concatenate((np.zeros(X.shape),F,np.zeros(Z.shape)),axis=1),markersize=4,marker="o",color="r")
     plt.spy(np.concatenate((np.zeros(X.shape),np.zeros(F.shape),Z),axis=1),markersize=4,marker="o",color="k")
 
+    if model.nx()<50:
+        fSize = 12
+    elif model.nx() > 50 and model.nx() < 75:
+        fSize = 10
+    else:
+        fSize = 8
+        
     for idx,val in enumerate(np.argwhere(X==2)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'I',color="b")
+        plt.text(val[1]-0.06,val[0]+0.15, 'I', color="b", fontsize=fSize)
   
     for idx,val in enumerate(np.argwhere(X==3)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'D',color="b")
+        plt.text(val[1]-0.06,val[0]+0.15, 'D', color="b", fontsize=fSize)
 
     # Plot axis ticks
     if labelVars:
@@ -64,11 +71,18 @@ def PlotMatching( model, Gamma, **options):
         labelVars = True;
 
     # Plot structure
+    if model.nx()<50:
+        fSize = 12
+    elif model.nx() > 50 and model.nx() < 75:
+        fSize = 10
+    else:
+        fSize = 8
+
     plt.spy(Xm==1,markersize=4,marker="o", color="b")
     for idx,val in enumerate(np.argwhere(Xm==3)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'D',color="b")
+        plt.text(val[1]-0.06,val[0]+0.15, 'D', color="b", fontsize=fSize)
         for idx,val in enumerate(np.argwhere(Xm==2)):
-            plt.text(val[1]-0.06,val[0]+0.15, 'I',color="b")
+            plt.text(val[1]-0.06,val[0]+0.15, 'I', color="b", fontsize=fSize)
     
     # Plot axis ticks
     if labelVars:
@@ -143,12 +157,18 @@ def PlotDM(model, **options) :
         pcolstart = len(dm.colp)-len(P['q']);    
         dm.colp[pcolstart:] = colp;    
 
+    if model.nx()<50:
+        fSize = 12
+    elif model.nx() > 50 and model.nx() < 75:
+        fSize = 10
+    else:
+        fSize = 8
     plt.spy(X[dm.rowp,:][:,dm.colp]==1,markersize=4, marker="o")
     for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==3)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'D',color="b")
+        plt.text(val[1]-0.06,val[0]+0.15, 'D', color="b", fontsize=fSize)
   
     for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==2)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'I',color="b")
+        plt.text(val[1]-0.06,val[0]+0.15, 'I', color="b", fontsize=fSize)
     
     if labelVars:
         plt.xticks(np.arange(0,X.shape[1]),dm.colp)

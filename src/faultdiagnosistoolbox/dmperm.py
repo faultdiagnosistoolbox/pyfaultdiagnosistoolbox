@@ -149,23 +149,37 @@ def IsPSO( X, *args ):
     dm = GetDMParts(X[eq,:])    
     return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
 
+#def IsHighIndex(X, **opts):
+#    if opts.has_key('eq'):
+#        eq = opts['eq']
+#    else:
+#        eq = np.arange(0,X.shape[0])
+#    X1 = X[eq,:]
+#    x1 = np.argwhere(X1==3)
+#    row_d = x1[:,0]
+#    row_a = np.array([r for r in np.arange(0,X1.shape[0]) if not r in row_d])
+#    col_d1 = x1[:,1]
+#    col_1 = np.argwhere(X1[row_d,:]==2)[:,1]
+#    col_2 = np.array([c for c in range(0,X1.shape[1]) if not (c in col_d1 or c in col_1)])
+#    col_2 = [c for c in col_2 if np.any(X1[:,c],axis=0)]
+#    Xhod = X1[row_a,:][:,np.concatenate((col_2, col_d1))]
+#    
+#    return srank(Xhod)<Xhod.shape[1]
+
 def IsHighIndex(X, **opts):
     if opts.has_key('eq'):
         eq = opts['eq']
     else:
         eq = np.arange(0,X.shape[0])
-    X1 = copy.deepcopy(X)
-    X1 = X1[eq,:]
-    x1 = np.argwhere(X1==3)
-    row_d = x1[:,0]
-    row_a = np.array([r for r in np.arange(0,X1.shape[0]) if not r in row_d])
-    col_d1 = x1[:,1]
-    col_1 = np.argwhere(X1[row_d,:]==2)[:,1]
-    col_2 = np.array([c for c in range(0,X1.shape[1]) if not (c in col_d1 or c in col_1)])
-    col_2 = [c for c in col_2 if np.any(X1[:,c].todense(),axis=0)]
-    Xhod = X1[row_a,:][:,np.concatenate((col_2, col_d1))]
+    X1 = X[eq,:]
     
-    return srank(Xhod)<Xhod.shape[1]
+    col_d1 = np.any(X1==3,axis=0)
+    row_a = np.all(X1<=1,axis=1)
+    row_d = np.any(X1>1,axis=1)
+    col_2 = np.all(X1[row_d,:]==0,axis=0)
+    Xhod = X1[row_a,:][:,np.logical_or(col_d1,col_2)]
+    nz = sum(np.all(Xhod==0,axis=0))
+    return srank(Xhod)<Xhod.shape[1]-nz
 
 def IsLowIndex(X, **opts):
     if opts.has_key('eq'):
@@ -229,7 +243,7 @@ def Mplus( X, causality='mixed' ):
         x = np.array([xi for xi in x if not xi in X])
         return (c,x,A)
     
-    Xc = np.array(X.copy().todense())
+    Xc = np.array(X.copy().toarray())
     # Represent graph as a tuple G=(constraints,variables, adjacency matrix)
     G = (np.arange(0,Xc.shape[0], dtype=np.int64), np.arange(0,Xc.shape[1], dtype=np.int64), Xc)
 

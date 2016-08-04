@@ -141,14 +141,14 @@ class DiagnosisModel(object):
             eq = opts['eq']
         else:
             eq = np.arange(0,self.X.shape[0])
-        return dmperm.IsHighIndex(self.X,eq=eq)
+        return dmperm.IsHighIndex(self.X.toarray(),eq=eq)
 
     def IsLowIndex(self, **opts):
         if opts.has_key('eq'):
             eq = opts['eq']
         else:
             eq = np.arange(0,self.X.shape[0])
-        return dmperm.IsLowIndex(self.X,eq=eq)
+        return dmperm.IsLowIndex(self.X.toarray(),eq=eq)
 
     def IsUnderdetermined(self):
         dm = dmperm.GetDMParts(self.X)
