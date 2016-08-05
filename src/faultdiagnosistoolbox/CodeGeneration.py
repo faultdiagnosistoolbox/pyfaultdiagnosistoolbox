@@ -404,6 +404,7 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
     sys.stdout.write("  Generating code for the exactly determined part: ")
     m0Code, m0iState, m0dState, m0integ = GenerateExactlyDetermined( model, Gamma, language, user_functions)
 
+    sys.stdout.flush()
     print "  Generating code for the residual equations"
     resCode, resiState, resdState, resinteg = GenerateResidualEquations( model, resEq, diffres, language, user_functions)
 
