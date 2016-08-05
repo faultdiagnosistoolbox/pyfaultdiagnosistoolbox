@@ -166,11 +166,9 @@ def IsPSO( X, *args ):
 #    
 #    return srank(Xhod)<Xhod.shape[1]
 
-def IsHighIndex(X, **opts):
-    if opts.has_key('eq'):
-        eq = opts['eq']
-    else:
-        eq = np.arange(0,X.shape[0])
+def IsHighIndex(X, eq=[]):
+    if len(eq)==0:
+        eq = np.arange(0,self.X.shape[0])
     X1 = X[eq,:]
     
     col_d1 = np.any(X1==3,axis=0)
@@ -181,12 +179,10 @@ def IsHighIndex(X, **opts):
     nz = sum(np.all(Xhod==0,axis=0))
     return srank(Xhod)<Xhod.shape[1]-nz
 
-def IsLowIndex(X, **opts):
-    if opts.has_key('eq'):
-        eq = opts['eq']
-    else:
-        eq = np.arange(0,X.shape[0])
-    return not IsHighIndex(X,eq=eq)
+def IsLowIndex(X, eq=[]):
+    if len(eq)==0:
+        eq = np.arange(0,self.X.shape[0])
+    return not IsHighIndex(X,eq)
 
 def Mplus( X, causality='mixed' ):
     def Gp(G):

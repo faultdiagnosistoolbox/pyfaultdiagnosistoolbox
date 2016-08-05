@@ -27,11 +27,10 @@ def PlotModel(model, **options):
         fSize = 8
         
     for idx,val in enumerate(np.argwhere(X==2)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'I', color="b", fontsize=fSize)
-  
+        plt.text(val[1],val[0], 'I', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
     for idx,val in enumerate(np.argwhere(X==3)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'D', color="b", fontsize=fSize)
-
+        plt.text(val[1],val[0], 'D', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
+        
     # Plot axis ticks
     if labelVars:
         plt.xticks(np.arange(0,model.nx()+model.nf()+model.nz()),model.x + model.f + model.z, rotation='vertical')
@@ -80,9 +79,9 @@ def PlotMatching( model, Gamma, **options):
 
     plt.spy(Xm==1,markersize=4,marker="o", color="b")
     for idx,val in enumerate(np.argwhere(Xm==3)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'D', color="b", fontsize=fSize)
+        plt.text(val[1],val[0], 'D', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
         for idx,val in enumerate(np.argwhere(Xm==2)):
-            plt.text(val[1]-0.06,val[0]+0.15, 'I', color="b", fontsize=fSize)
+            plt.text(val[1],val[0], 'I', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
     
     # Plot axis ticks
     if labelVars:
@@ -165,10 +164,10 @@ def PlotDM(model, **options) :
         fSize = 8
     plt.spy(X[dm.rowp,:][:,dm.colp]==1,markersize=4, marker="o")
     for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==3)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'D', color="b", fontsize=fSize)
+        plt.text(val[1],val[0], 'D', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
   
     for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==2)):
-        plt.text(val[1]-0.06,val[0]+0.15, 'I', color="b", fontsize=fSize)
+        plt.text(val[1],val[0]+0.15, 'I', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
     
     if labelVars:
         plt.xticks(np.arange(0,X.shape[1]),dm.colp)

@@ -135,19 +135,15 @@ class DiagnosisModel(object):
         self.Pfault = []
         self.P = np.arange(0,len(self.x))
         
-    def IsHighIndex(self, **opts):
-        if opts.has_key('eq'):
-            eq = opts['eq']
-        else:
+    def IsHighIndex(self, eq=[]):
+        if len(eq)==0:
             eq = np.arange(0,self.X.shape[0])
-        return dmperm.IsHighIndex(self.X,eq=eq)
+        return dmperm.IsHighIndex(self.X,eq)
 
-    def IsLowIndex(self, **opts):
-        if opts.has_key('eq'):
-            eq = opts['eq']
-        else:
+    def IsLowIndex(self, eq=[]):
+        if len(eq)==0:
             eq = np.arange(0,self.X.shape[0])
-        return dmperm.IsLowIndex(self.X,eq=eq)
+        return dmperm.IsLowIndex(self.X,eq)
 
     def IsUnderdetermined(self):
         dm = dmperm.GetDMParts(self.X)
@@ -435,8 +431,8 @@ class DiagnosisModel(object):
                 plt.title('Isolability matrix for a given FSM')
         return im 
 
-    def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, external=[], api='Python'):
-        codegen.SeqResGen(self, Gamma, resEq, name, diffres=diffres, language=language, batch=batch, external=external)
+    def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python', user_functions=[]):
+        codegen.SeqResGen(self, Gamma, resEq, name, diffres=diffres, language=language, batch=batch, user_functions=user_functions)
 
     def Lint(self):
         war = False

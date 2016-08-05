@@ -1,6 +1,7 @@
 Todo
 ====
 MTES                          
+RemoveFaultVariables          
 IsObservable                  
 SubModel                      
 TestSelection                 
@@ -9,15 +10,14 @@ Pantelides
 
 Low prio
 ========
-RemoveFaultVariables          
 BipartiteToLaTeX              
 CompiledMHS                   
 ObserverResGen                
 AddEquations                  
 ReplaceEquations              
 
-Done
-===
+Done (fully or partially)
+====
 AddSensors                    
 CompiledMSO                   
 DetectabilityAnalysis         
@@ -47,7 +47,7 @@ Redundancy
 SensorLocationsWithFaults     
 SensorPlacementDetectability  
 SensorPlacementIsolability    
-SeqResGen                     
+SeqResGen (partially)
 Structural                    
 copy                          
 ne                            

@@ -13,11 +13,11 @@ def UsedVars(rels, variables):
             uv |= set([str(v) for v in expr.atoms() if str(v) in variables])
     return [v for v in variables if v in uv]
 
-def ExprToCode( expr, language):
+def ExprToCode( expr, language, user_functions = {}):
     if language is 'C':
-        genCode = ccode(expr)
+        genCode = ccode(expr, user_functions=user_functions)
     elif language is 'Matlab':
-        genCode = octave_code(expr)
+        genCode = octave_code(expr, user_functions=user_functions)
     elif language is 'Python':
         genCode = str(expr)
     else:
@@ -65,7 +65,7 @@ def SeqResGenCausality( Gamma, e, diffres ):
         elif Gamma.matchType is 'algebraic':
             return 'der'
 
-def AlgebraicHallComponent(model, g, language):
+def AlgebraicHallComponent(model, g, language, user_functions = {}):
     fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
     eqs = map(lambda eq: eq.subs(fzSub), model.syme[g.row])    
     hcVars = list(np.array(model.x)[g.col])
@@ -73,10 +73,10 @@ def AlgebraicHallComponent(model, g, language):
     resGen = []
     for varSol in sol:
         if len(hcVars)==1:
-            genCode = "%s = %s%s %s %s" %(varSol,ExprToCode(sol[varSol], language), CodeEOL(language),
+            genCode = "%s = %s%s %s %s" %(varSol,ExprToCode(sol[varSol], language, user_functions), CodeEOL(language),
                                          CodeComment(language),model.e[g.row[0]])
         else:
-            genCode = "%s = %s%s" %(varSol,ExprToCode(sol[varSol], language), CodeEOL(language))
+            genCode = "%s = %s%s" %(varSol,ExprToCode(sol[varSol], language, user_functions), CodeEOL(language))
         resGen.append(genCode)
     return resGen
 
@@ -98,7 +98,7 @@ def CodeApproxDer(v,enum,language):
     else:
         return "ApproxDiff(%s,state['%s'],Ts)%s %s %s" % (v,v,CodeEOL(language),CodeComment(language),enum)
 
-def IntegralHallComponent(model, g, language):
+def IntegralHallComponent(model, g, language, user_functions = {}):
     fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
     resGen = []
     integ = []
@@ -106,7 +106,7 @@ def IntegralHallComponent(model, g, language):
     for e,v,enum in zip(model.syme[g.row],np.array(model.x)[g.col],np.array(model.e)[g.row]):
         if not fdt.IsDifferentialConstraint(e):
             sol=sym.solve(e.subs(fzSub),v)
-            genCode = "%s = %s%s %s %s" %(v,ExprToCode(sol[0], language), CodeEOL(language),CodeComment(language),enum)
+            genCode = "%s = %s%s %s %s" %(v,ExprToCode(sol[0], language, user_functions), CodeEOL(language),CodeComment(language),enum)
             resGen.append(genCode)
         else:
             dv = DVar(e)
@@ -116,7 +116,7 @@ def IntegralHallComponent(model, g, language):
             iState.append(v)
     return (resGen,integ,iState)
 
-def MixedHallComponent(model, g, language):
+def MixedHallComponent(model, g, language, user_functions = {}):
     fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
     resGen = []
     iState = []
@@ -125,7 +125,7 @@ def MixedHallComponent(model, g, language):
     for e,v,enum in zip(model.syme[g.row],np.array(model.x)[g.col],np.array(model.e)[g.row]):
         if not fdt.IsDifferentialConstraint(e):
             sol=sym.solve(e.subs(fzSub),v)
-            genCode = "%s = %s%s %s %s" %(v,ExprToCode(sol[0], language), CodeEOL(language),CodeComment(language),enum)
+            genCode = "%s = %s%s %s %s" %(v,ExprToCode(sol[0], language, user_functions), CodeEOL(language),CodeComment(language),enum)
             resGen.append(genCode)
         elif v is IVar(e):
             dv = DVar(e)
@@ -140,7 +140,7 @@ def MixedHallComponent(model, g, language):
 
     return (resGen,integ,iState,dState)
 
-def GenerateResidualEquations( model, resEq, diffres, language):
+def GenerateResidualEquations( model, resEq, diffres, language, user_functions = {} ):
     if language is 'C':
         resvar = 'r[0]'
     else:
@@ -151,7 +151,7 @@ def GenerateResidualEquations( model, resEq, diffres, language):
         fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
         e = e.subs(fzSub)
         resExpr = e.lhs - e.rhs
-        genCode = ["%s = %s%s %s %s" % (resvar,ExprToCode(resExpr,language), CodeEOL(language), 
+        genCode = ["%s = %s%s %s %s" % (resvar,ExprToCode(resExpr,language, user_functions=user_functions), CodeEOL(language), 
                                        CodeComment(language), np.array(model.e)[resEq])]
         iState = []
         dState = []
@@ -178,7 +178,7 @@ def GenerateResidualEquations( model, resEq, diffres, language):
             integ = [iv + " = " + CodeApproxInt(iv,dv,np.array(model.e)[resEq],language)]
     return (np.array(genCode), iState, dState, integ)
 
-def GenerateExactlyDetermined( model, Gamma, language):
+def GenerateExactlyDetermined( model, Gamma, language, user_functions = {}):
     resGenM0 = np.array([])
     integ = np.array([])
     iState = np.array([])
@@ -188,10 +188,10 @@ def GenerateExactlyDetermined( model, Gamma, language):
         sys.stdout.write('.')
         sys.stdout.flush()
         if g.matchType is 'algebraic':
-            codeGen = AlgebraicHallComponent(model, g, language)
+            codeGen = AlgebraicHallComponent(model, g, language, user_functions)
             resGenM0 = np.concatenate((resGenM0, codeGen))
         elif g.matchType is 'int':
-            codeGen,gInteg,giState = IntegralHallComponent(model, g, language)
+            codeGen,gInteg,giState = IntegralHallComponent(model, g, language, user_functions)
             iState = np.concatenate((iState, giState))
             resGenM0 = np.concatenate((resGenM0, codeGen))
             integ = np.concatenate((integ, gInteg))
@@ -201,7 +201,7 @@ def GenerateExactlyDetermined( model, Gamma, language):
             resGenM0 = np.concatenate((resGenM0, [codeGen]))
             dState = np.concatenate((dState, [IVar(dc)]))
         elif g.matchType is 'mixed':
-            codeGen,gInteg,giState,gdState = IntegralHallComponent(model, g, language)
+            codeGen,gInteg,giState,gdState = IntegralHallComponent(model, g, language, user_functions)
             resGenM0 = np.concatenate((resGenM0, codeGen))    
             iState = np.concatenate((iState, giState))
             dState = np.concatenate((dState, gdState))
@@ -389,7 +389,7 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
         f.write(tab + 'return r\n');
     f.close()
 
-def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python', external=[]):
+def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python', user_functions = {}):
     if not model.modelType is 'Symbolic':
         print "Code generation only possible for symbolic models"
         return []
@@ -402,10 +402,10 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
     sys.stdout.write(")\n")
     
     sys.stdout.write("  Generating code for the exactly determined part: ")
-    m0Code, m0iState, m0dState, m0integ = GenerateExactlyDetermined( model, Gamma, language)
+    m0Code, m0iState, m0dState, m0integ = GenerateExactlyDetermined( model, Gamma, language, user_functions)
 
     print "  Generating code for the residual equations"
-    resCode, resiState, resdState, resinteg = GenerateResidualEquations( model, resEq, diffres, language)
+    resCode, resiState, resdState, resinteg = GenerateResidualEquations( model, resEq, diffres, language, user_functions)
 
     # Collect code, integrators, and states
     resGenCode = np.concatenate((m0Code,[' '],resCode))
