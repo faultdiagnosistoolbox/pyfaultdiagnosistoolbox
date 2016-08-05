@@ -1,5 +1,6 @@
 import faultdiagnosistoolbox as fdt
 import sympy as sym
+from VEP_par import TC_ENGINE, diag_par
 
 modeldef = {}
 modeldef['type'] = 'Symbolic'
