@@ -270,7 +270,7 @@ diag_par = {
     'A_0' : TC_ENGINE.throttle.a_0, 
     'A_1' : TC_ENGINE.throttle.a_1, 
     'A_2' : TC_ENGINE.throttle.a_2, 
-    'lambda' : lambda_cyl, 
+    'lambda_af' : lambda_cyl, 
     'n_r' : TC_ENGINE.geometry.n_r, 
     'r_c' : TC_ENGINE.geometry.r_c, 
     'V_D' : TC_ENGINE.geometry.V_d, 

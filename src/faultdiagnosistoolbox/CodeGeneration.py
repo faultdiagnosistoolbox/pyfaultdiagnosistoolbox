@@ -5,6 +5,7 @@ import sys
 import faultdiagnosistoolbox as fdt
 from sympy.printing import ccode, octave_code
 import time
+import os
 
 def UsedVars(rels, variables):
     uv = set([])
@@ -254,10 +255,10 @@ def WriteResGenCorePython(f, name, model, resGen, state, integ, resGenEqs):
     # Known variables
     usedKnownSignals = UsedVars(model.syme[resGenEqs], model.z)
     f.write(tab + '# Known signals\n')
-    for zIdx,zv in enumerate(usedKnownSignals):
-        f.write(tab + zv + ' = z[' + str(zIdx) + ']\n')
+    for zv in usedKnownSignals:
+        f.write(tab + zv + ' = z[' + str(model.z.index(zv)) + ']\n')
     f.write('\n') 
-            
+
     # Initialize state variables
     if len(state)>0:
         f.write(tab + '# Initialize state variables\n')
@@ -288,9 +289,20 @@ def WriteResGenCorePython(f, name, model, resGen, state, integ, resGenEqs):
     # Return value
     f.write(tab + 'return (r, state)\n')
     
-def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality, resGenEqs ):
+def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality, resGenEqs, external_src ):
     f=open(name + ".py", 'w')
     tab = '    '
+    f.write('import numpy as np\n');
+    f.write('from numpy import * # For access to all fundamental funcations, constants etc.\n')
+    if batch:
+        f.write('from copy import deepcopy\n\n');
+        
+    if len(external_src)>0:
+        f.write('# External modules\n');
+        for ext_mod in external_src:
+            f.write('from ' + os.path.splitext(ext_mod)[0]  + ' import *\n')
+        f.write('\n');
+        
     if not batch:
         f.write('def ' + name + "(z,state,params,Ts):\n")
         f.write(tab + '""" ' + name.upper() + " Sequential residual generator for model '" + model.name + "'\n")
@@ -337,8 +349,6 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
         f.write('\n')
         f.write('    return ' + name + '_core(z, state, params, Ts)\n')
     else: # batch
-        f.write('import numpy as np\n');
-        f.write('from copy import copy\n');
         f.write('def ' + name + "(z,state,params,Ts):\n")
         f.write(tab + '""" ' + name.upper() + " Sequential residual generator for model '" + model.name + "'\n")
         f.write(tab + 'Causality: ' + resGenCausality + '\n')
@@ -382,14 +392,14 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
         f.write('\n')
         f.write(tab + 'N = z.shape[0] # Number of datapoints\n')
         f.write(tab + 'r = np.zeros(N)\n');
-        f.write(tab + 'state = copy(state)\n')
+        f.write(tab + 'dynState = deepcopy(state)\n')
         f.write(tab + 'for k,zk in enumerate(z):\n');
-        f.write(tab + tab + 'r[k], state = ' + name + '_core(zk, state, params, Ts)\n')
+        f.write(tab + tab + 'r[k], dynState = ' + name + '_core(zk, dynState, params, Ts)\n')
         f.write('\n')
         f.write(tab + 'return r\n');
     f.close()
 
-def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python', user_functions = {}):
+def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python', user_functions = {}, external_src=[], external_headers=[]):
     if not model.modelType is 'Symbolic':
         print "Code generation only possible for symbolic models"
         return []
@@ -422,23 +432,28 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
         resGenEqs = np.concatenate((resGenEqs,g.row))
     resGenEqs = np.concatenate((resGenEqs,[resEq]))
     if language is 'Python':
-        WriteResGenPython( model, resGenCode, resGenState, resGenInteg, name, batch, resGenCausality, resGenEqs )
+        WriteResGenPython( model, resGenCode, resGenState, resGenInteg, name, batch,
+                               resGenCausality, resGenEqs, external_src )
         print 'File ' + name + '.py generated.'
     elif language is 'Matlab':
         pass
     elif language is 'C':
         if api is 'Python':
-            WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch, resGenCausality, resGenEqs )
-            print 'Files ' + name + '.c and ' + name + '_setup.py generated'
+            WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch,
+                                    resGenCausality, resGenEqs, external_src, external_headers )
+            print 'Files ' + name + '.cc and ' + name + '_setup.py generated'
             print 'Compile by running: python ' + name + '_setup.py build'
 
-def WriteResGenCoreC(f,name, model, resGen, state, integ, resGenEqs):
+def WriteResGenCoreC(f,name, model, resGen, state, integ, resGenEqs, batch):
     usedParams = UsedVars(model.syme[resGenEqs], model.parameters)
     tab = '  '
 
     # Function definition
     f.write('void\n')
-    f.write(name + '_core(double* r, const double *z, ')
+    if not batch:
+        f.write(name + '_core(double* r, PyArrayObject *pyZ, ')
+    else:
+        f.write(name + '_core(double* r, PyArrayObject *pyZ, npy_intp k, ')
     if len(resGen)>0:
         f.write('ResState* state, ')
     if len(usedParams)>0:
@@ -469,8 +484,11 @@ def WriteResGenCoreC(f,name, model, resGen, state, integ, resGenEqs):
     # Known variables
     usedKnownSignals = UsedVars(model.syme[resGenEqs], model.z)
     f.write(tab + '// Known signals\n')
-    for zIdx,zv in enumerate(usedKnownSignals):
-        f.write(tab + 'double ' + zv + ' = z[' + str(zIdx) + '];\n')
+    for zv in usedKnownSignals:
+        if not batch:
+            f.write(tab + 'double ' + zv + ' = *((double *)PyArray_GETPTR1(pyZ, ' + str(model.z.index(zv)) + '));\n')
+        else:
+            f.write(tab + 'double ' + zv + ' = *((double *)PyArray_GETPTR2(pyZ, k, ' + str(model.z.index(zv)) + '));\n')
     f.write('\n') 
 
     # Residual generator body
@@ -493,15 +511,18 @@ def WriteResGenCoreC(f,name, model, resGen, state, integ, resGenEqs):
             f.write(tab + "state->" + sv + " = " + sv + ';\n')
     f.write('}\n')
 
-def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch, resGenCausality, resGenEqs ):
-    f=open(name + ".c", 'w')
+def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch, resGenCausality, resGenEqs,
+                            external_src, external_headers  ):
+    f=open(name + ".cc", 'w')
     tab = '  '
     if not batch:
         f.write('#include <Python.h>\n')
         f.write('#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n')
         f.write('#include <numpy/ndarrayobject.h>\n')
+        for header in external_headers:
+            f.write('#include "' + header + '"\n');
         f.write('\n')
-
+        
         f.write('// ' + name.upper() + " Sequential residual generator for model '" + model.name + "'\n")
         f.write('// Causality: ' + resGenCausality + '\n')
         f.write('//\n')
@@ -558,7 +579,8 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
             f.write('void GetParameters( PyObject *pyParams, Parameters* params );\n')
         if len(resGenState)>0:
             f.write('void GetState( PyObject *pyStates, ResState* state );\n')
-        f.write('void ' + name + '_core( double* r, const double *z, ')
+
+        f.write('void ' + name + '_core( double* r, PyArrayObject *pyZ, ')
         if len(resGenState)>0:
             f.write('ResState *state, ')
         if len(usedParams)>0:
@@ -579,7 +601,6 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
         f.write('  }\n')
         f.write('\n')
         f.write('  double r;\n')
-        f.write('  double *z = (double *)PyArray_DATA( pyZ ); // column first\n')
         f.write('\n')
         if len(resGenState)>0:
             f.write('  ResState state;\n')
@@ -589,7 +610,7 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
             f.write('  Parameters params;\n')
             f.write('  GetParameters( pyParams, &params );\n')
             f.write('\n')
-        f.write('  ' + name + '_core( &r, z, ')
+        f.write('  ' + name + '_core( &r, pyZ, ')
         if len(resGenState)>0:
             f.write('&state, ')
         if len(usedParams)>0:
@@ -604,7 +625,7 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
         f.write('}\n')
         
         f.write('\n')
-        WriteResGenCoreC(f, name, model, resGenCode, resGenState, resGenInteg, resGenEqs)
+        WriteResGenCoreC(f, name, model, resGenCode, resGenState, resGenInteg, resGenEqs, batch)
         f.write('\n')
         
         if resGenCausality is 'int' or resGenCausality is 'mixed':
@@ -658,11 +679,13 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
             f.write('  return 0;\n')
             f.write('}\n')
             
-            WriteSetupBuild(name)
+            WriteSetupBuild(name, external_src)
     else: # batch
         f.write('#include <Python.h>\n')
         f.write('#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n')
         f.write('#include <numpy/ndarrayobject.h>\n')
+        for header in external_headers:
+            f.write('#include "' + header + '"\n');
         f.write('\n')
 
         f.write('// ' + name.upper() + " Sequential residual generator for model '" + model.name + "'\n")
@@ -719,7 +742,8 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
             f.write('void GetParameters( PyObject *pyParams, Parameters* params );\n')
         if len(resGenState)>0:
             f.write('void GetState( PyObject *pyStates, ResState* state );\n')
-        f.write('void ' + name + '_core( double* r, const double *z, ')
+
+        f.write('void ' + name + '_core( double* r, PyArrayObject *pyZ, npy_intp k, ')
         if len(resGenState)>0:
             f.write('ResState *state, ')
         if len(usedParams)>0:
@@ -744,12 +768,10 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
         f.write('    return Py_BuildValue("");\n')
         f.write('  }\n')
         f.write('  npy_intp *shape = PyArray_SHAPE( pyZ );\n')
-        f.write('  npy_intp N = shape[0];\n')
-        f.write('  npy_intp nz = shape[1];\n\n')
+        f.write('  npy_intp N = shape[0];\n\n')
 
         f.write('  PyObject* pyR = PyArray_SimpleNew(1, &N, NPY_FLOAT64);\n')
         f.write('  double *r = (double *)PyArray_DATA((PyArrayObject *)pyR);\n\n')
-        f.write('  double *z = (double *)PyArray_DATA( pyZ ); // column first\n')
         f.write('\n')
         if len(resGenState)>0:
             f.write('  ResState state;\n')
@@ -762,7 +784,7 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
             
         f.write('  // Main computational loop\n')
         f.write('  for( npy_intp k=0; k < N; k++ ) {\n')
-        f.write('    ' + name + '_core( &(r[k]), &(z[k*nz]), ')
+        f.write('    ' + name + '_core( &(r[k]), pyZ, k, ')
         if len(resGenState)>0:
             f.write('&state, ')
         if len(usedParams)>0:
@@ -774,7 +796,7 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
         f.write('}\n')
         
         f.write('\n')
-        WriteResGenCoreC(f, name, model, resGenCode, resGenState, resGenInteg, resGenEqs)
+        WriteResGenCoreC(f, name, model, resGenCode, resGenState, resGenInteg, resGenEqs, batch)
         f.write('\n')
         
         if resGenCausality is 'int' or resGenCausality is 'mixed':
@@ -828,11 +850,11 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
             f.write('  return 0;\n')
             f.write('}\n')
             
-            WriteSetupBuild(name)
+            WriteSetupBuild(name, external_src)
 
     f.close()
     
-def WriteSetupBuild(name):
+def WriteSetupBuild(name, external_src):
     f = open(name + '_setup.py', 'w')
     f.write('# Build file for compiling ' + name + '.c\n')
     f.write('#\n')
@@ -846,7 +868,10 @@ def WriteSetupBuild(name):
     f.write('incdir = np.get_include()\n')
     f.write('\n')
     f.write("module1 = Extension('" + name + "',\n")
-    f.write("                    sources = ['" + name + ".c'],\n")
+    f.write("                    sources = ['" + name + ".cc'")
+    for src in external_src:
+        f.write(", '" + src + "'")
+    f.write("],\n")
     f.write("                    include_dirs=[incdir],\n")
     f.write("                    extra_compile_args=['-Wno-unused-function'])\n")
     f.write('\n')

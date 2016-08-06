@@ -5,7 +5,7 @@ CPPFLAGS=-Wall $(OPT) -I$(CSPARSE)/Include
 TARGET_VERSION=`sw_vers -productVersion` # 11.10
 
 $(TARGET): structuralanalysismodule.cc setup.py SparseMatrix.o StructuralAnalysisModel.o MSOalg.o
-	CC=g++ MACOSX_DEPLOYMENT_TARGET=10.11.5 python setup.py build
+	CC=g++ MACOSX_DEPLOYMENT_TARGET=$(TARGET_VERSION) python setup.py build
 
 SparseMatrix.o: SparseMatrix.cc SparseMatrix.h
 	g++ -c $< -o $@ $(CPPFLAGS)
@@ -17,5 +17,5 @@ StructuralAnalysisModel.o: StructuralAnalysisModel.cc StructuralAnalysisModel.h
 	g++ -c $< -o $@ $(CPPFLAGS)
 
 clean:
-	rm -rf build *~ SparseMatrix.o StructuralAnalysisModel.o MSOalg.o
+	rm -rf build/* *~ SparseMatrix.o StructuralAnalysisModel.o MSOalg.o
 

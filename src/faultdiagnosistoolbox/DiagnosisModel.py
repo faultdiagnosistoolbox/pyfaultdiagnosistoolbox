@@ -431,8 +431,11 @@ class DiagnosisModel(object):
                 plt.title('Isolability matrix for a given FSM')
         return im 
 
-    def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python', user_functions=[]):
-        codegen.SeqResGen(self, Gamma, resEq, name, diffres=diffres, language=language, batch=batch, user_functions=user_functions)
+    def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python',
+                      user_functions=[], external_src=[], external_headers=[]):
+        codegen.SeqResGen(self, Gamma, resEq, name, diffres=diffres, language=language, batch=batch,
+                              user_functions=user_functions, external_src=external_src,
+                              external_headers=external_headers)
 
     def Lint(self):
         war = False

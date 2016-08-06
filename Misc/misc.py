@@ -4,6 +4,7 @@ import scipy.sparse as sp
 import scipy.io as sio
 import sys
 import matplotlib.pyplot as plt
+import time
 
 def ReadMatrixCSV(fileName):
     with open(fileName, 'rt') as csvfile:
@@ -58,3 +59,25 @@ def _todict(matobj):
             dict[strg] = elem
     return dict
 
+class Timer:
+    t0 = 0.0
+    def tic(self):
+        self.t0 = time.time()
+    def toc(self):
+        return time.time()-self.t0
+
+def RunResgenOnDataSets( resgen, data, params ):
+    res = {}
+    t = Timer()
+    for ds in data.keys():
+        sys.stdout.write('  dataset ' + ds)
+        state = data[ds]['state_init'].copy()
+        Ts = data[ds]['Ts']
+        z = data[ds]['z']
+        N = len(data[ds]['time'])
+        t.tic()        
+        res[ds] = resgen(z,state,params,Ts)
+        dt=t.toc()
+        sys.stdout.write(' (%.2f sec, %.1f x real time @ %d Hz)\n' % (dt, Ts*N/dt, 1/Ts))
+        sys.stdout.flush()
+    return res

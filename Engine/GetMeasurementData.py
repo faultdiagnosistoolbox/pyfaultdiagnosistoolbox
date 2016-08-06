@@ -4,6 +4,31 @@ from scipy.interpolate import interp1d
 import numpy as np
 
 def GetMeasurementData(fileName):
+    """ GetMeasurementData(fileName)
+
+    Input:
+      fileName - filename of .mat-file with data
+
+    Output:
+      dictionary with the keys
+      
+        time - Global time vector
+        z    - Known signal matrix, each signal as a column in the order
+               y_p_ic     [Pa]
+               y_p_im     [Pa]
+               y_T_ic     [K]
+               y_W_af     [kg/s]
+               y_omega_e  [rad/s]
+               y_alpha_th [%]
+               y_u_wg     [%]
+               y_wfc      [kg/s]
+               y_T_amb    [K]
+               y_p_amb    [Pa]
+        fault_idx - Indices where faults are activated/deactivated
+        fault_vector - 0/1-vecotr indicating active fault
+        Ts - Sampling time
+        state_init - dictionary with all states for a template state initialization
+    """
     data = loadmat(fileName)
     if data.has_key('fault_idx'):
         fault_idx = data['fault_idx']
@@ -84,7 +109,7 @@ def GetMeasurementData(fileName):
 
     res = {}
     res['time'] = time
-    res['measurement'] = measurement
+    res['z'] = measurement
     res['fault_idx'] = fault_idx
     res['fault_vector'] = fault_vector
     res['Ts'] = Ts

@@ -103,7 +103,6 @@ W_ig_fun = sym.Function('W_ig_fun')
 W_c_fun = sym.Function('W_c_fun')
 PHI_model_fun = sym.Function('PHI_model_fun')
 PI_c_fun = sym.Function('PI_c_fun')
-X_c_fun = sym.Function('X_c_fun')
 W_t_fun = sym.Function('W_t_fun')
 Tq_t_fun = sym.Function('Tq_t_fun')
 PI_t_fun = sym.Function('PI_t_fun')
@@ -130,7 +129,6 @@ ext_funs = {
     'W_c_fun'       : 'W_c_fun',
     'PHI_model_fun' : 'PHI_model_fun',
     'PI_c_fun'      : 'PI_c_fun',
-    'X_c_fun'       : 'X_c_fun',
     'W_t_fun'       : 'W_t_fun',
     'Tq_t_fun'      : 'Tq_t_fun',
     'PI_t_fun'      : 'PI_t_fun',
