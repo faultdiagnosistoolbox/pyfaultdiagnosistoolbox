@@ -30,7 +30,7 @@ def GetMeasurementData(fileName):
         state_init - dictionary with all states for a template state initialization
     """
     data = loadmat(fileName)
-    if data.has_key('fault_idx'):
+    if 'fault_idx' in data:
         fault_idx = data['fault_idx']
     else:
         fault_idx = []
