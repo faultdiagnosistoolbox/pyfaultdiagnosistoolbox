@@ -1,3 +1,5 @@
+Module dependencies: jupyter matplotlib numpy scipy sympy controlpy
+
 Todo
 ====
 MTES                          
