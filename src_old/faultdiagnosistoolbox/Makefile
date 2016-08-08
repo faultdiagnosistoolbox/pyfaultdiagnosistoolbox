@@ -1,10 +1,10 @@
+TARGET=build/lib.macosx-10.6-x86_64-2.7/structuralanalysis.so
 CSPARSE=/Users/frisk/sw/CSParse
 OPT=-DNDEBUG -O3
 CPPFLAGS=-Wall $(OPT) -I$(CSPARSE)/Include 
 TARGET_VERSION=`sw_vers -productVersion` # 11.10
-.PHONY: module clean
 
-module: structuralanalysismodule.cc setup.py SparseMatrix.o StructuralAnalysisModel.o MSOalg.o
+$(TARGET): structuralanalysismodule.cc setup.py SparseMatrix.o StructuralAnalysisModel.o MSOalg.o
 	CC=g++ MACOSX_DEPLOYMENT_TARGET=$(TARGET_VERSION) python setup.py build
 
 SparseMatrix.o: SparseMatrix.cc SparseMatrix.h

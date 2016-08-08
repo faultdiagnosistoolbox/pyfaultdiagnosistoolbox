@@ -25,7 +25,7 @@ class Matching:
         X=X[eqs,:]
         dm=dmperm.GetDMParts(X)
         if len(dm.M0eqs) != len(eqs):
-            print("Error, matchings can only be computed for exactly determined systems")
+            print "Error, matchings can only be computed for exactly determined systems"
 
         self.matching = []
         derCausal = False

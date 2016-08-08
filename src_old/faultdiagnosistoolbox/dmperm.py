@@ -95,7 +95,7 @@ def GetDMParts(X):
 
 def PSODecomposition(X):
     if not IsPSO(X):
-        print("PSO Decomposition for PSO structures only, exiting...")
+        print "PSO Decomposition for PSO structures only, exiting..."
         return;
 
     n = X.shape[0]
@@ -150,7 +150,7 @@ def IsPSO( X, *args ):
     return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
 
 #def IsHighIndex(X, **opts):
-#    if 'eq' in opts:
+#    if opts.has_key('eq'):
 #        eq = opts['eq']
 #    else:
 #        eq = np.arange(0,X.shape[0])

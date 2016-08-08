@@ -1,5 +1,5 @@
 import numpy as np
-import faultdiagnosistoolbox.dmperm as dmperm
+import dmperm as dmperm
 import sympy as sym
 import sys
 import faultdiagnosistoolbox as fdt
@@ -22,7 +22,7 @@ def ExprToCode( expr, language, user_functions = {}):
     elif language is 'Python':
         genCode = str(expr)
     else:
-        print("Unknown language")
+        print "Unknown language"
     return genCode
 
 def CodeEOL(language):
@@ -67,8 +67,8 @@ def SeqResGenCausality( Gamma, e, diffres ):
             return 'der'
 
 def AlgebraicHallComponent(model, g, language, user_functions = {}):
-    fzSub = list(zip(model.f, np.zeros(len(model.f),dtype=np.int64)))
-    eqs = list(map(lambda eq: eq.subs(fzSub), model.syme[g.row]))
+    fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
+    eqs = map(lambda eq: eq.subs(fzSub), model.syme[g.row])    
     hcVars = list(np.array(model.x)[g.col])
     sol = sym.solve(eqs,hcVars)
     resGen = []
@@ -100,7 +100,7 @@ def CodeApproxDer(v,enum,language):
         return "ApproxDiff(%s,state['%s'],Ts)%s %s %s" % (v,v,CodeEOL(language),CodeComment(language),enum)
 
 def IntegralHallComponent(model, g, language, user_functions = {}):
-    fzSub = list(zip(model.f, np.zeros(len(model.f),dtype=np.int64)))
+    fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
     resGen = []
     integ = []
     iState = []
@@ -118,7 +118,7 @@ def IntegralHallComponent(model, g, language, user_functions = {}):
     return (resGen,integ,iState)
 
 def MixedHallComponent(model, g, language, user_functions = {}):
-    fzSub = list(zip(model.f, np.zeros(len(model.f),dtype=np.int64)))
+    fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
     resGen = []
     iState = []
     dState = []
@@ -149,7 +149,7 @@ def GenerateResidualEquations( model, resEq, diffres, language, user_functions =
     
     e = model.syme[resEq]
     if not fdt.IsDifferentialConstraint(e):
-        fzSub = list(zip(model.f, np.zeros(len(model.f),dtype=np.int64)))
+        fzSub = zip(model.f, np.zeros(len(model.f),dtype=np.int64))
         e = e.subs(fzSub)
         resExpr = e.lhs - e.rhs
         genCode = ["%s = %s%s %s %s" % (resvar,ExprToCode(resExpr,language, user_functions=user_functions), CodeEOL(language), 
@@ -401,7 +401,7 @@ def WriteResGenPython( model, resGen, state, integ, name, batch, resGenCausality
 
 def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python', user_functions = {}, external_src=[], external_headers=[]):
     if not model.modelType is 'Symbolic':
-        print("Code generation only possible for symbolic models")
+        print "Code generation only possible for symbolic models"
         return []
     
     sys.stdout.write("Generating residual generator " + name + " (" + language + ', ')
@@ -410,13 +410,12 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
     else:
         sys.stdout.write("no batch")
     sys.stdout.write(")\n")
-
-    print('Language: ' + language)
+    
     sys.stdout.write("  Generating code for the exactly determined part: ")
     m0Code, m0iState, m0dState, m0integ = GenerateExactlyDetermined( model, Gamma, language, user_functions)
 
     sys.stdout.flush()
-    print("  Generating code for the residual equations")
+    print "  Generating code for the residual equations"
     resCode, resiState, resdState, resinteg = GenerateResidualEquations( model, resEq, diffres, language, user_functions)
 
     # Collect code, integrators, and states
@@ -426,7 +425,7 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
     resGenState  = np.concatenate((resGeniState,resGendState))
     resGenInteg = np.concatenate((m0integ,resinteg))
         
-    print("  Writing residual generator file")
+    print "  Writing residual generator file"
     resGenCausality = SeqResGenCausality( Gamma, model.syme[resEq], diffres )
     resGenEqs = np.array([],dtype=np.int64)
     for g in Gamma.matching:
@@ -435,15 +434,15 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
     if language is 'Python':
         WriteResGenPython( model, resGenCode, resGenState, resGenInteg, name, batch,
                                resGenCausality, resGenEqs, external_src )
-        print('File ' + name + '.py generated.')
+        print 'File ' + name + '.py generated.'
     elif language is 'Matlab':
         pass
     elif language is 'C':
         if api is 'Python':
             WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch,
                                     resGenCausality, resGenEqs, external_src, external_headers )
-            print('Files ' + name + '.cc and ' + name + '_setup.py generated')
-            print('Compile by running: python ' + name + '_setup.py build')
+            print 'Files ' + name + '.cc and ' + name + '_setup.py generated'
+            print 'Compile by running: python ' + name + '_setup.py build'
 
 def WriteResGenCoreC(f,name, model, resGen, state, integ, resGenEqs, batch):
     usedParams = UsedVars(model.syme[resGenEqs], model.parameters)
@@ -512,90 +511,6 @@ def WriteResGenCoreC(f,name, model, resGen, state, integ, resGenEqs, batch):
             f.write(tab + "state->" + sv + " = " + sv + ';\n')
     f.write('}\n')
 
-def WriteCPythonAPI(f,name):
-    f.write('struct module_state {\n')
-    f.write('    PyObject *error;\n')
-    f.write('};\n')
-    f.write('\n')
-    f.write('#if PY_MAJOR_VERSION >= 3\n')
-    f.write('#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))\n')
-    f.write('#else\n')
-    f.write('#define GETSTATE(m) (&_state)\n')
-    f.write('static struct module_state _state;\n')
-    f.write('#endif\n')
-    f.write('\n')
-    f.write('static PyObject *\n')
-    f.write('error_out(PyObject *m) {\n')
-    f.write('    struct module_state *st = GETSTATE(m);\n')
-    f.write('    PyErr_SetString(st->error, "something bad happened");\n')
-    f.write('    return NULL;\n')
-    f.write('}\n')
-    f.write('\n')
-    f.write('static PyMethodDef ' + name + '_methods[] = {\n')
-    f.write('    {"' + name + '",  ' + name + ', METH_VARARGS, "Residual generator ' + name + '"},\n')
-    f.write('    {NULL, NULL}\n')
-    f.write('};\n')
-    f.write('\n')
-    f.write('#if PY_MAJOR_VERSION >= 3\n')
-    f.write('\n')
-    f.write('static int ' + name + '_traverse(PyObject *m, visitproc visit, void *arg) {\n')
-    f.write('    Py_VISIT(GETSTATE(m)->error);\n')
-    f.write('    return 0;\n')
-    f.write('}\n')
-    f.write('\n')
-    f.write('static int ' + name + '_clear(PyObject *m) {\n')
-    f.write('    Py_CLEAR(GETSTATE(m)->error);\n')
-    f.write('    return 0;\n')
-    f.write('}\n')
-    f.write('\n')
-    f.write('static struct PyModuleDef moduledef = {\n')
-    f.write('        PyModuleDef_HEAD_INIT,\n')
-    f.write('        "' + name + '",\n')
-    f.write('        NULL,\n')
-    f.write('        sizeof(struct module_state),\n')
-    f.write('        ' + name + '_methods,\n')
-    f.write('        NULL,\n')
-    f.write('        ' + name + '_traverse,\n')
-    f.write('        ' + name + '_clear,\n')
-    f.write('        NULL\n')
-    f.write('};\n')
-    f.write('\n')
-    f.write('#define INITERROR return NULL\n')
-    f.write('\n')
-    f.write('PyMODINIT_FUNC\n')
-    f.write('PyInit_' + name + '(void)\n')
-    f.write('\n')
-    f.write('#else\n')
-    f.write('#define INITERROR return\n')
-    f.write('\n')
-    f.write('PyMODINIT_FUNC\n')
-    f.write('init' + name + '(void)\n')
-    f.write('#endif\n')
-    f.write('{\n')
-    f.write('#if PY_MAJOR_VERSION >= 3\n')
-    f.write('    PyObject *module = PyModule_Create(&moduledef);\n')
-    f.write('#else\n')
-    f.write('    PyObject *module = Py_InitModule("' + name + '", ' + name + '_methods);\n')
-    f.write('#endif\n')
-    f.write('\n')
-    f.write('    if (module == NULL)\n')
-    f.write('        INITERROR;\n')
-    f.write('    struct module_state *st = GETSTATE(module);\n')
-    f.write('\n')
-    f.write('    char errName[] = "' + name + '.Error";\n')
-    f.write('    st->error = PyErr_NewException(errName, NULL, NULL);\n')
-    f.write('    if (st->error == NULL) {\n')
-    f.write('        Py_DECREF(module);\n')
-    f.write('        INITERROR;\n')
-    f.write('    }\n')
-    f.write('\n')
-    f.write('    import_array();\n')
-    f.write('\n')
-    f.write('#if PY_MAJOR_VERSION >= 3\n')
-    f.write('    return module;\n')
-    f.write('#endif\n')
-    f.write('}\n')
-    
 def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch, resGenCausality, resGenEqs,
                             external_src, external_headers  ):
     f=open(name + ".cc", 'w')
@@ -740,9 +655,31 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
                 f.write( tab + 'state->' + sv + ' = PyFloat_AsDouble(' + sv + ');\n')
                 f.write('\n')
             f.write('}\n\n')
-
-        WriteCPythonAPI(f,name)        
-        WriteSetupBuild(name, external_src)
+        
+            f.write('PyMODINIT_FUNC\n')
+            f.write('init' + name + '(void)\n')
+            f.write('{\n')
+            f.write('  static PyMethodDef ' + name + 'Methods[] = {\n')
+            f.write('    {"' + name + '",  ' + name + ', METH_VARARGS, "Residual generator"},\n')
+            f.write('    {NULL, NULL, 0, NULL}\n')
+            f.write('  };\n')
+            f.write('  (void) Py_InitModule("' + name + '", ' + name + 'Methods);\n')
+            f.write('  import_array();\n')
+            f.write('}\n')
+            f.write('\n')
+            f.write('int\n')
+            f.write('main(int argc, char *argv[])\n')
+            f.write('{\n')
+            f.write('  Py_SetProgramName(argv[0]);\n')
+            f.write('  \n')
+            f.write('  Py_Initialize();\n')
+            f.write('  \n')
+            f.write('  init' + name + '();\n')
+            f.write('\n')
+            f.write('  return 0;\n')
+            f.write('}\n')
+            
+            WriteSetupBuild(name, external_src)
     else: # batch
         f.write('#include <Python.h>\n')
         f.write('#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n')
@@ -889,8 +826,31 @@ def WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch
                 f.write( tab + 'state->' + sv + ' = PyFloat_AsDouble(' + sv + ');\n')
                 f.write('\n')
             f.write('}\n\n')
-        WriteCPythonAPI(f,name)
-        WriteSetupBuild(name, external_src)
+        
+            f.write('PyMODINIT_FUNC\n')
+            f.write('init' + name + '(void)\n')
+            f.write('{\n')
+            f.write('  static PyMethodDef ' + name + 'Methods[] = {\n')
+            f.write('    {"' + name + '",  ' + name + ', METH_VARARGS, "Residual generator"},\n')
+            f.write('    {NULL, NULL, 0, NULL}\n')
+            f.write('  };\n')
+            f.write('  (void) Py_InitModule("' + name + '", ' + name + 'Methods);\n')
+            f.write('  import_array();\n')
+            f.write('}\n')
+            f.write('\n')
+            f.write('int\n')
+            f.write('main(int argc, char *argv[])\n')
+            f.write('{\n')
+            f.write('  Py_SetProgramName(argv[0]);\n')
+            f.write('  \n')
+            f.write('  Py_Initialize();\n')
+            f.write('  \n')
+            f.write('  init' + name + '();\n')
+            f.write('\n')
+            f.write('  return 0;\n')
+            f.write('}\n')
+            
+            WriteSetupBuild(name, external_src)
 
     f.close()
     

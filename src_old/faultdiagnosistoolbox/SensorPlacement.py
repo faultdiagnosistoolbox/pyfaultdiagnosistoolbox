@@ -1,6 +1,6 @@
 import numpy as np
-import faultdiagnosistoolbox.dmperm
-from faultdiagnosistoolbox.MHS import MHS
+import dmperm
+from MHS import MHS
 
 def ParentBlocks(X,b):
         return np.where(X[0:b,b])[0]
@@ -13,19 +13,19 @@ def FbDetectability(Xb,fb,dm):
     return v
 
 def SensorPlacementDetectability(model,**options):
-    if 'fdet' in options:
+    if options.has_key('fdet'):
         fdet = options['fdet']
         if isinstance(fdet[0],str):
-            fdet = list(map(lambda fi: model.f.index(fi), fdet))
+            fdet = map(lambda fi: model.f.index(fi), fdet)
     else:
         fdet = np.arange(0,len(model.f))
         
     if model.IsUnderdetermined():
-        print("Sorry, sensor placement only works for models with no underdetermined parts")
+        print "Sorry, sensor placement only works for models with no underdetermined parts"
         return
     
     dm = dmperm.GetDMParts(model.X)
-    ef = list(map(lambda fi: np.where(model.F[:,fi])[0][0], fdet))
+    ef = map(lambda fi: np.where(model.F[:,fi])[0][0], fdet)
     nondetIdx = [eIdx for eIdx in np.arange(0,len(ef)) if ef[eIdx] in dm.M0eqs]
     if len(nondetIdx)>0:
         ds = DetectabilitySets( model.X, model.F[:,fdet[nondetIdx]], model.P )
@@ -34,7 +34,7 @@ def SensorPlacementDetectability(model,**options):
         sensSets = []
 
     # Compute list of variable names
-    s = list(map(lambda s: list(np.array(model.x)[s]), sensSets))
+    s = map(lambda s: list(np.array(model.x)[s]), sensSets)
     
     return (s,sensSets)
 
@@ -75,7 +75,7 @@ def IsolabilitySubProblem(X,F,P,fi):
             e=-1
         feq[fj] = e
 
-    nondet = np.where(list(map(lambda f: feq[f] in dm.M0eqs, np.arange(0,Fisol.shape[1]))))[0]
+    nondet = np.where(map(lambda f: feq[f] in dm.M0eqs, np.arange(0,Fisol.shape[1])))[0]
     F0 = Fisol[dm.M0eqs,:][:,nondet]
 
     # Translate P to P0
@@ -85,7 +85,7 @@ def IsolabilitySubProblem(X,F,P,fi):
     detSets = DetectabilitySets( X0, F0, P0 )
 
     # Translate back to original variable indices
-    detSets = list(map(lambda ds: dm.M0vars[ds], detSets))
+    detSets = map(lambda ds: dm.M0vars[ds], detSets)
     
     return detSets
 
@@ -134,12 +134,12 @@ def BlockAndFaultOrder(X,F,dm):
 def SensPlaceM0(X,F):
     dm0 = dmperm.GetDMParts(X)
     bfOrder = BlockAndFaultOrder( X, F, dm0 )
-    return list(map(lambda b: FbDetectability(bfOrder['blockorder'],b,dm0),bfOrder['bFm']))
+    return map(lambda b: FbDetectability(bfOrder['blockorder'],b,dm0),bfOrder['bFm'])
 
 def DetectabilitySets(X,F,P):
     dm = dmperm.GetDMParts(X)
     detSets = SensPlaceM0(X[dm.M0eqs,:][:,dm.M0vars],F[dm.M0eqs,:])
-    return list(map(lambda d: [dm.M0vars[x] for x in d if x in P], detSets))
+    return map(lambda d: [dm.M0vars[x] for x in d if x in P], detSets)
 
 def SensorPlacementIsolability(model):
     Pfault = model.Pfault
@@ -161,7 +161,7 @@ def SensorPlacementIsolability(model):
                 if len(isolDetSets)>0:
                     detSets = detSets + isolDetSets
             mhs_s = MHS( detSets )
-            sIsolIdx = list(map(lambda m: np.sort(np.concatenate((m,s))), mhs_s))
+            sIsolIdx = map(lambda m: np.sort(np.concatenate((m,s))), mhs_s)
             sIdx = sIdx + sIsolIdx
     else:
         X = model.X
@@ -184,6 +184,6 @@ def SensorPlacementIsolability(model):
     sIdx = [sIdx[k] for k in np.arange(0,len(sIdx)) if keepIdx[k]]
 
     # Compute list of variable names
-    s = list(map(lambda s: list(np.array(model.x)[s]), sIdx))
+    s = map(lambda s: list(np.array(model.x)[s]), sIdx)
     
     return (s,sIdx)

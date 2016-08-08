@@ -2,12 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sym
 import copy
-import faultdiagnosistoolbox.dmperm as dmperm
-import faultdiagnosistoolbox.Matching as match
-import faultdiagnosistoolbox.StructurePlotting as smplot
-import faultdiagnosistoolbox.CodeGeneration as codegen
-import faultdiagnosistoolbox.SensorPlacement as sensplace
-from faultdiagnosistoolbox.VarIdGen import VarIdGen
+import dmperm as dmperm
+import Matching as match
+import StructurePlotting as smplot
+import CodeGeneration as codegen
+import SensorPlacement as sensplace
+from VarIdGen import VarIdGen
 import sys
 
 class DiagnosisModel(object):
@@ -30,7 +30,8 @@ class DiagnosisModel(object):
             self.f = modeldef['f']
             self.Z = _ModelStructure( modeldef['rels'], modeldef['z'])
             self.z = modeldef['z']
-            self.e = list(map(lambda x:self.vGen.NewE(),np.arange(0,self.ne())))
+            self.e = map(lambda x:self.vGen.NewE(),np.arange(0,self.ne()))
+
             if modeldef['type'] is 'Symbolic':
                 self.modelType = 'Symbolic'
 
@@ -49,22 +50,22 @@ class DiagnosisModel(object):
             else:
                 self.Z = np.zeros((ne,0),dtype=np.int64)
 
-            if 'x' in modeldef:
+            if modeldef.has_key('x'):
                 self.x = modeldef['x']
             else:
-                self.x = list(map(lambda x:"x"+np.str(x+1),np.arange(0,self.X.shape[1])))
-            if 'f' in modeldef:
+                self.x = map(lambda x:"x"+np.str(x+1),np.arange(0,self.X.shape[1]))
+            if modeldef.has_key('f'):
                 self.f = modeldef['f']
             else:
-                self.f = list(map(lambda x:"f"+np.str(x+1),np.arange(0,self.F.shape[1])))
-            if 'z' in modeldef:
+                self.f = map(lambda x:"f"+np.str(x+1),np.arange(0,self.F.shape[1]))
+            if modeldef.has_key('z'):
                 self.z = modeldef['z']
             else:
-                self.z = list(map(lambda x:"z"+np.str(x+1),np.arange(0,self.Z.shape[1])))
+                self.z = map(lambda x:"z"+np.str(x+1),np.arange(0,self.Z.shape[1]))
 
-            self.e = list(map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne())))
+            self.e = map(lambda x:"e"+np.str(x+1),np.arange(0,self.ne()))
         else:
-            print('Model definition type ' + modeldef['type'] + ' is not supported (yet)')
+            print 'Model definition type ' + modeldef['type'] + ' is not supported (yet)'
 
         if modeldef['type'] is 'Symbolic':
             self.syme = np.array(_ToEquations(modeldef['rels']))
@@ -198,7 +199,7 @@ class DiagnosisModel(object):
                 elif Gamma.matchType is 'algebraic':
                     res.append('der')
         if len(causality)>0:
-            res = np.array(list(map(lambda c: c is causality or c is 'algebraic', res)))
+            res = np.array(map(lambda c: c is causality or c is 'algebraic', res))
         return res
     
     def MeasurementEquations(self, m):
@@ -227,15 +228,15 @@ class DiagnosisModel(object):
     
     def PlotDM(self, **options) :
         labelVars = False
-        if 'verbose' in options:
+        if options.has_key('verbose'):
             labelVars = options['verbose']
         elif self.X.shape[0]<40:
             labelVars = True
-        if 'eqclass' in options:
+        if options.has_key('eqclass'):
             eqclass=options['eqclass']
         else:
             eqclass=False
-        if 'fault' in options:
+        if options.has_key('fault'):
             fault=options['fault']
         else:
             fault=False
@@ -243,7 +244,7 @@ class DiagnosisModel(object):
             
     def PlotModel(self, **options):
         labelVars = False;
-        if 'verbose' in options:
+        if options.has_key('verbose'):
             labelVars = options['verbose'];
         elif self.nx()+self.nf()+self.nz()<40:
             labelVars = True;
@@ -257,7 +258,7 @@ class DiagnosisModel(object):
         
         # Determine if axis should be labeled
         labelVars = False;
-        if 'verbose' in options:
+        if options.has_key('verbose'):
             labelVars = options['verbose'];
         elif len(q)<40:
             labelVars = True;
@@ -321,7 +322,7 @@ class DiagnosisModel(object):
             self.F = np.hstack((self.F,np.zeros((ne,np.sum(fs)),dtype=np.int64)))
         self.F = np.vstack((self.F,Fs))
     
-        self.e = self.e + list(map(lambda x:self.vGen.NewE(),s))
+        self.e = self.e + map(lambda x:self.vGen.NewE(),s)    
         
         for idx,zi in enumerate(s):
             if len(name)==0:
@@ -363,7 +364,7 @@ class DiagnosisModel(object):
         plusRow = MplusCausal( self.X )
 
         # Determine equations for each fault
-        feq = list(map(lambda fi: np.argwhere(self.F[:,fi])[0][0],np.arange(0,nf)))
+        feq = map(lambda fi: np.argwhere(self.F[:,fi])[0][0],np.arange(0,nf))
 
         # Determine non-detectable faults
         ndrows = [x for x in np.arange(0,ne) if x not in plusRow]
@@ -443,9 +444,9 @@ class DiagnosisModel(object):
         dm = dmperm.GetDMParts(self.X)
 
         if len(self.name)>0:
-            print('Model: ' + self.name)
+            print 'Model: ' + self.name
         else:
-            print("Model information")
+            print "Model information"
 
         sys.stdout.write("\n  Type:" + self.modelType)
 
@@ -455,69 +456,69 @@ class DiagnosisModel(object):
         else:
             sys.stdout.write(", static\n")
 
-        print('\n  Variables and equations')
-        print('    ' + str(self.nx()) + ' unknown variables')
-        print('    ' + str(self.nz()) + ' known variables')
-        print('    ' + str(self.nf()) + ' fault variables')
-        print('    ' + str(self.ne()) + ' equations, including ' + str(nd) + ' differential constraints')
-        print('\n  Degree of redundancy: ' + str(self.Redundancy()))
+        print '\n  Variables and equations'
+        print '    ' + str(self.nx()) + ' unknown variables'
+        print '    ' + str(self.nz()) + ' known variables'
+        print '    ' + str(self.nf()) + ' fault variables'
+        print '    ' + str(self.ne()) + ' equations, including ' + str(nd) + ' differential constraints'
+        print '\n  Degree of redundancy: ' + str(self.Redundancy())
 
         if self.Redundancy()>0 and len(self.f)>0:
-            print('  Degree of redundancy of MTES set: ' + str(self.MTESRedundancy()))
-        print('\n')
+            print '  Degree of redundancy of MTES set: ' + str(self.MTESRedundancy())
+        print '\n'
 
 
         if self.ne() != self.F.shape[0] or self.ne() != self.Z.shape[0]:
-            print('Error! Inconsistent numnber of rows in incidence matrices')
+            print 'Error! Inconsistent numnber of rows in incidence matrices'
             err = err+1
 
         if self.nx() != len(self.x):
-            print('Error! Inconsistent number of unknown variables')
+            print 'Error! Inconsistent number of unknown variables'
             err = err+1
 
         if self.nz() != len(self.z):
-            print('Error! Inconsistent number of known variables')
+            print 'Error! Inconsistent number of known variables'
             err = err+1
 
         if self.nf() != len(self.f):
-            print('Error! Inconsistent number of fault variables')
+            print 'Error! Inconsistent number of fault variables'
             err = err+1
 
         if self.ne()!= len(self.e):
-            print('Error! Inconsistent number of equations')
+            print 'Error! Inconsistent number of equations'
             err = err+1
 
         if len([v for v in self.P if not v in np.arange(0,self.nx())])>0:
-            print('Error! Possible sensor locations outside set of unknown variables')
+            print 'Error! Possible sensor locations outside set of unknown variables'
             err = err+1
 
         if len([v for v in self.Pfault if not v in np.arange(0,self.nx())])>0:
-            print('Error! Possible sensor locations with faults outside set of unknown variables')
+            print 'Error! Possible sensor locations with faults outside set of unknown variables'
             err = err+1
 
         if np.any(np.sum(self.F>0,axis=0)>1):
-            print('Error! Fault variables can only appear in 1 equation, rewrite model with intermediate variables')
+            print 'Error! Fault variables can only appear in 1 equation, rewrite model with intermediate variables'
             err = err+1;
 
         xIdx = np.where(np.all(self.X==0,axis=0))[0]
         for ii in xIdx:
-            print('Warning! Variable ' + self.x[ii] + ' is not included in model')
+            print 'Warning! Variable ' + self.x[ii] + ' is not included in model'
             war = war + 1;
 
         zIdx = np.where(np.all(self.Z==0,axis=0))[0]
         for ii in zIdx:
-            print('Warning! Variable ' + self.z[ii] + ' is not included in model')
+            print 'Warning! Variable ' + self.z[ii] + ' is not included in model'
             war = war + 1;
 
         fIdx = np.where(np.all(self.F==0,axis=0))[0]
         for ii in fIdx:
-            print('Warning! Variable ' + self.f[ii] + ' is not included in model')
+            print 'Warning! Variable ' + self.f[ii] + ' is not included in model'
             war = war + 1;
         if self.IsUnderdetermined():
-            print('Warning! Model is underdetermined')
+            print 'Warning! Model is underdetermined'
             war = war + 1;
 
-        print('  Model validation finished with %d errors and %d warnings.' % (err, war))
+        print '  Model validation finished with %d errors and %d warnings.' % (err, war)
 
         
 def DiffConstraint(dvar,ivar):
@@ -558,4 +559,4 @@ def _ToEquations(rels):
             return sym.Eq(rel)
         else:
             return rel
-    return list(map(lambda r: _ToEquation(r), rels))
+    return map(lambda r: _ToEquation(r), rels)

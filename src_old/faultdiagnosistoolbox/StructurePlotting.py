@@ -1,12 +1,12 @@
 import numpy as np
-import faultdiagnosistoolbox.dmperm as dmperm
+import dmperm as dmperm
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 def PlotModel(model, **options):
     labelVars = False;
-    if 'verbose' in options:
+    if options.has_key('verbose'):
         labelVars = options['verbose'];
     elif model.nx()+model.nf()+model.nz()<40:
         labelVars = True;
@@ -34,7 +34,7 @@ def PlotModel(model, **options):
     # Plot axis ticks
     if labelVars:
         plt.xticks(np.arange(0,model.nx()+model.nf()+model.nz()),model.x + model.f + model.z, rotation='vertical')
-        bottomMargin = 0.1 + (np.max(list(map(lambda v:len(v),model.x)))-3)*0.1/6 # ad-hoc expression
+        bottomMargin = 0.1 + (np.max(map(lambda v:len(v),model.x))-3)*0.1/6 # ad-hoc expression
         plt.subplots_adjust(bottom=np.max([0.1,bottomMargin]))
         plt.yticks(np.arange(0,model.X.shape[0]),model.e)
 
@@ -64,7 +64,7 @@ def PlotMatching( model, Gamma, **options):
 
     # Determine if axis should be labeled
     labelVars = False;
-    if 'verbose' in options:
+    if options.has_key('verbose'):
         labelVars = options['verbose'];
     elif len(q)<40:
         labelVars = True;
@@ -85,7 +85,7 @@ def PlotMatching( model, Gamma, **options):
     
     # Plot axis ticks
     if labelVars:
-        bottomMargin = 0.1 + (np.max(list(map(lambda v:len(v),[model.x[xi] for xi in q])))-3)*0.1/6 # ad-hoc expression
+        bottomMargin = 0.1 + (np.max(map(lambda v:len(v),[model.x[xi] for xi in q]))-3)*0.1/6 # ad-hoc expression
         plt.xticks(np.arange(0,len(q)), [model.x[xi] for xi in q],rotation='vertical')
         plt.subplots_adjust(bottom=np.max([0.1,bottomMargin]))        
         plt.yticks(np.arange(0,len(p)), [model.e[ei] for ei in p])
@@ -114,15 +114,15 @@ def PlotDM(model, **options) :
 
     X = model.X
     labelVars = False
-    if 'verbose' in options:
+    if options.has_key('verbose'):
         labelVars = options['verbose']
     elif X.shape[0]<40:
         labelVars = True
-    if 'eqclass' in options:
+    if options.has_key('eqclass'):
         eqclass=options['eqclass']
     else:
         eqclass=False
-    if 'fault' in options:
+    if options.has_key('fault'):
         fault=options['fault']
     else:
         fault=False
@@ -224,7 +224,7 @@ def PlotDM(model, **options) :
         plt.plot([c-0.5, c-0.5], [r1-0.5, len(dm.rowp)+0.5], 'k--')   
 
     if fault:
-        fPlotRowIdx = list(map(lambda f: np.argwhere(dm.rowp==f[0])[0][0],np.argwhere(model.F)))
+        fPlotRowIdx = map(lambda f: np.argwhere(dm.rowp==f[0])[0][0],np.argwhere(model.F))
         nVars = len(dm.colp)
         for ff in np.unique(fPlotRowIdx):
             fstr=''
@@ -241,7 +241,7 @@ def PlotDM(model, **options) :
     if labelVars:
         plt.xticks(np.arange(0,X.shape[1]),[model.x[xidx] for xidx in dm.colp], rotation='vertical')
 
-        bottomMargin = 0.1 + (np.max(list(map(lambda v:len(v),[model.x[xidx] for xidx in dm.colp])))-3)*0.1/6 # ad-hoc expression
+        bottomMargin = 0.1 + (np.max(map(lambda v:len(v),[model.x[xidx] for xidx in dm.colp]))-3)*0.1/6 # ad-hoc expression
         plt.subplots_adjust(bottom=np.max([0.1,bottomMargin]))
         plt.yticks(np.arange(0,model.X.shape[0]),model.e)
 

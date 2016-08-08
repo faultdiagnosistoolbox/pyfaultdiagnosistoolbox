@@ -1,14 +1,15 @@
+
 extern "C" {
-  #include "Python.h"
+  #include <Python.h>
+  #include "cs.h"
   #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
   #include <numpy/ndarrayobject.h>
 }
-
 #include <iostream>
 #include <cstring>
 #include "StructuralAnalysisModel.h"
 #include "MSOAlg.h"
-
+#include "timer.h"
 
 int DictToCS( PyObject *csDict, cs **sm );
 PyObject* CreateDMpermOutput( csd* dm, cs* sm );
@@ -36,10 +37,11 @@ MSOResultPython::CreateOutput()
   }
   
   return (PyObject *)out;
+  //  return Py_BuildValue("[i]",10);
 }
 
 static PyObject*
-structuralanalysis3_findmsointernal(PyObject *self, PyObject * args)
+structuralanalysis_findmsointernal(PyObject *self, PyObject * args)
 {
   PyObject *x;
 
@@ -70,7 +72,7 @@ structuralanalysis3_findmsointernal(PyObject *self, PyObject * args)
 }
 
 static PyObject*
-structuralanalysis3_dmperminternal(PyObject *self, PyObject * args)
+structuralanalysis_dmperminternal(PyObject *self, PyObject * args)
 {
   PyObject *x;
 
@@ -89,95 +91,33 @@ structuralanalysis3_dmperminternal(PyObject *self, PyObject * args)
   return res;
 }
 
-struct module_state {
-    PyObject *error;
-};
-
-#if PY_MAJOR_VERSION >= 3
-#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
-#else
-#define GETSTATE(m) (&_state)
-static struct module_state _state;
-#endif
-
-static PyObject *
-error_out(PyObject *m) {
-    struct module_state *st = GETSTATE(m);
-    PyErr_SetString(st->error, "something bad happened");
-    return NULL;
-}
-
-static PyMethodDef structuralanalysis3_methods[] = {
-    {"dmperm_internal",  structuralanalysis3_dmperminternal, METH_VARARGS, "Dulmage-Mendelsohn decomposition"},
-    {"findmso_internal",  structuralanalysis3_findmsointernal, METH_VARARGS, "Compute MSO sets"},
-    {NULL, NULL}
-};
-
-#if PY_MAJOR_VERSION >= 3
-
-static int structuralanalysis3_traverse(PyObject *m, visitproc visit, void *arg) {
-    Py_VISIT(GETSTATE(m)->error);
-    return 0;
-}
-
-static int structuralanalysis3_clear(PyObject *m) {
-    Py_CLEAR(GETSTATE(m)->error);
-    return 0;
-}
-
-static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        "structuralanalysis3",
-        NULL,
-        sizeof(struct module_state),
-        structuralanalysis3_methods,
-        NULL,
-        structuralanalysis3_traverse,
-        structuralanalysis3_clear,
-        NULL
-};
-
-#define INITERROR return NULL
-
 PyMODINIT_FUNC
-PyInit_structuralanalysis3(void)
-
-#else
-#define INITERROR return
-
-PyMODINIT_FUNC
-initstructuralanalysis3(void)
-#endif
+initstructuralanalysis(void)
 {
-#if PY_MAJOR_VERSION >= 3
-    PyObject *module = PyModule_Create(&moduledef);
-#else
-    PyObject *module = Py_InitModule("structuralanalysis3", structuralanalysis3_methods);
-#endif
-
-    if (module == NULL)
-        INITERROR;
-    struct module_state *st = GETSTATE(module);
-
-    char errName[] = "structuralanalysis3.Error";
-    st->error = PyErr_NewException(errName, NULL, NULL);
-    if (st->error == NULL) {
-        Py_DECREF(module);
-        INITERROR;
-    }
-
-    import_array();
-
-#if PY_MAJOR_VERSION >= 3
-    return module;
-#endif
+  static PyMethodDef StructuralAnalysisMethods[] = {
+    {"dmperm_internal",  structuralanalysis_dmperminternal, METH_VARARGS, "Dulmage-Mendelsohn decomposition"},
+    {"findmso_internal",  structuralanalysis_findmsointernal, METH_VARARGS, "Compute MSO sets"},
+    {NULL, NULL, 0, NULL}        /* Sentinel */
+  };
+  (void) Py_InitModule("structuralanalysis", StructuralAnalysisMethods);
+  import_array();
 }
 
-static PyObject*
-foobar(PyObject *self, PyObject * args)
+int
+main(int argc, char *argv[])
 {
-  return Py_BuildValue("");
+  /* Pass argv[0] to the Python interpreter */
+  Py_SetProgramName(argv[0]);
+  
+  /* Initialize the Python interpreter.  Required. */
+  Py_Initialize();
+  
+  /* Add a static module */
+  initstructuralanalysis();
+
+  return 0;
 }
+
 
 int
 DictToCS( PyObject *csDict, cs **sm )
@@ -189,19 +129,16 @@ DictToCS( PyObject *csDict, cs **sm )
 
   // nzmax - number of non-zero elements
   PyObject *pnzmax = PyDict_GetItemString(csDict, "nzmax");
-  //  (*sm)->nzmax = PyInt_AS_LONG(pnzmax);
-  (*sm)->nzmax = PyLong_AsLong(pnzmax);
-  
+  (*sm)->nzmax = PyInt_AS_LONG(pnzmax);
+
   // m - number of rows
   PyObject *pm = PyDict_GetItemString(csDict, "m");
-  // (*sm)->m = PyInt_AS_LONG(pm);
-  (*sm)->m = PyLong_AsLong(pm);
-  
+  (*sm)->m = PyInt_AS_LONG(pm);
+
   // n - number of columns
   PyObject *pn = PyDict_GetItemString(csDict, "n");
-  // (*sm)->n = PyInt_AS_LONG(pn);
-  (*sm)->n = PyLong_AsLong(pn);
-  
+  (*sm)->n = PyInt_AS_LONG(pn);
+
   // nz - -1 for compressed formate
   (*sm)->nz = -1;
   
