@@ -1,5 +1,5 @@
 import numpy as np
-import faultdiagnosistoolbox.dmperm
+import faultdiagnosistoolbox.dmperm as dmperm
 from faultdiagnosistoolbox.MHS import MHS
 
 def ParentBlocks(X,b):
