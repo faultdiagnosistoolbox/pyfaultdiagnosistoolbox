@@ -411,7 +411,6 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
         sys.stdout.write("no batch")
     sys.stdout.write(")\n")
 
-    print('Language: ' + language)
     sys.stdout.write("  Generating code for the exactly determined part: ")
     m0Code, m0iState, m0dState, m0integ = GenerateExactlyDetermined( model, Gamma, language, user_functions)
 
