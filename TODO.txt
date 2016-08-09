@@ -1,4 +1,6 @@
-Module dependencies: jupyter matplotlib numpy scipy sympy controlpy
+Module dependencies:
+  Toolbox: matplotlib numpy scipy sympy
+  Examples: controlpy jupyter
 
 Todo
 ====
