@@ -8,7 +8,7 @@ module1 = Extension('structuralanalysis',
                     include_dirs=[incdir,'/Users/frisk/sw/CSParse/Include'],
                     extra_compile_args=['-Wno-unused-function'],
                     library_dirs=['/Users/frisk/sw/CSParse/Lib'],
-                    libraries=['csparse'], extra_objects=['SparseMatrix.o', 'StructuralAnalysisModel.o', 'MSOalg.o'])
+                    libraries=['csparse'], extra_objects=['SparseMatrix.o', 'StructuralAnalysisModel.o', 'MSOAlg.o'])
 
 setup (name = 'structuralanalysis',
        version = '0.1',
