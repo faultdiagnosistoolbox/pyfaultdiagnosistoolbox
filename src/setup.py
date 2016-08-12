@@ -10,9 +10,9 @@ incdir = np.get_include()
 
 module1 = Extension('faultdiagnosistoolbox.structuralanalysis',
                     sources = ['faultdiagnosistoolbox/structuralanalysismodule.cc', 'faultdiagnosistoolbox/SparseMatrix.cc', 'faultdiagnosistoolbox/StructuralAnalysisModel.cc', 'faultdiagnosistoolbox/MSOAlg.cc'],
-                    include_dirs=[incdir,'CSParse/Include'],
-                    extra_compile_args=['-Wno-unused-function'],
-                    library_dirs=['CSParse/Lib'],
+                    include_dirs=[incdir,'CSparse/Include'],
+                    extra_compile_args=['-Wno-unused-function', '-Wno-unknown-pragmas'],
+                    library_dirs=['CSparse/Lib'],
                     libraries=['csparse'])
 
 setup(
