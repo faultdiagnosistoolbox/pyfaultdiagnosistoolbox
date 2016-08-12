@@ -442,7 +442,7 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python', batch
             WriteResGenCPython( model, resGenCode, resGenState, resGenInteg, name, batch,
                                     resGenCausality, resGenEqs, external_src, external_headers )
             print('Files ' + name + '.cc and ' + name + '_setup.py generated')
-            print('Compile by running: python ' + name + '_setup.py build')
+            print('Compile by running: python ' + name + '_setup.py build_ext --inplace')
 
 def WriteResGenCoreC(f,name, model, resGen, state, integ, resGenEqs, batch):
     usedParams = UsedVars(model.syme[resGenEqs], model.parameters)
