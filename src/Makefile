@@ -1,9 +1,16 @@
-TARGET_VERSION=`sw_vers -productVersion` # 11.10
-.PHONY: package clean
+.PHONY: package clean cleanall
 
-package: 
-	MACOSX_DEPLOYMENT_TARGET=$(TARGET_VERSION) python setup.py build
+package: CSparse/Lib/libcsparse.a
+	python setup.py build
+
+CSparse/Lib/libcsparse.a:
+	cd CSparse && MACOSX_DEPLOYMENT_TARGET=10.6 make
 
 clean:
 	rm -rf build/* *~ 
+
+cleanall:
+	make clean
+	cd CSparse && make purge
+
 
