@@ -14,7 +14,6 @@ module1 = Extension('faultdiagnosistoolbox.structuralanalysis',
                     extra_compile_args=['-Wno-unused-function', '-Wno-unknown-pragmas'],
                     library_dirs=['CSparse/Lib'],
                     libraries=['csparse'])
-
 setup(
     name='faultdiagnosistoolbox',
     version='0.1',
