@@ -1,7 +1,10 @@
-.PHONY: build build_ext clean cleanall
+.PHONY: build build_ext wheel clean cleanall
 
 build: CSparse/Lib/libcsparse.a
 	python setup.py build
+
+wheel: CSparse/Lib/libcsparse.a
+	python setup.py bdist_wheel
 
 build_ext: CSparse/Lib/libcsparse.a
 	python setup.py build_ext --inplace

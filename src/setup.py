@@ -1,36 +1,39 @@
 from setuptools import setup, find_packages, Extension
 # To use a consistent encoding
 from codecs import open
-from os import path
+from os import path, system
 import numpy as np
 
 here = path.abspath(path.dirname(__file__))
 
 incdir = np.get_include()
 
-module1 = Extension('faultdiagnosistoolbox.structuralanalysis',
+strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
                     sources = ['faultdiagnosistoolbox/structuralanalysismodule.cc', 'faultdiagnosistoolbox/SparseMatrix.cc', 'faultdiagnosistoolbox/StructuralAnalysisModel.cc', 'faultdiagnosistoolbox/MSOAlg.cc'],
                     include_dirs=[incdir,'CSparse/Include'],
                     extra_compile_args=['-Wno-unused-function', '-Wno-unknown-pragmas'],
                     library_dirs=['CSparse/Lib'],
                     libraries=['csparse'])
 
+if not path.isfile('CSparse/Lib/libcsparse.a'):
+    system('(cd CSparse; MACOSX_DEPLOYMENT_TARGET=10.6 make)')
+
 setup(
     name='faultdiagnosistoolbox',
     version='0.1',
 
-    ext_modules = [module1],
     description='A Fault Diagnosis Toolbox',
 #    long_description=long_description,
 
-    # The project's main homepage.
     url='http://www.fs.isy.liu.se/Software/',
 
     # Author details
     author='Erik Frisk',
     author_email='erik.frisk@liu.se',
 
-#    ext_modules=['structuralanalysis'],
+    ext_modules = [strucanalysis_ext],
+
+    include_package_data = True, 
     
     # Choose your license
     license='MIT',
@@ -70,7 +73,8 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['sympy', 'numpy', 'scipy'],
+    setup_requires=['numpy'],
+    install_requires=['sympy', 'numpy', 'scipy', 'matplotlib'],
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
@@ -97,9 +101,9 @@ setup(
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    entry_points={
-        'console_scripts': [
-            'sample=sample:main',
-        ],
-    },
+    #entry_points={
+    #    'console_scripts': [
+    #        'sample=sample:main',
+    #    ],
+    #},
 )

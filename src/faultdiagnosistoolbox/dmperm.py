@@ -1,4 +1,4 @@
-import structuralanalysis as sa
+import faultdiagnosistoolbox.structuralanalysis as sa
 import scipy.sparse as sp
 import numpy as np
 import copy
