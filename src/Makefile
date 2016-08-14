@@ -1,10 +1,13 @@
-.PHONY: build build_ext wheel clean cleanall
+.PHONY: build build_ext wheel sdist wheel clean cleanall
 
 build: CSparse/Lib/libcsparse.a
 	python setup.py build
 
 wheel: CSparse/Lib/libcsparse.a
 	python setup.py bdist_wheel
+
+sdist:
+	python setup.py sdist
 
 build_ext: CSparse/Lib/libcsparse.a
 	python setup.py build_ext --inplace
@@ -16,10 +19,11 @@ CSparse/Lib/libcsparse.a:
 	cd CSparse && MACOSX_DEPLOYMENT_TARGET=10.6 make 
 
 clean:
-	rm -rf build/* *~ faultdiagnosistoolbox/*.so
+	rm -rf build *~ faultdiagnosistoolbox/*.so
 
 cleanall:
 	make clean
 	cd CSparse && make purge
-
+	rm -rf faultdiagnosistoolbox.egg-info
+	rm -rf dist
 
