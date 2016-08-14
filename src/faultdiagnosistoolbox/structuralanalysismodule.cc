@@ -183,20 +183,17 @@ DictToCS( PyObject *csDict, cs **sm )
 
   // nzmax - number of non-zero elements
   PyObject *pnzmax = PyDict_GetItemString(csDict, "nzmax");
-  //  (*sm)->nzmax = PyInt_AS_LONG(pnzmax);
   (*sm)->nzmax = PyLong_AsLong(pnzmax);
   
   // m - number of rows
   PyObject *pm = PyDict_GetItemString(csDict, "m");
-  // (*sm)->m = PyInt_AS_LONG(pm);
   (*sm)->m = PyLong_AsLong(pm);
   
   // n - number of columns
   PyObject *pn = PyDict_GetItemString(csDict, "n");
-  // (*sm)->n = PyInt_AS_LONG(pn);
   (*sm)->n = PyLong_AsLong(pn);
   
-  // nz - -1 for compressed formate
+  // nz - -1 for compressed format
   (*sm)->nz = -1;
   
   // x - data
@@ -229,5 +226,4 @@ CreateDMpermOutput( csd* dm, cs* sm )
   PyObject* cc=PyArray_SimpleNewFromData(1, &numBlocks, NPY_INT64, (void *)dm->cc);
 
   return Py_BuildValue("(O,O,O,O,O,O)", p, q, r, s, rr, cc);  
-  //  return Py_BuildValue("{s:O,s:O,s:O,s:O,s:O,s:O}", "p", p, "q", q, "r", r, "s", s, "rr", rr, "cc", cc);
 }

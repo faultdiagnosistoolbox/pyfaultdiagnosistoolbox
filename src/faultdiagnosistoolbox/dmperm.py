@@ -230,13 +230,15 @@ def Mplus( X, causality='mixed' ):
 
     def GsubC(G,C):
         c,x,A = copy.deepcopy(G)
-        A = np.delete(A,C,axis=0)
+        Cidx = list(map(lambda ci: np.argwhere(G[0]==ci)[0][0], C))
+        A = np.delete(A,Cidx,axis=0)
         c = np.array([ci for ci in c if not ci in C])
         return (c,x,A)
 
     def GsubX(G,X):
-        c,x,A = copy.deepcopy(G)        
-        A = np.delete(A,X,axis=1)
+        c,x,A = copy.deepcopy(G)
+        Xidx = list(map(lambda xi: np.argwhere(G[1]==xi)[0][0], X))
+        A = np.delete(A,Xidx,axis=1)
         x = np.array([xi for xi in x if not xi in X])
         return (c,x,A)
     
