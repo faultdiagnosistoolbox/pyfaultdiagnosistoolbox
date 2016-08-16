@@ -1,4 +1,9 @@
-.PHONY: build build_ext wheel sdist wheel clean cleanall
+.PHONY: build build_ext wheel sdist wheel clean cleanall alldist
+
+build_ext: CSparse/Lib/libcsparse.a
+	python setup.py build_ext --inplace
+
+alldist: build wheel sdist
 
 build: CSparse/Lib/libcsparse.a
 	python setup.py build
@@ -8,9 +13,6 @@ wheel: CSparse/Lib/libcsparse.a
 
 sdist:
 	python setup.py sdist
-
-build_ext: CSparse/Lib/libcsparse.a
-	python setup.py build_ext --inplace
 
 CSparse/Lib/libcsparse.a:
 # Anaconda python sets MACOSX_DEPLOYMENT_TARGET to 10.6, so to avoid
