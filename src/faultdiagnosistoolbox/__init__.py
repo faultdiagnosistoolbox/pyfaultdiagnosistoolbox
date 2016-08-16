@@ -5,5 +5,5 @@ from . DiagnosisModel import *
 #from .Matching import *
 
 #__all__ = ["DiagnosisModel", "dmperm", "PlotDM", "Matching"]
-#__all__ = ["DiagnosisModel", "dmperm"]
+#__all__ = ["DiagnosisModel", "dmperm", "structureanalysis"]
 #__all_  = ["DiagnosisModel"]

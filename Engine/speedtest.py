@@ -1,3 +1,4 @@
+# %%
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -6,14 +7,14 @@ import sys
 from importlib import reload
 new_paths = ['../Misc/', '../src', '../src/faultdiagnosistoolbox/']
 [sys.path.append(d) for d in new_paths if not d in sys.path];
-
+##
 import numpy as np
 import scipy
 from scipy.stats import gaussian_kde
 from misc import *
 import GetMeasurementData as gm
 
-
+# %%
 import VEP4Engine
 model = VEP4Engine.model;
 
@@ -30,7 +31,7 @@ for dd in dataSets:
     data[dd] = gm.GetMeasurementData(dataDir + dataSets[dd])
 sys.stdout.write(' Finished loading ' + str(len(data.keys())) + ' datasets\n')
 
+# %%
 import ResGen_1649_1
 r1 = RunResgenOnDataSets( ResGen_1649_1.ResGen_1649_1, data, VEP4Engine.diag_par )
-
 

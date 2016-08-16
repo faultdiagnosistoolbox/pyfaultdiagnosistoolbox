@@ -134,6 +134,9 @@ class DiagnosisModel(object):
         self.Pfault = []
         self.P = np.arange(0,len(self.x))
         
+    def IsObservable(self, eq=[]):
+        return dmperm.IsObservable(self.X,eq)
+
     def IsHighIndex(self, eq=[]):
         if len(eq)==0:
             eq = np.arange(0,self.X.shape[0])

@@ -149,22 +149,65 @@ def IsPSO( X, *args ):
     dm = GetDMParts(X[eq,:])    
     return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
 
-#def IsHighIndex(X, **opts):
-#    if 'eq' in opts:
-#        eq = opts['eq']
-#    else:
-#        eq = np.arange(0,X.shape[0])
-#    X1 = X[eq,:]
-#    x1 = np.argwhere(X1==3)
-#    row_d = x1[:,0]
-#    row_a = np.array([r for r in np.arange(0,X1.shape[0]) if not r in row_d])
-#    col_d1 = x1[:,1]
-#    col_1 = np.argwhere(X1[row_d,:]==2)[:,1]
-#    col_2 = np.array([c for c in range(0,X1.shape[1]) if not (c in col_d1 or c in col_1)])
-#    col_2 = [c for c in col_2 if np.any(X1[:,c],axis=0)]
-#    Xhod = X1[row_a,:][:,np.concatenate((col_2, col_d1))]
-#    
-#    return srank(Xhod)<Xhod.shape[1]
+def IsObservable(Xin,eq=[]):
+    def DiffConstraints(X):
+        diffEqs = np.where(np.any(X==2,axis=1))[0]
+        algEqs = np.array([ei for ei in np.arange(0,ne) if not ei in diffEqs])
+        x1Idx=np.argwhere(np.any(X[diffEqs,:]==2,axis=0)).flatten()
+        dx1Idx = np.array(list(map(lambda x1i: np.argwhere(X[np.argwhere(X[:,x1i]==2)[0][0],:]==3)[0][0],x1Idx)))
+        x2Idx = np.array([xi for xi in np.arange(0,nx) if (not xi in x1Idx) and (not xi in dx1Idx)])
+        return (diffEqs,algEqs,x1Idx,dx1Idx,x2Idx)
+
+    if len(eq)==0:
+        X=Xin
+    else:
+        X=Xin[eq,:]
+        # Remove zero columns
+        zc = np.where(np.all(X==0,axis=0))[0]
+        X = np.delete(X,zc,axis=1)
+    
+    ne = X.shape[0]
+    nx = X.shape[1]
+
+#    diffEqs = np.where(np.any(X==2,axis=1))[0]
+#    algEqs = np.array([ei for ei in np.arange(0,ne) if not ei in diffEqs])
+#    x1Idx=np.argwhere(np.any(X[diffEqs,:]==2,axis=0)).flatten()
+#    dx1Idx = np.array(list(map(lambda x1i: np.argwhere(X[np.argwhere(X[:,x1i]==2)[0][0],:]==3)[0][0],x1Idx)))
+#    x2Idx = np.array([xi for xi in np.arange(0,nx) if (not xi in x1Idx) and (not xi in dx1Idx)])
+
+    diffEqs,algEqs,x1Idx,dx1Idx,x2Idx = DiffConstraints(X)
+    n1 = len(x1Idx)
+    n2 = len(x2Idx)
+    nalg = len(algEqs)
+
+    # Model format:
+    #  x1' = dx1
+    #  0   = A11 x1 + A12 x2 + A13 dx1
+    #
+    #  AC-sF=0
+    
+    A = X[algEqs,:][:,np.hstack((x1Idx, x2Idx, dx1Idx)).astype(np.int64)]
+    A11 = A[:,np.arange(0,n1)]
+    A12 = A[:,np.arange(n1,n1+n2)]
+    A13 = A[:,np.arange(n1+n2,2*n1+n2)]
+    AC = np.vstack((np.hstack((np.zeros((n1,n1+n2)),np.eye(n1))),A)).astype(np.int64)
+    F = np.vstack((np.hstack((np.eye(n1),np.zeros((n1,n1+n2)))),np.zeros((ne-n1,n1+n2+n1)))).astype(np.int64)
+
+    # Condition 1: srank(A-sF)=n1+n2
+    obs=srank(np.hstack((np.logical_or(A11,A13),A12)))==n1+n2
+
+    if obs:
+    # Condition 2: v(AC)=2*n1+n2
+        obs=srank(AC)==2*n1+n2    
+    if obs:
+    # Condition 3: no s-argc in Hall components of AC-sF
+        G3=np.maximum(AC,2*F)
+        dm=GetDMParts(G3)
+        if len(dm.M0)>0:
+            hc_sarcs = list(map(lambda hc: np.any(G3[hc.row,:][:,hc.col]==2), dm.M0))
+            obs=len(hc_sarcs)==0 or (not np.any(hc_sarcs))
+
+    return obs
 
 def IsHighIndex(X, eq=[]):
     if len(eq)==0:
