@@ -1,10 +1,9 @@
 # %%
+%matplotlib 
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import os
 import sys
-from importlib import reload
 new_paths = ['../Misc/', '../src', '../src/faultdiagnosistoolbox/']
 [sys.path.append(d) for d in new_paths if not d in sys.path];
 ##

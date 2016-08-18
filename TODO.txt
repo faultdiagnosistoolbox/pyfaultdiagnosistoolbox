@@ -6,7 +6,6 @@ Todo
 ====
 MTES
 RemoveFaultVariables
-SubModel
 TestSelection
 GenSimulationModel
 Pantelides
@@ -53,6 +52,7 @@ SensorPlacementDetectability
 SensorPlacementIsolability
 SeqResGen (partially)
 Structural
+SubModel
 copy
 ne
 nf

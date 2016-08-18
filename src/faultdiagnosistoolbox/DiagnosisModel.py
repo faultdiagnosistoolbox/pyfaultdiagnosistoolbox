@@ -11,6 +11,7 @@ from faultdiagnosistoolbox.VarIdGen import VarIdGen
 import sys
 
 class DiagnosisModel(object):
+    """ Base class for diagnosis models"""
     def __init__(self, modeldef, name='') : 
         self.X = np.zeros((0,0),dtype='float64')
         self.F = np.zeros((0,0),dtype='float64')
@@ -73,30 +74,51 @@ class DiagnosisModel(object):
         self.Pfault = []
 
     def copy(self):
+        """ Returns a new copy of the model object """
         return copy.deepcopy(self)
     
     def ne(self):
+        """ Returns number of equations in model """
         return self.X.shape[0]
 
     def nx(self):
+        """ Returns number of unknown variables in model """
         return self.X.shape[1]
 
     def nf(self):
+        """ Returns number of fault variables in model """
         return self.F.shape[1]
 
     def nz(self):
+        """ Returns number of known variables in model """
         return self.Z.shape[1]
     
     def GetDMParts(self):
         return dmperm.GetDMParts(self.X)
         
     def MSO(self):
+        """ Returns the set of MSO sets 
+
+        For details of the algorithm see the journal publication
+        Krysander, Mattias, Jan Aslund, and Mattias Nyberg. 
+        "An efficient algorithm for finding minimal overconstrained 
+        subsystems for model-based diagnosis." 
+        Systems, Man and Cybernetics, Part A: Systems and Humans, 
+        IEEE Transactions on 38.1 (2008): 197-206."""
+
         return dmperm.MSO(self.X)
 
     def srank(self):
+        """ Returns the structural rank of the incidence matrix for the unknown variables"""
         return dmperm.srank(self.X)
   
     def IsPSO( self, *args ):
+        """ Returns True if  the model is a PSO set
+        
+        Input
+        -----
+          eq (optional) : Set of equations to analyze. (default: all equations)
+        """
         if len(args)>0:
             eq=args[0]
         else:
@@ -106,10 +128,14 @@ class DiagnosisModel(object):
         return (len(dm.Mm.row)==0) and (len(dm.M0)==0)
 
     def Structural(self):
+        """ Converts the model to a structural model"""
         self.modelType = 'Structural'
         self.syme = []
 
     def LumpDynamics(self):
+        """ Lumps the dynamics variables. 
+
+        If model is symbolic, it will be converted into a structural model"""
         if self.modelType is 'Symbolic':
             self.Structural()
 
@@ -135,26 +161,53 @@ class DiagnosisModel(object):
         self.P = np.arange(0,len(self.x))
         
     def IsObservable(self, eq=[]):
+        """ Returns true if the model is observable
+        
+        Input
+        -----
+          eq : Set of equations to analyze. (default: all equations)
+        """
         return dmperm.IsObservable(self.X,eq)
 
     def IsHighIndex(self, eq=[]):
+        """ Returns true if the model is high structural differential index
+        
+        Input
+        -----
+          eq : Set of equations to analyze. (default: all equations)
+        """
         if len(eq)==0:
             eq = np.arange(0,self.X.shape[0])
         return dmperm.IsHighIndex(self.X,eq)
 
     def IsLowIndex(self, eq=[]):
+        """ Returns true if the model is low structural differential index
+        
+        Input
+        -----
+          eq : Set of equations to analyze. (default: all equations)
+        """
         if len(eq)==0:
             eq = np.arange(0,self.X.shape[0])
         return dmperm.IsLowIndex(self.X,eq)
 
     def IsUnderdetermined(self):
+        """ Returns true if the model has underdetermined parts"""
         dm = dmperm.GetDMParts(self.X)
         return len(dm.Mm.row)>0
 
     def DifferentialConstraints(self):
+        """ Returns indices to the differential constraints"""
         return np.where(np.any(self.X==2,axis=1))[0]
 
     def FSM(self, eqs_sets, plot=False ):
+        """ Returns the fault signature matrix for a set of equation sets
+        
+        Input
+        -----
+          eqs_sets : list of sets of equations, e.g., MSO sets
+          Plot     : If True, plot the fault signature matrix (dafault: False)
+        """
         r=np.zeros((len(eqs_sets),self.F.shape[1]),dtype=np.int64)
         for idx,eqs in enumerate(eqs_sets):
             r[idx,:] = np.any(self.F[eqs,:],axis=0)
@@ -168,9 +221,31 @@ class DiagnosisModel(object):
         return r
 
     def Matching(self,eqs):
+        """ Returns a matching for a set of equations
+        
+        Input
+        -----
+          eqs : Set of equations
+        """
         return match.Matching(self.X,np.array(eqs))
 
     def MSOCausalitySweep(self, mso, diffres='int', causality=''):
+        """For a given MSO set, determine causality for sequential residual generator for 
+           each n residual equations.
+        
+        Input
+        -----
+          mso       : list of equations
+          diffres   : Can be 'int' or 'der' (default 'int'). Determines how
+                      to treat differential constraints when used as a
+                      residual equation.
+          causality : Can be 'int' or 'der'. When causality is specified, 
+                      the call returns a boolean vector indicating if it is 
+                      possible to realize the residual generator in
+                      derivative or integral causality respectively with the
+                      corresponding equations as residual equation. If
+                      this option is given, the diffres key have no
+                      effect."""
         def IsDifferentialStructure( X, eq ):
             return np.any(X[eq,:]==3)
 
@@ -205,19 +280,88 @@ class DiagnosisModel(object):
         return res
     
     def MeasurementEquations(self, m):
+        """ Returns indices to measurement equations
+
+        Input
+        -----
+          m : List of names for measurement variables (strings)"""
         mIdx = np.array([self.z.index(zi) for zi in m if zi in self.z])
         if len(mIdx)>0:
             return np.where(np.any(self.Z[:,mIdx],axis=1))[0]
         else:
             return []
 
+    def SubModel(self,m,v,clear=True,remove=False, verbose=False):
+        """ Extract submodel
+        
+        Input
+        -----
+          eqs     : Set of indices to or logicals for equations to keep/remove
+          vars    : Set of indices to or logicals for variables to keep/remove
+          clear   : If true, non used varaibles in the submodel will be
+                    eliminated (default: true)
+          verbose : If true, verbose output (default: false)
+          remove  : If true, supplied equations are removed instead of kept (default: false)"""
+        if remove:
+            eqs  = np.array([ei for ei in np.arange(0,self.ne()) if not ei in m])
+            var = np.array([vi for vi in np.arange(0,self.nx()) if not vi in v])
+        else:
+            eqs = m
+            var = np.arange(0,self.nx())
+
+        if clear:
+            xIdx = var[np.any(self.X[eqs,:][:,var],axis=0)]
+            fIdx = np.argwhere(np.any(model.F[eqs,:],axis=0)).flatten()
+            zIdx = np.argwhere(np.any(model.Z[eqs,:],axis=0)).flatten()
+        else:
+            xIdx = var
+            fIdx = np.arange(0,self.nf())
+            zIdx = np.arange(0,self.nz())
+
+        if verbose and clear:
+            cxIdx = [xi for xi in var if not xi in xIdx]
+            cfIdx = [fi for fi in np.arange(0,self.nf()) if not fi in fIdx]
+            czIdx = [zi for zi in np.arange(0,self.nf()) if not zi in zIdx]
+            if len(cxIdx)>0:
+                sys.stdout.write('Removing unknown variables: ')
+                for xi in cxIdx:
+                    sys.stdout.write(self.x[xi] + '  ')
+                sys.stdout.write('\n')
+            if len(cfIdx)>0:
+                sys.stdout.write('Removing fault variables: ')
+                for fi in cfIdx:
+                    sys.stdout.write(self.f[fi] + '  ')
+                sys.stdout.write('\n')
+            if len(czIdx)>0:
+                sys.stdout.write('Removing known variables: ')
+                for zi in czIdx:
+                    sys.stdout.write(self.z[zi] + '  ')
+                sys.stdout.write('\n')    
+
+        self.X = self.X[eqs,:][:,xIdx]
+        self.F = self.F[eqs,:][:,fIdx]
+        self.Z = self.Z[eqs,:][:,zIdx]
+        self.e = [self.e[ei] for ei in eqs]
+        self.x = [self.x[xi] for xi in xIdx]
+        self.f = [self.f[fi] for fi in fIdx]
+        self.z = [self.z[zi] for zi in zIdx]
+
+        if len(self.syme)>0:
+            self.syme=self.syme[eqs]
+
+        self.P = np.arange(0,len(xIdx))
+        self.Pfault = []
+
     def IsDynamic(self):
+        """ Returns True if model is dynamic """
         return np.any(self.X==2)
 
     def IsStatic(self):
+        """ Returns True if model is static """
         return not self.IsDynamic()
 
-    def Redundancy(self, eqs=''):
+    def Redundancy(self, eqs=[]):
+        """ Returns the redundancy of the model """
         if len(eqs)==0:
             eqs = np.arange(0,self.ne())
         
@@ -225,10 +369,25 @@ class DiagnosisModel(object):
         return len(dm.Mp.row)-len(dm.Mp.col)
 
     def MTESRedundancy( self ):
+        """ Returns the redundancy of an MTES for the model """
         eqs = np.argwhere(np.any(self.F,axis=1))[:,0]
         return self.Redundancy(eqs) + 1
     
     def PlotDM(self, **options) :
+        """ Plots Dulmage-Mendelsohn decomposition of model structure
+ 
+        Plots a Dulmage-Mendelsohn decomposition, originally described in 
+        Dulmage, A. and Mendelsohn, N. "Coverings of bipartite graphs." 
+        Canadian Journal of Mathematics 10.4 (1958): 516-534.
+   
+        Input
+        -----
+          eqclass : If True, perform canonical decomposition of M+ and
+                    plot equivalence classes
+          fault   : If true, indicates fault equations in canonical 
+                    decomposition of M+
+          verbose : If True, use full variable names in plot. If not specified, heuristic 
+                    decides based on model size of variable names should be printed."""
         labelVars = False
         if 'verbose' in options:
             labelVars = options['verbose']
@@ -245,6 +404,7 @@ class DiagnosisModel(object):
         smplot.PlotDM(self, verbose=labelVars, eqclass=eqclass, fault=fault)
             
     def PlotModel(self, **options):
+        """ Plot the model structure"""
         labelVars = False;
         if 'verbose' in options:
             labelVars = options['verbose'];
@@ -254,6 +414,13 @@ class DiagnosisModel(object):
         smplot.PlotModel(self, verbose=labelVars)
         
     def PlotMatching( self, Gamma, **options):
+        """Plots a matching by plotting the structure in an upper-triangular
+        incidence matrix with the matched variables in the diagnoal
+   
+        Input
+        -----
+          Gamma : A matching computed by the Matching class method"""
+
         q = np.array([],dtype=np.int64)
         for g in Gamma.matching:
             q = np.concatenate((q,g.col))
@@ -267,6 +434,13 @@ class DiagnosisModel(object):
         smplot.PlotMatching(self, Gamma, verbose=labelVars)
         
     def PossibleSensorLocations(self, x=-1):
+        """Set possible sensor locations
+
+        Input
+        -----
+          x : Specification of possible sensor locations 
+              The sensor positions x can be given either as 
+              indices into model.x or variable names (default: all positions)"""
         if x==-1:
             self.P = np.arange(0,len(self.x)) # Assume all possible sensor locations
         else:
@@ -276,6 +450,15 @@ class DiagnosisModel(object):
                 self.P = x.copy()
 
     def SensorLocationsWithFaults(self, x=[]):
+        """Set possible sensor locations that has faults in new sensors
+
+        Input
+        -----
+          x : Index to those sensor locations that can become faulty.
+              If no input argument is given, no sensors may
+              become faulty. The sensor positions x can be
+              given either as indices into model.x or variable
+              names"""
         if len(x)>0:
             if issubclass(type(x[0]),str): # list of strings
                 self.Pfault = np.array([self.x.index(xi) for xi in x if xi in self.x])
@@ -285,12 +468,53 @@ class DiagnosisModel(object):
             self.Pfault = []
 
     def SensorPlacementIsolability(self):
+        """ Computes all minimal sensor sets that achieves maximal fault isolability
+        of the faults in the model. 
+ 
+        Krysander, Mattias, and Erik Frisk, "Sensor placement for fault 
+        diagnosis." Systems, Man and Cybernetics, Part A: Systems and Humans, 
+        IEEE Transactions on 38.6 (2008): 1398-1410.
+ 
+        Outputs
+        -------
+        res - list of all minimal sensor sets, represented by strings
+        idx - same as res, but represented with indicices into model.f"""
         return sensplace.SensorPlacementIsolability(self)
 
     def SensorPlacementDetectability(self):
+        """ Computes all minimal sensor sets that achieves maximal fault detectability
+        of the faults in the model. 
+ 
+        Krysander, Mattias, and Erik Frisk, "Sensor placement for fault 
+        diagnosis." Systems, Man and Cybernetics, Part A: Systems and Humans, 
+        IEEE Transactions on 38.6 (2008): 1398-1410.
+ 
+        Outputs
+        -------
+        res - list of all minimal sensor sets, represented by strings
+        idx - same as res, but represented with indicices into model.f"""
         return sensplace.SensorPlacementDetectability(self)
 
     def AddSensors(self,sensors,name=[],fault=[]):
+        """ Add sensor equations to a model
+
+        Input
+        -----
+          sensors : Description of sensors to add s can be a list of strings
+                    with the names of sensors to add or indices into the known 
+                    variables (model.x) which sensors to add.
+
+                    It is only possible to add sensors measuring single
+                    variables in x. If functions of variables in x are
+                    measured, extend the model with a new variable first.
+              
+                    If the corresponding variable can be faulty, see
+                    class method SensorLocationsWithFaults, a fault will be added
+                    automatically.
+
+          name    : List with names of new sensor variables
+          fault   : List with names of fault variables for new sensors"""
+
         if issubclass(type(sensors[0]),str): # list of strings, convert to indices into self.x
             s = np.array([self.x.index(xi) for xi in sensors if xi in self.x])
         else:
@@ -352,13 +576,42 @@ class DiagnosisModel(object):
                 self.syme = np.concatenate((self.syme,[rel]))
 
     def DetectabilityAnalysis(self):
+        """ Performs a structural detectability analysis
+  
+        Outputs
+        -------
+          df  : Detectable faults
+          ndf : Non-detectable faults"""
         dm = dmperm.GetDMParts(self.X)
         df = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] in dm.Mp.row]
         ndf = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] not in dm.Mp.row]
         return (df,ndf)
     
     def IsolabilityAnalysis( self, plot=False, permute=True, causality='mixed' ):
+        """ Perform structural single fault isolability analysis of model
 
+        Inputs
+        ------
+          plot      : If True, plot the isolability matrix
+          permute   : If True, permute the fault variables such that the
+                      isolability matrix gets a block structure for easier
+                      interpretation when plotted. Does not affect the output 
+                      argument im, only the plot (default True)
+ 
+          causality : Can be 'mixed' (default), 'int', or 'der' for mixed,
+                      integral, or derivative causality analysis respectively.
+                      For details, see 
+ 
+                      Frisk, E., Bregon, A., Aaslund, J., Krysander, M., 
+                      Pulido, B., Biswas, G., "Diagnosability analysis
+                      considering causal interpretations for differential
+                      constraints", IEEE Transactions on Systems, Man and 
+                      Cybernetics, Part A: Systems and Humans, 2012, 42(5), 
+                      1216-1229.  
+        Outputs
+        -------
+          im        : Isolability matrix, im(i,j)=1 if fault i can be isolated
+                      from fault j, 0 otherwise"""
         MplusCausal = lambda X: dmperm.Mplus(X,causality=causality)
         ne = self.X.shape[0]
         nf = len(self.f)
@@ -405,10 +658,40 @@ class DiagnosisModel(object):
         return im        
 
     def IsolabilityAnalysisArrs(self,arrs,permute=True, plot=False):
+        """ Perform structural single fault isolability analysis of a set of ARRs
+
+        Inputs
+        ------
+          arrs      : List of ARRs, e.g., list of MSO sets
+          plot      : If True, plot the isolability matrix
+          permute   : If True, permute the fault variables such that the
+                      isolability matrix gets a block structure for easier
+                      interpretation when plotted. Does not affect the output 
+                      argument im, only the plot (default True)
+ 
+        Outputs
+        -------
+          im        : Isolability matrix, im(i,j)=1 if fault i can be isolated
+                      from fault j, 0 otherwise"""
         FSM = self.FSM(arrs)
         return self.IsolabilityAnalysisFSM(FSM,permute=permute,plot=plot)
 
     def IsolabilityAnalysisFSM(self,FSM,permute=True, plot=False):
+        """ Perform structural single fault isolability analysis of a fault sensitivity matrix (FSM)
+
+        Inputs
+        ------
+          FSM       : Fault sensitivity matrix
+          plot      : If True, plot the isolability matrix
+          permute   : If True, permute the fault variables such that the
+                      isolability matrix gets a block structure for easier
+                      interpretation when plotted. Does not affect the output 
+                      argument im, only the plot (default True)
+ 
+        Outputs
+        -------
+          im        : Isolability matrix, im(i,j)=1 if fault i can be isolated
+                      from fault j, 0 otherwise"""
         nf = FSM.shape[1]
         nr = FSM.shape[0]
         im = np.ones((nf,nf),dtype=np.int64)
@@ -435,11 +718,43 @@ class DiagnosisModel(object):
 
     def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python',
                       user_functions=[], external_src=[], external_headers=[]):
+        """ (Experimental) Generate Python/C code for sequential residual generator
+ 
+        Given a matching and a residual equation, generate code implementing the
+        residual generator. Generates Python/C file. How to call/compile  the
+        generated file is described in the generated file (or the user manual).
+ 
+        Inputs
+        ------
+          Gamma            : Matching
+          resEq            : Index to equation to use as residual equation
+          name             : Name of residual equation. Will also be used as a basis for
+                             filename.
+          diffres          : Can be 'int' or 'der' (default 'int'). Determines how
+                             to treat differential constraints when used as a
+                             residual equation.
+          language         : Defaults to Matlab but also C code can be generated
+ 
+          batch            : Generate a batch mode residual generator, only
+                             applicable when generating C code. Instead of
+                             computing the residual for one data samnple, 
+                             batch mode runs the residual generator for a whole
+                             data set. This can significantly decrease
+                             computational time.
+          user_functions   : Translation dictionary, from user function name 
+                             to generated code
+          external_src     : List of Python files with external functions 
+                             used in residual generator
+          external_headers : List of external header files to include in 
+                             generated C source"""
+
         codegen.SeqResGen(self, Gamma, resEq, name, diffres=diffres, language=language, batch=batch,
                               user_functions=user_functions, external_src=external_src,
                               external_headers=external_headers)
 
     def Lint(self):
+        """ Prints model information and checks for inconsistencies in model definition."""
+
         war = False
         err = False
 
@@ -524,6 +839,7 @@ class DiagnosisModel(object):
 
         
 def DiffConstraint(dvar,ivar):
+    """ Define a differential constraint"""
     return [dvar, ivar, "diff"];
 
 def _ModelStructure(rels,x) : 
