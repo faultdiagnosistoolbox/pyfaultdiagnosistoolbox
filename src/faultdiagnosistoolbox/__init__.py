@@ -27,9 +27,8 @@ http://www.fs.isy.liu.se/Software/PyFaultDiagnosisToolbox/ and
 links to relevant publications can be found also at our list of
 publications http://www.fs.isy.liu.se/Publications.
 """
-from . DiagnosisModel import *
-#from .dmperm import *
-#from .Matching import *
+from . DiagnosisModel import DiagnosisModel, DiffConstraint
+from . dmperm import dmperm, srank, MSO, GetDMParts, Mplus
 
 #__all__ = ["DiagnosisModel", "dmperm", "PlotDM", "Matching"]
 #__all__ = ["DiagnosisModel", "dmperm", "structureanalysis"]
