@@ -311,8 +311,8 @@ class DiagnosisModel(object):
 
         if clear:
             xIdx = var[np.any(self.X[eqs,:][:,var],axis=0)]
-            fIdx = np.argwhere(np.any(model.F[eqs,:],axis=0)).flatten()
-            zIdx = np.argwhere(np.any(model.Z[eqs,:],axis=0)).flatten()
+            fIdx = np.argwhere(np.any(self.F[eqs,:],axis=0)).flatten()
+            zIdx = np.argwhere(np.any(self.Z[eqs,:],axis=0)).flatten()
         else:
             xIdx = var
             fIdx = np.arange(0,self.nf())
