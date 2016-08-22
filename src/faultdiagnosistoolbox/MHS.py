@@ -1,12 +1,12 @@
 import numpy as np
 
 def MHS(conflist):
-        """ Returns Minimal Hitting Set for a set of sets
-        
-        Input
-        -----
-          conflist : list of lists of integers
-        """
+    """ Returns Minimal Hitting Set for a set of sets
+    
+    Input
+    -----
+      conflist : list of lists of integers
+    """
     mmhs = [np.array([],dtype=np.int64)]
     for c in conflist:
         j=0
