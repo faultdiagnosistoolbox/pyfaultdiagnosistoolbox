@@ -18,12 +18,16 @@ strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
 if not path.isfile('CSparse/Lib/libcsparse.a'):
     system('(cd CSparse; MACOSX_DEPLOYMENT_TARGET=10.6 make)')
 
+readme = open('README.rst', 'r')
+README_TEXT = readme.read()
+readme.close()
+
 setup(
     name='faultdiagnosistoolbox',
     version='0.1',
 
     description='A Fault Diagnosis Toolbox',
-#    long_description=long_description,
+    long_description=README_TEXT,
 
     url='http://www.fs.isy.liu.se/Software/',
 

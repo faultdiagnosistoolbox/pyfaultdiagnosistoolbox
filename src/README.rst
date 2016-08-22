@@ -1,5 +1,4 @@
-# __init__.py
-""" Fault Diagnosis Toolbox is a toolbox for analysis and design of
+Fault Diagnosis Toolbox is a toolbox for analysis and design of
 fault diagnosis systems for dynamic systems, primarily described by
 differential equations. In particular, the toolbox is focused on
 techniques that utilize structural analysis, i.e., methods that
@@ -26,10 +25,3 @@ version can always be downloaded from our website at
 http://www.fs.isy.liu.se/Software/PyFaultDiagnosisToolbox/ and
 links to relevant publications can be found also at our list of
 publications http://www.fs.isy.liu.se/Publications.
-"""
-from . DiagnosisModel import DiagnosisModel, DiffConstraint, IsDifferentialConstraint
-from . dmperm import dmperm, srank, MSO, GetDMParts, Mplus
-from . MHS import MHS
-#__all__ = ["DiagnosisModel", "dmperm", "PlotDM", "Matching"]
-#__all__ = ["DiagnosisModel", "dmperm", "structureanalysis"]
-#__all_  = ["DiagnosisModel"]
