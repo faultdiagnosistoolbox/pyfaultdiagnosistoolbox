@@ -51,12 +51,84 @@ model = fdt.DiagnosisModel(modelDef, name='MTES small example')
 # %%
 m = MTES_initModel(model)
 row = 0
+m,_ = MTES_LumpExt(m,row)
+if len(m['f'])==1: # m is an MTES
+    S = MTES_storeFS(m)
+else: #recurse
+    if p==0:
+        S=MTES_storeFS(m)
+    else:
+        S = {'eq':[], 'f':[], 'sr':0}
+    row=m['delrow']
+    while len(m['f'])>=row:
+        m,row=MTES_LumpExt(m,row)
+    for delrow in np.arange(m['delrow'],len(m['f'])):
+        # create the model where delrow has been removed
+        m['delrow']=delrow
+        rows = np.delete(np.arange(0,m['X'].shape[0]),delrow)
+        n = MTES_GetPartialModel(m,rows)
+        Sn = MTES_FindMTES(n,p) # make recursive call
+        S = MTES_addResults(S,Sn)
+        
+# %%
+def MTES_GetPartialModel(m,rows):
+    n = {}
+    vars = np.any(m['X'][rows,:],axis=0)
+    n['X'] = m['X'][rows,:][:,vars]
+    n['e'] = list(np.array(n['e'])[rows])
+[ei for ei in rows if ei < len(m['f'])]
+    return n    
 
-n,nrow = MTES_LumpExt(m,row)
+
+    
+
+# %%
+function n = GetPartialModel(m,rows)
+  n.sm = m.sm(rows,any(m.sm(rows,:),1));
+  n.e =  m.e(rows);
+  n.f = m.f(intersect(rows,1:length(m.f)));
+  n.sr = size(n.sm,1)-size(n.sm,2);
+  n.delrow = length(find(rows<m.delrow))+1;
+end
+
+function S = FindMTES(m,p)
+  m = LumpExt(m,1);
+  if length(m.f)==1 % if m is MTES
+    S = storeFS(m); % then store m
+  else %otherwise make recursive call
+    if p == 1
+      S = storeFS(m);
+    else
+      S.eq = {};
+      S.f = {};
+      S.sr = [];
+    end
+    row = m.delrow;
+    while length(m.f)>=row % some rows are allowed to be removed
+      [m,row] = LumpExt(m,row); % lump model w.r.t. row
+    end
+    for delrow = m.delrow:length(m.f)
+      % create the model where delrow has been removed
+      m.delrow = delrow;
+      rows = [1:delrow-1 delrow+1:size(m.sm,1)];
+      n = GetPartialModel(m,rows);
+
+      Sn = FindMTES(n,p); % make recursive call
+      S = addResults(S,Sn); % store results
+    end   
+  end
+end
 
 
-
-# In[ ]:
+# %% Code
+def MTES_storeFS(m):
+    eq = list(np.sort(np.concatenate(m['e'])))
+    f = list(np.sort(np.concatenate(m['f'])))
+    return {'eq': eq, 'f': f, 'sr':m['sr']}
+            
+def MTES_FindMTES(m,p):
+    pass
+    
 def MTES( self ):
     S = {'eq':[], 'f':[], 'sr':[]}    
     m = MTES_initModel(self) # overdetermined or empty
