@@ -152,19 +152,19 @@ def MTES_LumpExt(m,row):
             x2 =np.zeros((len(eqcls),len(col_over))).astype(np.int64)
         n['X'] = np.vstack((x1,x2,x3))
 
+        foo = remRows[row_over[0:rowinsert]].astype(np.int64) if len(row_over[0:rowinsert])>0 else np.array([],dtype=np.int64)
+        e1 = list(np.array(m['e'])[foo])
+        e2 = list([np.array(m['e'])[eqcls].flatten()])
+        foo = remRows[row_over[rowinsert:]].astype(np.int64) if len(row_over[rowinsert:])>0 else np.array([],dtype=np.int64)
+        e3 = list(np.array(m['e'])[foo])
+        n['e'] = e1 + e2 + e3
+
         foo = remRowsf[row_overf[0:rowinsert]].astype(np.int64) if len(row_overf[0:rowinsert])>0 else np.array([],dtype=np.int64)
         ef1 = list(np.array(m['f'])[foo])
         ef2 = list([np.array(m['f'])[eqclsf].flatten()])
         foo = remRowsf[row_overf[rowinsert:]].astype(np.int64) if len(row_overf[rowinsert:])>0 else np.array([],dtype=np.int64)
         ef3 = list(np.array(m['f'])[foo])
         n['f'] = ef1 + ef2 + ef3
-
-        foo = remRowsf[row_overf[0:rowinsert]].astype(np.int64) if len(row_overf[0:rowinsert])>0 else np.array([],dtype=np.int64)
-        e1 = list(np.array(m['e'])[foo])
-        e2 = list([np.array(m['e'])[eqcls].flatten()])
-        foo = remRowsf[row_overf[rowinsert:]].astype(np.int64) if len(row_overf[rowinsert:])>0 else np.array([],dtype=np.int64)
-        e3 = list(np.array(m['e'])[foo])
-        n['e'] = e1 + e2 + e3
               
         n['sr'] = m['sr']
 
