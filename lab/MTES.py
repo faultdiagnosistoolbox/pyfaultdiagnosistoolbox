@@ -1,14 +1,14 @@
 
 # coding: utf-8
 
-# In[1]:
+# %% Basic imports
 import sys
 import numpy as np
 new_paths = ['../Misc/', '../src/']
 [sys.path.append(d) for d in new_paths if not d in sys.path];
 import faultdiagnosistoolbox as fdt
 
-# In[3]:
+# %% Define model: three-tank system
 
 modelDef = {}
 modelDef['type'] = 'VarStruc'
@@ -33,7 +33,7 @@ modelDef['rels'] = [
   ['Rv0','y2']]
 model = fdt.DiagnosisModel(modelDef, name='MTES example')
 
-# %%
+# %% Define model: small system (paper version)
 modelDef={}
 modelDef['type'] = 'VarStruc'
 modelDef['x'] = ['x1','x2','x3']
@@ -67,21 +67,19 @@ def MTES_FindMTES(m,p):
             S = {'eq':[], 'f':[], 'sr':[]}
         row = m['delrow']
         while len(m['f'])>row:
-            print('1')
             m,row=MTES_LumpExt(m,row)
         for delrow in np.arange(m['delrow'],len(m['f'])):
-            print('2')
             # create the model where delrow has been removed
             m['delrow']=delrow
             rows = np.delete(np.arange(0,m['X'].shape[0]),delrow)
+#            print(np.max(rows))
+            print(len(m['e']))
+            print(m['X'].shape)
             n = MTES_GetPartialModel(m,rows)
             Sn = MTES_FindMTES(n,p) # make recursive call
             S = MTES_addResults(S,Sn)
     return S
         
-# %%
-MTES(model)
-
 # %% Code
 def MTES_addResults(S,Sn):
     return {'eq':S['eq']+Sn['eq'],
@@ -142,23 +140,30 @@ def MTES_LumpExt(m,row):
             rowinsert = n['delrow']
         else:
             rowinsert = row
-        print(remRows)
-        print(row_over[0:rowinsert])
-        print(type(remRows))
-        print(type(row_over[0:rowinsert]))
-        x1 = m['X'][remRows[row_over[0:rowinsert]],:][:,col_over]
-        x2 = np.any(m['X'][eqcls,:][:,col_over],axis=0).astype(np.int64)
-        x3 = m['X'][remRows[row_over[rowinsert:]],:][:,col_over]
+        if len(row_over)>0 and len(col_over)>0:
+            x1 = m['X'][remRows[row_over[0:rowinsert]],:][:,col_over]
+            x3 = m['X'][remRows[row_over[rowinsert:]],:][:,col_over]
+        else:
+            x1 =np.zeros((len(row_over),len(col_over))).astype(np.int64)
+            x3 =np.zeros((len(row_over),len(col_over))).astype(np.int64)
+        if len(eqcls)>0 and len(col_over)>0:
+            x2 = np.any(m['X'][eqcls,:][:,col_over],axis=0).astype(np.int64)
+        else:
+            x2 =np.zeros((len(eqcls),len(col_over))).astype(np.int64)
         n['X'] = np.vstack((x1,x2,x3))
 
-        ef1 = list(np.array(m['f'])[remRowsf[row_overf[0:rowinsert]]])
+        foo = remRowsf[row_overf[0:rowinsert]].astype(np.int64) if len(row_overf[0:rowinsert])>0 else np.array([],dtype=np.int64)
+        ef1 = list(np.array(m['f'])[foo])
         ef2 = list([np.array(m['f'])[eqclsf].flatten()])
-        ef3 = list(np.array(m['f'])[remRowsf[row_overf[rowinsert:]]])
+        foo = remRowsf[row_overf[rowinsert:]].astype(np.int64) if len(row_overf[rowinsert:])>0 else np.array([],dtype=np.int64)
+        ef3 = list(np.array(m['f'])[foo])
         n['f'] = ef1 + ef2 + ef3
 
-        e1 = list(np.array(m['e'])[remRows[row_over[0:rowinsert]]])
+        foo = remRowsf[row_overf[0:rowinsert]].astype(np.int64) if len(row_overf[0:rowinsert])>0 else np.array([],dtype=np.int64)
+        e1 = list(np.array(m['e'])[foo])
         e2 = list([np.array(m['e'])[eqcls].flatten()])
-        e3 = list(np.array(m['e'])[remRows[row_over[rowinsert:]]])
+        foo = remRowsf[row_overf[rowinsert:]].astype(np.int64) if len(row_overf[rowinsert:])>0 else np.array([],dtype=np.int64)
+        e3 = list(np.array(m['e'])[foo])
         n['e'] = e1 + e2 + e3
               
         n['sr'] = m['sr']
@@ -171,3 +176,5 @@ def MTES_LumpExt(m,row):
     row = row + 1
     return (n,row)
 
+# %%
+MTES(model)
