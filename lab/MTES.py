@@ -54,53 +54,14 @@ def MTES( self ):
     m = MTES_initModel(self) # overdetermined or empty
     if m['sr']>0 and len(m['f'])>0:
         S = MTES_FindMTES(m,0)
-    return S
-    
-def MTES_FindMTES(m,p):
-    m,_ = MTES_LumpExt(m,0)
-    if len(m['f'])==1: # m is an MTES
-        S = MTES_storeFS(m)
-    else: #recurse
-        if p==1:
-            S = MTES_storeFS(m)
-        else:
-            S = {'eq':[], 'f':[], 'sr':[]}
-        row = m['delrow']
-        while len(m['f'])>row:
-            m,row=MTES_LumpExt(m,row)
-        for delrow in np.arange(m['delrow'],len(m['f'])):
-            # create the model where delrow has been removed
-            m['delrow']=delrow
-            rows = np.delete(np.arange(0,m['X'].shape[0]),delrow)
-#            print(np.max(rows))
-            print(len(m['e']))
-            print(m['X'].shape)
-            n = MTES_GetPartialModel(m,rows)
-            Sn = MTES_FindMTES(n,p) # make recursive call
-            S = MTES_addResults(S,Sn)
-    return S
+    return S['eq']
         
 # %% Code
-def MTES_addResults(S,Sn):
-    return {'eq':S['eq']+Sn['eq'],
-            'f':S['f'] + Sn['f'],
-            'sr': S['f'] + Sn['f']}
-
-def MTES_GetPartialModel(m,rows):
-    n = {}
-    vars = np.any(m['X'][rows,:],axis=0)
-    n['X'] = m['X'][rows,:][:,vars]
-    n['e'] = list(np.array(m['e'])[rows])
-    n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
-    n['sr'] = n['X'].shape[0]-n['X'].shape[1]
-    n['delrow'] = np.sum(rows<m['delrow'])
-    return n    
-
 def MTES_storeFS(m):
-    eq = list(np.sort(np.concatenate(m['e'])))
-    f = list(np.sort(np.concatenate(m['f'])))
-    return {'eq': eq, 'f': f, 'sr':[m['sr']]}
-    
+    eq = np.sort(np.hstack(m['e'])).tolist()
+    f = np.sort(np.hstack(m['f'])).tolist()
+    return {'eq': [eq], 'f': [f], 'sr':[m['sr']]}
+        
 def MTES_initModel(model):
     dm = fdt.GetDMParts(model.X)
     row_over = dm.Mp.row
@@ -117,17 +78,49 @@ def MTES_initModel(model):
     m['e'] = list(map(lambda ei: np.array([ei]), idx))
     return m
     
+def MTES_GetPartialModel(m,rows):
+    n = {}
+    vars = np.any(m['X'][rows,:],axis=0)
+    n['X'] = m['X'][rows,:][:,vars]
+    n['e'] = list(np.array(m['e'])[rows])
+    n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
+    n['sr'] = n['X'].shape[0]-n['X'].shape[1]
+    n['delrow'] = np.sum(rows<m['delrow'])
+    return n    
+
+def MTES_FindMTES(m,p):
+    m,_ = MTES_LumpExt(m,0)
+    if len(m['f'])==1: # m is an MTES
+        S = MTES_storeFS(m)
+    else: #recurse
+        if p==1:
+            S = MTES_storeFS(m)
+        else:
+            S = {'eq':[], 'f':[], 'sr':[]}
+        row = m['delrow']
+        while len(m['f'])>row:
+            m,row=MTES_LumpExt(m,row)
+        for delrow in np.arange(m['delrow'],len(m['f'])):
+            # create the model where delrow has been removed
+            m['delrow']=delrow
+            rows = np.delete(np.arange(0,m['X'].shape[0]),delrow)
+            n = MTES_GetPartialModel(m,rows)
+            Sn = MTES_FindMTES(n,p) # make recursive call
+            S = MTES_addResults(S,Sn)
+    return S
+
+# %%
 def MTES_LumpExt(m,row):
     n = {}
 
     no_rows = m['X'].shape[0]
-    remRows = np.hstack((np.arange(0,row-1),np.arange(row+1,no_rows)))
-    remRowsf = np.hstack((np.arange(0,row-1),np.arange(row+1,len(m['f']))))
+    remRows = np.hstack((np.arange(0,row),np.arange(row+1,no_rows)))
+    remRowsf = np.hstack((np.arange(0,row),np.arange(row+1,len(m['f']))))
   
     dm = fdt.GetDMParts(m['X'][remRows,:])
     row_just = dm.M0eqs
-    row_over = np.array(dm.Mp.row)
-    col_over = np.array(dm.Mp.col)
+    row_over = np.array(dm.Mp.row,dtype=np.int64)
+    col_over = np.array(dm.Mp.col,dtype=np.int64)
     if len(row_just)>0:
         eqcls = np.hstack((remRows[row_just],[row]))
         no_rows_before_row = np.sum(eqcls<row)
@@ -140,28 +133,21 @@ def MTES_LumpExt(m,row):
             rowinsert = n['delrow']
         else:
             rowinsert = row
-        if len(row_over)>0 and len(col_over)>0:
-            x1 = m['X'][remRows[row_over[0:rowinsert]],:][:,col_over]
-            x3 = m['X'][remRows[row_over[rowinsert:]],:][:,col_over]
-        else:
-            x1 =np.zeros((len(row_over),len(col_over))).astype(np.int64)
-            x3 =np.zeros((len(row_over),len(col_over))).astype(np.int64)
-        if len(eqcls)>0 and len(col_over)>0:
-            x2 = np.any(m['X'][eqcls,:][:,col_over],axis=0).astype(np.int64)
-        else:
-            x2 =np.zeros((len(eqcls),len(col_over))).astype(np.int64)
+        x1 = m['X'][remRows[row_over[0:rowinsert]],:][:,col_over]
+        x3 = m['X'][remRows[row_over[rowinsert:]],:][:,col_over]
+        x2 = np.any(m['X'][eqcls,:][:,col_over],axis=0).astype(np.int64)
         n['X'] = np.vstack((x1,x2,x3))
 
         foo = remRows[row_over[0:rowinsert]].astype(np.int64) if len(row_over[0:rowinsert])>0 else np.array([],dtype=np.int64)
         e1 = list(np.array(m['e'])[foo])
-        e2 = list([np.array(m['e'])[eqcls].flatten()])
+        e2 = list([np.hstack(np.array(m['e'])[eqcls])])
         foo = remRows[row_over[rowinsert:]].astype(np.int64) if len(row_over[rowinsert:])>0 else np.array([],dtype=np.int64)
         e3 = list(np.array(m['e'])[foo])
         n['e'] = e1 + e2 + e3
 
         foo = remRowsf[row_overf[0:rowinsert]].astype(np.int64) if len(row_overf[0:rowinsert])>0 else np.array([],dtype=np.int64)
         ef1 = list(np.array(m['f'])[foo])
-        ef2 = list([np.array(m['f'])[eqclsf].flatten()])
+        ef2 = list([np.hstack(np.array(m['f'])[eqclsf])])
         foo = remRowsf[row_overf[rowinsert:]].astype(np.int64) if len(row_overf[rowinsert:])>0 else np.array([],dtype=np.int64)
         ef3 = list(np.array(m['f'])[foo])
         n['f'] = ef1 + ef2 + ef3
@@ -177,4 +163,10 @@ def MTES_LumpExt(m,row):
     return (n,row)
 
 # %%
-MTES(model)
+def MTES_addResults(S,Sn):
+    return {'eq' : S['eq'] + Sn['eq'],
+             'f' : S['f']  + Sn['f'],
+             'sr': S['sr'] + Sn['sr']}
+
+
+mtes = MTES(model)
