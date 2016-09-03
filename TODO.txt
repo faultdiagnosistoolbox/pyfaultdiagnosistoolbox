@@ -4,7 +4,6 @@ Module dependencies:
 
 Todo
 ====
-MTES
 RemoveFaultVariables
 TestSelection
 GenSimulationModel
@@ -40,6 +39,7 @@ LumpDynamics
 MeasurementEquations
 MSO
 MSOCausalitySweep
+MTES
 MTESRedundancy
 Matching
 PlotDM

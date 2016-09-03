@@ -178,7 +178,7 @@ def IsObservable(Xin,eq=[]):
     diffEqs,algEqs,x1Idx,dx1Idx,x2Idx = DiffConstraints(X)
     n1 = len(x1Idx)
     n2 = len(x2Idx)
-    nalg = len(algEqs)
+#    nalg = len(algEqs)
 
     # Model format:
     #  x1' = dx1
@@ -211,7 +211,7 @@ def IsObservable(Xin,eq=[]):
 
 def IsHighIndex(X, eq=[]):
     if len(eq)==0:
-        eq = np.arange(0,self.X.shape[0])
+        eq = np.arange(0,X.shape[0])
     X1 = X[eq,:]
     
     col_d1 = np.any(X1==3,axis=0)
@@ -224,7 +224,7 @@ def IsHighIndex(X, eq=[]):
 
 def IsLowIndex(X, eq=[]):
     if len(eq)==0:
-        eq = np.arange(0,self.X.shape[0])
+        eq = np.arange(0,X.shape[0])
     return not IsHighIndex(X,eq)
 
 def Mplus( X, causality='mixed' ):
@@ -369,3 +369,119 @@ def MixedCausalityMatching(Gin):
     dm = GetDMParts(G[2])
     Gamma_p = np.stack((G[0][dm.rowp][:],G[1][dm.colp][:]), axis=1)
     return np.flipud(np.concatenate((Gamma,Gamma_p),axis=0))
+
+def MTES( self ):
+    S = {'eq':[], 'f':[], 'sr':[]}    
+    m = MTES_initModel(self) # overdetermined or empty
+    if m['sr']>0 and len(m['f'])>0:
+        S = MTES_FindMTES(m,0)
+    return S['eq']
+        
+def MTES_storeFS(m):
+    eq = np.sort(np.hstack(m['e'])).tolist()
+    f = np.sort(np.hstack(m['f'])).tolist()
+    return {'eq': [eq], 'f': [f], 'sr':[m['sr']]}
+        
+def MTES_initModel(model):
+    dm = GetDMParts(model.X)
+    row_over = dm.Mp.row
+    col_over = dm.Mp.col
+
+    ef = np.argwhere(np.any(model.F,axis=1)).flatten()
+    ef = np.intersect1d(ef,row_over)
+    idx = np.hstack((ef,np.setdiff1d(row_over,ef)))
+    m = {}
+    m['sr'] = len(row_over) - len(col_over)
+    m['X'] = model.X[idx,:][:,col_over]
+    m['f'] = list(map(lambda fi: np.argwhere(fi)[0], model.F[ef,:]))
+    m['delrow']=0
+    m['e'] = list(map(lambda ei: np.array([ei]), idx))
+    return m
+    
+def MTES_GetPartialModel(m,rows):
+    n = {}
+    vars = np.any(m['X'][rows,:],axis=0)
+    n['X'] = m['X'][rows,:][:,vars]
+    n['e'] = list(np.array(m['e'])[rows])
+    n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
+    n['sr'] = n['X'].shape[0]-n['X'].shape[1]
+    n['delrow'] = np.sum(rows<m['delrow'])
+    return n    
+
+def MTES_FindMTES(m,p):
+    m,_ = MTES_LumpExt(m,0)
+    if len(m['f'])==1: # m is an MTES
+        S = MTES_storeFS(m)
+    else: #recurse
+        if p==1:
+            S = MTES_storeFS(m)
+        else:
+            S = {'eq':[], 'f':[], 'sr':[]}
+        row = m['delrow']
+        while len(m['f'])>row:
+            m,row=MTES_LumpExt(m,row)
+        for delrow in np.arange(m['delrow'],len(m['f'])):
+            # create the model where delrow has been removed
+            m['delrow']=delrow
+            rows = np.delete(np.arange(0,m['X'].shape[0]),delrow)
+            n = MTES_GetPartialModel(m,rows)
+            Sn = MTES_FindMTES(n,p) # make recursive call
+            S = MTES_addResults(S,Sn)
+    return S
+
+def MTES_LumpExt(m,row):
+    n = {}
+
+    no_rows = m['X'].shape[0]
+    remRows = np.hstack((np.arange(0,row),np.arange(row+1,no_rows)))
+    remRowsf = np.hstack((np.arange(0,row),np.arange(row+1,len(m['f']))))
+  
+    dm = GetDMParts(m['X'][remRows,:])
+    row_just = dm.M0eqs
+    row_over = np.array(dm.Mp.row,dtype=np.int64)
+    col_over = np.array(dm.Mp.col,dtype=np.int64)
+    if len(row_just)>0:
+        eqcls = np.hstack((remRows[row_just],[row]))
+        no_rows_before_row = np.sum(eqcls<row)
+        row = row - no_rows_before_row
+        no_rows_before = np.sum(eqcls<m['delrow'])
+        n['delrow'] = m['delrow'] - no_rows_before
+        eqclsf = eqcls[eqcls<len(m['f'])]
+        row_overf = row_over[row_over<len(remRowsf)]
+        if no_rows_before > 0:
+            rowinsert = n['delrow']
+        else:
+            rowinsert = row
+        x1 = m['X'][remRows[row_over[0:rowinsert]],:][:,col_over]
+        x3 = m['X'][remRows[row_over[rowinsert:]],:][:,col_over]
+        x2 = np.any(m['X'][eqcls,:][:,col_over],axis=0).astype(np.int64)
+        n['X'] = np.vstack((x1,x2,x3))
+
+        foo = remRows[row_over[0:rowinsert]].astype(np.int64) if len(row_over[0:rowinsert])>0 else np.array([],dtype=np.int64)
+        e1 = list(np.array(m['e'])[foo])
+        e2 = list([np.hstack(np.array(m['e'])[eqcls])])
+        foo = remRows[row_over[rowinsert:]].astype(np.int64) if len(row_over[rowinsert:])>0 else np.array([],dtype=np.int64)
+        e3 = list(np.array(m['e'])[foo])
+        n['e'] = e1 + e2 + e3
+
+        foo = remRowsf[row_overf[0:rowinsert]].astype(np.int64) if len(row_overf[0:rowinsert])>0 else np.array([],dtype=np.int64)
+        ef1 = list(np.array(m['f'])[foo])
+        ef2 = list([np.hstack(np.array(m['f'])[eqclsf])])
+        foo = remRowsf[row_overf[rowinsert:]].astype(np.int64) if len(row_overf[rowinsert:])>0 else np.array([],dtype=np.int64)
+        ef3 = list(np.array(m['f'])[foo])
+        n['f'] = ef1 + ef2 + ef3
+              
+        n['sr'] = m['sr']
+
+        if no_rows_before > 0: 
+            n['delrow']= n['delrow']+1
+    else:
+        n = m
+
+    row = row + 1
+    return (n,row)
+
+def MTES_addResults(S,Sn):
+    return {'eq' : S['eq'] + Sn['eq'],
+             'f' : S['f']  + Sn['f'],
+             'sr': S['sr'] + Sn['sr']}

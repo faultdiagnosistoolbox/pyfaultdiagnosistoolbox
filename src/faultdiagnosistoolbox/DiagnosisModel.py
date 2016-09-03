@@ -108,6 +108,17 @@ class DiagnosisModel(object):
 
         return dmperm.MSO(self.X)
 
+    def MTES(self):
+        """ Returns the set of MTES sets 
+
+        For details of the algorithm see the paper
+        A Structural Algorithm for Finding Testable Sub-models and 
+        Multiple Fault Isolability Analysis. Mattias Krysander, Jan Åslund, 
+        and Erik Frisk (2010). 21st International Workshop on Principles of 
+        Diagnosis (DX-10). Portland, Oregon, USA."""
+
+        return dmperm.MTES(self)
+        
     def srank(self):
         """ Returns the structural rank of the incidence matrix for the unknown variables"""
         return dmperm.srank(self.X)

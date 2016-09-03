@@ -48,7 +48,7 @@ modelDef['rels'] = [
   ['y3','x3','f5']]
 model = fdt.DiagnosisModel(modelDef, name='MTES small example')
 
-# %%
+# %% Code
 def MTES( self ):
     S = {'eq':[], 'f':[], 'sr':[]}    
     m = MTES_initModel(self) # overdetermined or empty
@@ -56,7 +56,6 @@ def MTES( self ):
         S = MTES_FindMTES(m,0)
     return S['eq']
         
-# %% Code
 def MTES_storeFS(m):
     eq = np.sort(np.hstack(m['e'])).tolist()
     f = np.sort(np.hstack(m['f'])).tolist()
@@ -109,7 +108,6 @@ def MTES_FindMTES(m,p):
             S = MTES_addResults(S,Sn)
     return S
 
-# %%
 def MTES_LumpExt(m,row):
     n = {}
 
@@ -162,11 +160,10 @@ def MTES_LumpExt(m,row):
     row = row + 1
     return (n,row)
 
-# %%
 def MTES_addResults(S,Sn):
     return {'eq' : S['eq'] + Sn['eq'],
              'f' : S['f']  + Sn['f'],
              'sr': S['sr'] + Sn['sr']}
 
-
+# %%
 mtes = MTES(model)
