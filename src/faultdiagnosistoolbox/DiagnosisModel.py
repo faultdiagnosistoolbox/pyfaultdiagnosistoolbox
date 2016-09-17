@@ -7,6 +7,8 @@ import faultdiagnosistoolbox.Matching as match
 import faultdiagnosistoolbox.StructurePlotting as smplot
 import faultdiagnosistoolbox.CodeGeneration as codegen
 import faultdiagnosistoolbox.SensorPlacement as sensplace
+import faultdiagnosistoolbox.TestSelection as testselection
+
 from faultdiagnosistoolbox.VarIdGen import VarIdGen
 import sys
 
@@ -118,6 +120,49 @@ class DiagnosisModel(object):
         Diagnosis (DX-10). Portland, Oregon, USA."""
 
         return dmperm.MTES(self)
+
+    def TestSelection(self, arr, method='aminc', isolabilitymatrix=''):
+        """ A minimal hitting set based test selection.
+ 
+        Find sets of tests, based on a set of equations or a fault sensitivity 
+        matrix, FSM, that achieves isolability performance specifications
+
+        Simple test selection strategy that finds sets of tests that, ideally, 
+        fulfills specified isolability performance specifications. Note that
+        this is a purely structural method, no noise or model uncertainty
+        considerations are used.
+   
+        Input
+        -----
+          arr               : An array of arrays, interpreted as a set of equations
+                              sets used to design residuals. For eample the ouput of 
+                              the MSO or MTES functions
+          isolabilitymatrix : Matrix specifying required isolability
+                              performance. A 0 in position (i,j) represents that
+                              fault i is isolable from fault j, a 1 indicates
+                              that fault i is not isolable from fault j. A fault
+                              can not be isolable from itself and therefore must
+                              the diagonal always be 1.
+          method            : Choice of test seleciton method. 
+                              'aminc' -  Searches for a subset minimal sets of tests
+                                         that fulfills requirements (default)
+                                         Uses aminc, an approximative minimal cardinality 
+                                         hitting set approach from:
+                                         Cormen, L., Leiserson, C. E., and
+                                         Ronald, L. (1990). Rivest, 
+                                         "Introduction to Algorithms.", 1990. 
+ 
+                                        Information also in De Kleer, Johan. "Hitting set 
+                                        algorithms for model-based diagnosis." 
+                                        22th International Workshop on Principles 
+                                        of Diagnosis, DX, 2011.
+ 
+                              'full' - Finds all subset minimal sets of tests
+                                       that fulfills requirements. Warning,
+                                       might easily lead to computationally
+                                       intractable problems. """
+        
+        return testselection.TestSelection(self,arr,method,isolabilitymatrix)        
         
     def srank(self):
         """ Returns the structural rank of the incidence matrix for the unknown variables"""

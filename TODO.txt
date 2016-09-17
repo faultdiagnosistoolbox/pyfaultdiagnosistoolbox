@@ -4,9 +4,8 @@ Module dependencies:
 
 Todo
 ====
-RemoveFaultVariables
-TestSelection
 GenSimulationModel
+RemoveFaultVariables
 Pantelides
 
 Low prio
@@ -53,9 +52,10 @@ SensorPlacementIsolability
 SeqResGen (partially)
 Structural
 SubModel
+TestSelection
 copy
 ne
 nf
 nx
 nz
-srank<
+srank
