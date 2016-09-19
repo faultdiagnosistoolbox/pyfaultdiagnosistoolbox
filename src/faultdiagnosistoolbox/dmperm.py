@@ -375,11 +375,13 @@ def MTES( self ):
     m = MTES_initModel(self) # overdetermined or empty
     if m['sr']>0 and len(m['f'])>0:
         S = MTES_FindMTES(m,0)
-    return S['eq']
+    return np.array(S['eq'])
         
 def MTES_storeFS(m):
-    eq = np.sort(np.hstack(m['e'])).tolist()
-    f = np.sort(np.hstack(m['f'])).tolist()
+#    eq = np.sort(np.hstack(m['e'])).tolist()
+#    f = np.sort(np.hstack(m['f'])).tolist()
+    eq = np.sort(np.hstack(m['e']))
+    f = np.sort(np.hstack(m['f']))
     return {'eq': [eq], 'f': [f], 'sr':[m['sr']]}
         
 def MTES_initModel(model):
