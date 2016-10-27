@@ -96,6 +96,7 @@ class DiagnosisModel(object):
         return self.Z.shape[1]
     
     def GetDMParts(self):
+        """ Returns Dulmage-Mendelsohn decomposition of structure for unknown variables """
         return dmperm.GetDMParts(self.X)
         
     def MSO(self):
