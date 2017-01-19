@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def MHS(conflist):
     """ Returns Minimal Hitting Set for a set of sets
 
@@ -7,22 +8,22 @@ def MHS(conflist):
     -----
       conflist : list of lists of integers
     """
-    mmhs = [np.array([],dtype=np.int64)]
+    mmhs = [np.array([], dtype=np.int64)]
     for c in conflist:
-        j=0
+        j = 0
         while j < len(mmhs):
-            if len(np.intersect1d(c,mmhs[j]))==0:
+            if len(np.intersect1d(c, mmhs[j])) == 0:
                 tmp = mmhs.pop(j)
                 j = j-1
                 for ci in c:
-                    newCand = np.concatenate((tmp,[ci]))
+                    newCand = np.concatenate((tmp, [ci]))
                     candmin = True
-                    k=0
-                    while candmin and k<len(mmhs):
-                        if len([x for x in mmhs[k] if x in newCand])==len(mmhs[k]):
+                    k = 0
+                    while candmin and k < len(mmhs):
+                        if len([x for x in mmhs[k] if x in newCand]) == len(mmhs[k]):
                             candmin = False
                             break
-                        k=k+1
+                        k = k+1
                     if candmin:
                         mmhs.append(newCand)
             j = j+1

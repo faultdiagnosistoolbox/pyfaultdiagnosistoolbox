@@ -1,34 +1,38 @@
 import numpy as np
 from faultdiagnosistoolbox.MHS import MHS
 
+
 def TestSelection(self, arr, method='aminc', isolabilitymatrix=''):
-    if len(isolabilitymatrix)==0:
-        im=self.IsolabilityAnalysisArrs(arr)
+    if len(isolabilitymatrix) == 0:
+        im = self.IsolabilityAnalysisArrs(arr)
     else:
-        im=isolabilitymatrix
+        im = isolabilitymatrix
     FSM = self.FSM(arr)
     if method is 'aminc':
-        return np.sort(aminc(TestSets(FSM,im),FSM.shape[0]))
+        return np.sort(aminc(TestSets(FSM, im), FSM.shape[0]))
     elif method is 'full':
-        return np.sort(MHS(TestSets(FSM,im),FSM.shape[0]))
+        return np.sort(MHS(TestSets(FSM, im), FSM.shape[0]))
     else:
         print('Unknown test selection method')
         return
-        
-def TestSets(FSM,im):
-    isolProperty = np.argwhere(im==0)
+
+
+def TestSets(FSM, im):
+    isolProperty = np.argwhere(im == 0)
     ts = []
     for iprop in isolProperty:
-        ts = ts+list(np.where(np.logical_and(FSM[:,iprop[1]]==1,FSM[:,iprop[0]]==0)))
+        ts = ts+list(np.where(np.logical_and(FSM[:, iprop[1]] == 1,
+                                             FSM[:, iprop[0]] == 0)))
     return ts
 
-def aminc(pi,n):
-    piM = np.zeros((len(pi),n))
-    for k,p in enumerate(pi):
-        piM[k,p]=1
+
+def aminc(pi, n):
+    piM = np.zeros((len(pi), n))
+    for k, p in enumerate(pi):
+        piM[k, p] = 1
     hs = []
-    while np.count_nonzero(piM)>0:
-        tIdx = np.argmax(np.sum(piM,axis=0,dtype=np.int64))
+    while np.count_nonzero(piM) > 0:
+        tIdx = np.argmax(np.sum(piM, axis=0, dtype=np.int64))
         hs.append(tIdx)
-        piM[piM[:,tIdx]==1,:]=0
+        piM[piM[:, tIdx] == 1, :] = 0
     return hs
