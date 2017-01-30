@@ -1,0 +1,9 @@
+*.a
+*.ipynb_checkpoints
+*__pycache__
+*~
+*.so
+src/CSparse*
+examples/*/build
+src/build
+
