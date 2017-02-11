@@ -257,6 +257,19 @@ class DiagnosisModel(object):
         """ Returns indices to the differential constraints"""
         return np.where(np.any(self.X==2,axis=1))[0]
 
+    def DynamicVariables(model):
+        """ Returns variables and index to dynamic variables in model"""
+        idx = np.where(np.any(model.X==2, axis=0))[0]
+        c = list(np.array(model.x)[idx])        
+        return (c,idx)
+        
+    def AlgebraicVariables(model):
+        """ Returns variables and index to algebraic variables in model"""
+        dyn_idx = np.where(np.any(model.X==2, axis=0))[0]
+        idx = [x for x in range(model.nx()) if not(x in dyn_idx)]
+        c = list(np.array(model.x)[idx])
+        return (c,idx)
+    
     def FSM(self, eqs_sets, plot=False ):
         """ Returns the fault signature matrix for a set of equation sets
         
