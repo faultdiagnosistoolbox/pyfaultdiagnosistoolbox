@@ -24,7 +24,23 @@ plt.figure(10)
 model.PlotModel(verbose=False)
 
 # %% Sensor placement analysis - detectability
-detSens = model.SensorPlacementDetectability()
+detSens,_ = model.SensorPlacementDetectability()
 
 # %% Sensor placement analysis - isolability
-sens = model.SensorPlacementIsolability()
+print("Performing sensor placement analysis...")
+sens,_ = model.SensorPlacementIsolability()
+print('Done! Found %d sensor sets.' % len(sens))
+
+# %% Add 1 sensor, detectability for all faults
+mDet = model.copy()
+mDet.AddSensors(['pan'])
+
+mDet.DetectabilityAnalysis()
+
+mDet.IsLowIndex()
+
+plt.figure(20)
+plt.subplot(1,2,1)
+mDet.IsolabilityAnalysis(plot=True)
+plt.subplot(1,2,2)
+mDet.IsolabilityAnalysis(causality='int',plot=True)
