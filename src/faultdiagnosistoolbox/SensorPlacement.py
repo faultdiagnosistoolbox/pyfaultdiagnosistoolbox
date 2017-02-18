@@ -1,6 +1,8 @@
 import numpy as np
 #import faultdiagnosistoolbox.dmperm as dmperm
-from faultdiagnosistoolbox import MHS, GetDMParts
+#from faultdiagnosistoolbox import MHS, GetDMParts
+from faultdiagnosistoolbox.dmperm import GetDMParts
+from faultdiagnosistoolbox.MHS import MHS
 
 def ParentBlocks(X,b):
         return np.where(X[0:b,b])[0]
@@ -139,8 +141,8 @@ def SensPlaceM0(X,F):
 def DetectabilitySets(X,F,P):
     dm = GetDMParts(X)
     detSets = SensPlaceM0(X[dm.M0eqs,:][:,dm.M0vars],F[dm.M0eqs,:])
-#    return list(map(lambda d: [dm.M0vars[x] for x in d if x in P], detSets))
-    return list(map(lambda d: [x for x in dm.M0vars[d] if x in P], detSets))
+    detSets = list(map(lambda d: [x for x in dm.M0vars[d] if x in P], detSets))
+    return [s for s in detSets if len(s)>0]
 
 def SensorPlacementIsolability(model):
     Pfault = model.Pfault
@@ -188,3 +190,7 @@ def SensorPlacementIsolability(model):
     s = list(map(lambda s: list(np.array(model.x)[s]), sIdx))
     
     return (s,sIdx)
+
+# %%
+sens = SensorPlacementIsolability(model)
+
