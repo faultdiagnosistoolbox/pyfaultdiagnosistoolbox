@@ -191,6 +191,3 @@ def SensorPlacementIsolability(model):
     
     return (s,sIdx)
 
-# %%
-sens = SensorPlacementIsolability(model)
-
