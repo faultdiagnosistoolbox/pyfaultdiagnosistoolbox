@@ -645,16 +645,34 @@ class DiagnosisModel(object):
                     rel = sym.Eq(sym.symbols(zName),sym.symbols(self.x[zi]))
                 self.syme = np.concatenate((self.syme,[rel]))
 
-    def DetectabilityAnalysis(self):
+    def DetectabilityAnalysis(model, causality='mixed'):
         """ Performs a structural detectability analysis
-  
+      
+        Inputs
+        ------
+          causality : Can be 'mixed' (default), 'int', or 'der' for mixed,
+                      integral, or derivative causality analysis respectively.
+                      For details, see 
+ 
+                      Frisk, E., Bregon, A., Aaslund, J., Krysander, M., 
+                      Pulido, B., Biswas, G., "Diagnosability analysis
+                      considering causal interpretations for differential
+                      constraints", IEEE Transactions on Systems, Man and 
+                      Cybernetics, Part A: Systems and Humans, 2012, 42(5), 
+                      1216-1229.  
+
         Outputs
         -------
           df  : Detectable faults
           ndf : Non-detectable faults"""
-        dm = dmperm.GetDMParts(self.X)
-        df = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] in dm.Mp.row]
-        ndf = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] not in dm.Mp.row]
+        MplusCausal = lambda X: dmperm.Mplus(X,causality=causality)
+          
+        dm = MplusCausal(model.X)
+    
+        df = [model.f[fidx] for fidx in np.arange(0, model.F.shape[1]) 
+            if np.argwhere(model.F[:,fidx])[:,0] in dm]
+        ndf = [model.f[fidx] for fidx in np.arange(0, model.F.shape[1])
+            if np.argwhere(model.F[:,fidx])[:,0] not in dm]
         return (df,ndf)
     
     def IsolabilityAnalysis( self, plot=False, permute=True, causality='mixed' ):
