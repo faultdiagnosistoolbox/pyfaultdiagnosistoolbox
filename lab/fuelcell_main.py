@@ -44,3 +44,21 @@ plt.subplot(1,2,1)
 mDet.IsolabilityAnalysis(plot=True)
 plt.subplot(1,2,2)
 mDet.IsolabilityAnalysis(causality='int',plot=True)
+
+# %%
+def TestDetectabilityAnalysis(model, causality='mixed'):
+    """ Performs a structural detectability analysis
+  
+    Outputs
+    -------
+      df  : Detectable faults
+      ndf : Non-detectable faults"""
+    MplusCausal = lambda X: dmperm.Mplus(X,causality=causality)
+      
+    dm = MplusCausal(model.X)
+
+    df = [model.f[fidx] for fidx in np.arange(0, model.F.shape[1]) 
+        if np.argwhere(model.F[:,fidx])[:,0] in dm]
+    ndf = [model.f[fidx] for fidx in np.arange(0, model.F.shape[1])
+        if np.argwhere(model.F[:,fidx])[:,0] not in dm]
+    return (df,ndf)
