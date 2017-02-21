@@ -537,7 +537,7 @@ class DiagnosisModel(object):
         else:
             self.Pfault = []
 
-    def SensorPlacementIsolability(self):
+    def SensorPlacementIsolability(self,isolabilityspecification=-1):
         """ Computes all minimal sensor sets that achieves maximal fault isolability
         of the faults in the model. 
  
@@ -545,11 +545,26 @@ class DiagnosisModel(object):
         diagnosis." Systems, Man and Cybernetics, Part A: Systems and Humans, 
         IEEE Transactions on 38.6 (2008): 1398-1410.
  
+        Input
+        -----
+          isolabilityspecification : Isolability specification, a 0/1-matrix with
+                                     a 0 in position (i,j) if fault fi should be
+                                     isolable from fault fj; 1 otherwise. Structural
+                                     isolability is a symmetric relation; and if
+                                     the specification is not symmetric; the
+                                     specification is made symmetric. Defaults to
+                                     the identity matrix, i.e., full isolability
+                                     among faults.
+
         Outputs
         -------
         res - list of all minimal sensor sets, represented by strings
         idx - same as res, but represented with indicices into model.f"""
-        return sensplace.SensorPlacementIsolability(self)
+        
+        if isolabilityspecification == -1:
+            Ispec = np.eye(self.nf())
+
+        return sensplace.SensorPlacementIsolability(self, Ispec)
 
     def SensorPlacementDetectability(self):
         """ Computes all minimal sensor sets that achieves maximal fault detectability
