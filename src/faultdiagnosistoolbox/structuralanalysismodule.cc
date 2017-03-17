@@ -202,11 +202,11 @@ DictToCS( PyObject *csDict, cs **sm )
 
   // p - column pointers
   PyArrayObject *pp = (PyArrayObject *)PyDict_GetItemString(csDict, "p");
-  (*sm)->p = (long int *)PyArray_DATA( pp );
+  (*sm)->p = (ptrdiff_t *)PyArray_DATA( pp );
 
   // i - row positions
   PyArrayObject *pi = (PyArrayObject *)PyDict_GetItemString(csDict, "i");
-  (*sm)->i = (long int *)PyArray_DATA( pi );
+  (*sm)->i = (ptrdiff_t *)PyArray_DATA( pi );
   
   return 1;
 }
@@ -214,8 +214,8 @@ DictToCS( PyObject *csDict, cs **sm )
 PyObject*
 CreateDMpermOutput( csd* dm, cs* sm )
 {
-  PyObject* p=PyArray_SimpleNewFromData(1, &(sm->m), NPY_INT64, (void *)dm->p); 
-  PyObject* q=PyArray_SimpleNewFromData(1, &(sm->n), NPY_INT64, (void *)dm->q);
+  PyObject* p=PyArray_SimpleNewFromData(1, (long *)&(sm->m), NPY_INT64, (void *)dm->p); 
+  PyObject* q=PyArray_SimpleNewFromData(1, (long *)&(sm->n), NPY_INT64, (void *)dm->q);
 
   npy_intp numBlocks = dm->nb+1;
   PyObject* r=PyArray_SimpleNewFromData(1, &numBlocks, NPY_INT64, (void *)dm->r);  

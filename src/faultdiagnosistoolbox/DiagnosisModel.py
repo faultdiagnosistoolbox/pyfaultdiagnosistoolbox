@@ -537,7 +537,7 @@ class DiagnosisModel(object):
         else:
             self.Pfault = []
 
-    def SensorPlacementIsolability(self):
+    def SensorPlacementIsolability(self,isolabilityspecification=-1):
         """ Computes all minimal sensor sets that achieves maximal fault isolability
         of the faults in the model. 
  
@@ -545,11 +545,26 @@ class DiagnosisModel(object):
         diagnosis." Systems, Man and Cybernetics, Part A: Systems and Humans, 
         IEEE Transactions on 38.6 (2008): 1398-1410.
  
+        Input
+        -----
+          isolabilityspecification : Isolability specification, a 0/1-matrix with
+                                     a 0 in position (i,j) if fault fi should be
+                                     isolable from fault fj; 1 otherwise. Structural
+                                     isolability is a symmetric relation; and if
+                                     the specification is not symmetric; the
+                                     specification is made symmetric. Defaults to
+                                     the identity matrix, i.e., full isolability
+                                     among faults.
+
         Outputs
         -------
         res - list of all minimal sensor sets, represented by strings
         idx - same as res, but represented with indicices into model.f"""
-        return sensplace.SensorPlacementIsolability(self)
+        
+        if isolabilityspecification == -1:
+            Ispec = np.eye(self.nf())
+
+        return sensplace.SensorPlacementIsolability(self, Ispec)
 
     def SensorPlacementDetectability(self):
         """ Computes all minimal sensor sets that achieves maximal fault detectability
@@ -645,16 +660,34 @@ class DiagnosisModel(object):
                     rel = sym.Eq(sym.symbols(zName),sym.symbols(self.x[zi]))
                 self.syme = np.concatenate((self.syme,[rel]))
 
-    def DetectabilityAnalysis(self):
+    def DetectabilityAnalysis(model, causality='mixed'):
         """ Performs a structural detectability analysis
-  
+      
+        Inputs
+        ------
+          causality : Can be 'mixed' (default), 'int', or 'der' for mixed,
+                      integral, or derivative causality analysis respectively.
+                      For details, see 
+ 
+                      Frisk, E., Bregon, A., Aaslund, J., Krysander, M., 
+                      Pulido, B., Biswas, G., "Diagnosability analysis
+                      considering causal interpretations for differential
+                      constraints", IEEE Transactions on Systems, Man and 
+                      Cybernetics, Part A: Systems and Humans, 2012, 42(5), 
+                      1216-1229.  
+
         Outputs
         -------
           df  : Detectable faults
           ndf : Non-detectable faults"""
-        dm = dmperm.GetDMParts(self.X)
-        df = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] in dm.Mp.row]
-        ndf = [self.f[fidx] for fidx in np.arange(0,self.F.shape[1]) if np.argwhere(self.F[:,fidx])[:,0] not in dm.Mp.row]
+        MplusCausal = lambda X: dmperm.Mplus(X,causality=causality)
+          
+        dm = MplusCausal(model.X)
+    
+        df = [model.f[fidx] for fidx in np.arange(0, model.F.shape[1]) 
+            if np.argwhere(model.F[:,fidx])[:,0] in dm]
+        ndf = [model.f[fidx] for fidx in np.arange(0, model.F.shape[1])
+            if np.argwhere(model.F[:,fidx])[:,0] not in dm]
         return (df,ndf)
     
     def IsolabilityAnalysis( self, plot=False, permute=True, causality='mixed' ):

@@ -6,4 +6,7 @@
 src/CSparse*
 examples/*/build
 src/build
+src/dist
+src/faultdiagnosistoolbox.egg-info
+
 

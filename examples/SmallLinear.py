@@ -69,4 +69,3 @@ model4.IsolabilityAnalysis(plot=True);
 
 plt.figure(31)
 model4.PlotDM(eqclass=True,fault=True)
-

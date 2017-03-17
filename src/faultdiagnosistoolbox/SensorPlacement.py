@@ -1,5 +1,7 @@
 import numpy as np
-import faultdiagnosistoolbox.dmperm as dmperm
+#import faultdiagnosistoolbox.dmperm as dmperm
+#from faultdiagnosistoolbox import MHS, GetDMParts
+from faultdiagnosistoolbox.dmperm import GetDMParts
 from faultdiagnosistoolbox.MHS import MHS
 
 def ParentBlocks(X,b):
@@ -24,7 +26,7 @@ def SensorPlacementDetectability(model,**options):
         print("Sorry, sensor placement only works for models with no underdetermined parts")
         return
     
-    dm = dmperm.GetDMParts(model.X)
+    dm = GetDMParts(model.X)
     ef = list(map(lambda fi: np.where(model.F[:,fi])[0][0], fdet))
     nondetIdx = [eIdx for eIdx in np.arange(0,len(ef)) if ef[eIdx] in dm.M0eqs]
     if len(nondetIdx)>0:
@@ -54,17 +56,17 @@ def NewSensorEqs(s,nx,nf,Pfault):
             Fs[sIdx,:] = np.zeros((1,nf))
     return (Xs, Fs, fs)
 
-def IsolabilitySubProblem(X,F,P,fi):
+def IsolabilitySubProblem(X, F, P, fi, Ispec):
     ef = np.where(F[:,fi])[0][0]
-    n = X.shape[0]
-    nf = F.shape[1]
+#    n = X.shape[0]
+#    nf = F.shape[1]
 
     # Misol = M\{ef}
     Xisol = np.delete(X,ef,axis=0)
     Fisol = np.delete(F,ef,axis=0)
 
     # Extract just determined part of Xisol
-    dm = dmperm.GetDMParts(Xisol)
+    dm = GetDMParts(Xisol)
     X0 = Xisol[dm.M0eqs,:][:,dm.M0vars]
     
     # Find out which faults are included in X0
@@ -76,11 +78,16 @@ def IsolabilitySubProblem(X,F,P,fi):
         feq[fj] = e
 
     nondet = np.where(list(map(lambda f: feq[f] in dm.M0eqs, np.arange(0,Fisol.shape[1]))))[0]
-    F0 = Fisol[dm.M0eqs,:][:,nondet]
+    # Adapt to isolability specification
+    nondetisol = [f for f in nondet if f in np.where(Ispec==0)[0]]
+
+    #nondetisol = nondet & (Ispec==0);
+
+    F0 = Fisol[dm.M0eqs,:][:,nondetisol]
 
     # Translate P to P0
     P0 = [np.where(dm.M0vars==v)[0][0] for v in P if v in dm.M0vars]
-
+    
     # Compute detectability sets
     detSets = DetectabilitySets( X0, F0, P0 )
 
@@ -132,18 +139,23 @@ def BlockAndFaultOrder(X,F,dm):
     return {'blockorder':Xb, 'bFm':bFm}
 
 def SensPlaceM0(X,F):
-    dm0 = dmperm.GetDMParts(X)
+    dm0 = GetDMParts(X)
     bfOrder = BlockAndFaultOrder( X, F, dm0 )
     return list(map(lambda b: FbDetectability(bfOrder['blockorder'],b,dm0),bfOrder['bFm']))
 
 def DetectabilitySets(X,F,P):
-    dm = dmperm.GetDMParts(X)
+    dm = GetDMParts(X)
     detSets = SensPlaceM0(X[dm.M0eqs,:][:,dm.M0vars],F[dm.M0eqs,:])
-    return list(map(lambda d: [dm.M0vars[x] for x in d if x in P], detSets))
+    detSets = list(map(lambda d: [x for x in dm.M0vars[d] if x in P], detSets))
+    return [s for s in detSets if len(s)>0]
 
-def SensorPlacementIsolability(model):
+def SensorPlacementIsolability(model, Ispec):
+    if not np.all(Ispec == Ispec.transpose()):
+        print("Warning: Isolability not symmetric, making it so...")
+        Ispec = np.bitwise_or(Ispec,Ispec.transpose())
+    
     Pfault = model.Pfault
-    fault = np.arange(0,len(model.x))
+#    fault = np.arange(0,len(model.x))
     _,spDet = SensorPlacementDetectability(model)
     sIdx = []
     if len(spDet)>0:
@@ -154,10 +166,14 @@ def SensorPlacementIsolability(model):
             X = np.vstack((X,Xs))
             F = np.vstack((F,Fs))
             P = model.P
+            nf = Ispec.shape[0]
+            Ispecii = np.vstack((
+                    np.hstack((Ispec,np.zeros((nf,len(fs))))),
+                    np.hstack((np.zeros((len(fs),nf)), np.eye(len(fs))))))
 
             detSets = []
             for fi in np.arange(0,F.shape[1]):
-                isolDetSets = IsolabilitySubProblem(X,F,P,fi)
+                isolDetSets = IsolabilitySubProblem(X, F, P, fi, Ispecii[fi,:])
                 if len(isolDetSets)>0:
                     detSets = detSets + isolDetSets
             mhs_s = MHS( detSets )
