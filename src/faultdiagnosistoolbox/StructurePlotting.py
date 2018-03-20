@@ -14,7 +14,7 @@ def PlotModel(model, **options):
     X = model.X
     F = model.F
     Z = model.Z
-    
+
     plt.spy(np.concatenate((X==1,np.zeros(F.shape),np.zeros(Z.shape)),axis=1),markersize=4,marker="o", color="b")
     plt.spy(np.concatenate((np.zeros(X.shape),F,np.zeros(Z.shape)),axis=1),markersize=4,marker="o",color="r")
     plt.spy(np.concatenate((np.zeros(X.shape),np.zeros(F.shape),Z),axis=1),markersize=4,marker="o",color="k")
@@ -25,12 +25,12 @@ def PlotModel(model, **options):
         fSize = 10
     else:
         fSize = 8
-        
+
     for idx,val in enumerate(np.argwhere(X==2)):
         plt.text(val[1],val[0], 'I', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
     for idx,val in enumerate(np.argwhere(X==3)):
         plt.text(val[1],val[0], 'D', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
-        
+
     # Plot axis ticks
     if labelVars:
         plt.xticks(np.arange(0,model.nx()+model.nf()+model.nz()),model.x + model.f + model.z, rotation='vertical')
@@ -82,12 +82,12 @@ def PlotMatching( model, Gamma, **options):
         plt.text(val[1],val[0], 'D', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
         for idx,val in enumerate(np.argwhere(Xm==2)):
             plt.text(val[1],val[0], 'I', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
-    
+
     # Plot axis ticks
     if labelVars:
         bottomMargin = 0.1 + (np.max(list(map(lambda v:len(v),[model.x[xi] for xi in q])))-3)*0.1/6 # ad-hoc expression
         plt.xticks(np.arange(0,len(q)), [model.x[xi] for xi in q],rotation='vertical')
-        plt.subplots_adjust(bottom=np.max([0.1,bottomMargin]))        
+        plt.subplots_adjust(bottom=np.max([0.1,bottomMargin]))
         plt.yticks(np.arange(0,len(p)), [model.e[ei] for ei in p])
     else:
         plt.xticks(np.arange(0,len(q)))
@@ -101,14 +101,14 @@ def PlotMatching( model, Gamma, **options):
         x2 = pos - n + 0.5
         y1 = pos + 0.5
         y2 = pos - n + 0.5
-        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'k')    
+        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'k')
         pos = pos - n
 
     plt.axis([-1, len(q), len(q), -1])
     plt.gca().xaxis.tick_bottom()
     plt.xlabel('Variables')
     plt.ylabel('Equations')
-    
+
 
 def PlotDM(model, **options) :
 
@@ -134,7 +134,7 @@ def PlotDM(model, **options) :
         # Perform PSO decomposition of M+
         Xp = X[dm.Mp.row,:][:,dm.Mp.col]
         P = dmperm.PSODecomposition(Xp)
- 
+
         # Update PSO decomposition description to correspond to global equation
         # indices
         rowp = dm.Mp.row[P['p']]
@@ -153,8 +153,8 @@ def PlotDM(model, **options) :
         prowstart = len(dm.rowp)-len(P['p'])
         dm.rowp[prowstart:] = rowp
 
-        pcolstart = len(dm.colp)-len(P['q']);    
-        dm.colp[pcolstart:] = colp;    
+        pcolstart = len(dm.colp)-len(P['q']);
+        dm.colp[pcolstart:] = colp;
 
     if model.nx()<50:
         fSize = 12
@@ -164,11 +164,11 @@ def PlotDM(model, **options) :
         fSize = 8
     plt.spy(X[dm.rowp,:][:,dm.colp]==1,markersize=4, marker="o")
     for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==3)):
-        plt.text(val[1],val[0], 'D', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
-  
+        plt.text(val[1],val[0]+0.15, 'D', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
+
     for idx,val in enumerate(np.argwhere(X[dm.rowp,:][:,dm.colp]==2)):
         plt.text(val[1],val[0]+0.15, 'I', color="b", fontsize=fSize, horizontalalignment="center", verticalalignment="center")
-    
+
     if labelVars:
         plt.xticks(np.arange(0,X.shape[1]),dm.colp)
         plt.yticks(np.arange(0,X.shape[0]),dm.rowp)
@@ -180,7 +180,7 @@ def PlotDM(model, **options) :
         x2 = x1+c;
         y1 = -0.5;
         y2 = y1+r;
-        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
+        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')
 
     # Plot exactly determined part
     r = len(dm.Mm.row);
@@ -195,7 +195,7 @@ def PlotDM(model, **options) :
         r = r+n;
         c = c+n;
 
-    # Plot over determined part  
+    # Plot over determined part
     if len(dm.Mp.row)>0:
         nr = len(dm.Mp.row);
         nc = len(dm.Mp.col);
@@ -203,9 +203,9 @@ def PlotDM(model, **options) :
         x2 = x1+nc;
         y1 = r-0.5;
         y2 = y1+nr;
-        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')    
+        plt.plot( [x1, x1, x2, x2, x1],[y1, y2, y2, y1, y1],'b')
 
-    # Plot equivalence classes in over determined part  
+    # Plot equivalence classes in over determined part
     if eqclass and len(dm.Mp.row)>0:
         r1 = r;
         c1 = c;
@@ -221,7 +221,7 @@ def PlotDM(model, **options) :
             c = c+nc;
 
         plt.plot([c1-0.5, len(dm.colp)+0.5], [r-0.5, r-0.5], 'k--')
-        plt.plot([c-0.5, c-0.5], [r1-0.5, len(dm.rowp)+0.5], 'k--')   
+        plt.plot([c-0.5, c-0.5], [r1-0.5, len(dm.rowp)+0.5], 'k--')
 
     if fault:
         fPlotRowIdx = list(map(lambda f: np.argwhere(dm.rowp==f[0])[0][0],np.argwhere(model.F)))
@@ -254,4 +254,3 @@ def PlotDM(model, **options) :
     plt.gca().xaxis.tick_bottom()
     plt.xlabel('Variables')
     plt.ylabel('Equations')
-
