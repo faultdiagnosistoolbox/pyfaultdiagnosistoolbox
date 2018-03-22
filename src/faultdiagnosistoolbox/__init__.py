@@ -21,15 +21,6 @@ are:
   be able to detect and isolate faults
 * Code generation (C and Python) for residual generators. 
 
-The toolbox available under a MIT license. The latest
-version can always be downloaded from our website at
-http://www.fs.isy.liu.se/Software/PyFaultDiagnosisToolbox/ and
-links to relevant publications can be found also at our list of
-publications http://www.fs.isy.liu.se/Publications.
 """
 from . DiagnosisModel import DiagnosisModel, DiffConstraint, IsDifferentialConstraint
-#from . dmperm import dmperm, srank, MSO, GetDMParts, Mplus
 from . MHS import MHS
-#__all__ = ["DiagnosisModel", "dmperm", "PlotDM", "Matching"]
-#__all__ = ["DiagnosisModel", "dmperm", "structureanalysis"]
-#__all_  = ["DiagnosisModel"]
