@@ -14,7 +14,7 @@ def UsedVars(rels, variables):
             uv |= set([str(v) for v in expr.atoms() if str(v) in variables])
     return [v for v in variables if v in uv]
 
-def ExprToCode( expr, language, user_functions = {}):
+def ExprToCode( expr, language, user_functions = []):
     if language is 'C':
         genCode = ccode(expr, user_functions=user_functions)
     elif language is 'Matlab':

@@ -186,7 +186,7 @@ def SensorPlacementIsolability(model, Ispec):
 
         detSets = []
         for fi in np.arange(0,F.shape[1]):
-            isolDetSets = IsolabilitySubProblem(X,F,P,fi)
+            isolDetSets = IsolabilitySubProblem(X,F,P,fi,Ispec)
             if len(isolDetSets)>0:
                 detSets = detSets + isolDetSets
         sIdx = MHS( detSets )

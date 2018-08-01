@@ -820,7 +820,7 @@ class DiagnosisModel(object):
         return im 
 
     def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python', batch=False, api='Python',
-                      user_functions=[], external_src=[], external_headers=[]):
+                      user_functions={}, external_src=[], external_headers=[]):
         """ (Experimental) Generate Python/C code for sequential residual generator
  
         Given a matching and a residual equation, generate code implementing the
