@@ -1,8 +1,11 @@
+"""Compute matchings."""
 import numpy as np
 import faultdiagnosistoolbox.dmperm as dmperm
 
 
 class HallComponentMatching:
+    """Base class for Hall Component matching."""
+
     matchType = ''
     row = []
     col = []
@@ -10,6 +13,7 @@ class HallComponentMatching:
     derState = []
 
     def __init__(self, t, r, c, derState=[], intState=[]):
+        """Initialize matching."""
         self.matchType = t
         self.row = r
         self.col = c
@@ -18,10 +22,13 @@ class HallComponentMatching:
 
 
 class Matching:
+    """Base class for matching."""
+
     matchType = ''
     matching = []
 
     def __init__(self, Xmodel, eqs_in):
+        """Initialize matching."""
         X = Xmodel.copy()
 
         eqs = np.array(eqs_in).copy()
@@ -76,6 +83,7 @@ class Matching:
 
 
 def MixedCausalityMatching(hallComponent, X):
+    """Compute mixed causality matching."""
     # Create graph representation
     G = (hallComponent.row,
          hallComponent.col,

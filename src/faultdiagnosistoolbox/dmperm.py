@@ -1,3 +1,4 @@
+"""Dulmage-Mendelsohn an MSO functionality."""
 import faultdiagnosistoolbox.structuralanalysis as sa
 import scipy.sparse as sp
 import numpy as np
@@ -5,6 +6,7 @@ import copy
 
 
 def CSCDict(A):
+    """Compressed matrix format."""
     return {'nzmax': A.nnz,
             'm': A.shape[0],
             'n': A.shape[1],
@@ -15,6 +17,7 @@ def CSCDict(A):
 
 
 def dmperm(A):
+    """Dulmage-Mendelsohn decomposition of matrix."""
     if sp.issparse(A):
         return sa.dmperm_internal(CSCDict(A))
     else:
@@ -22,12 +25,16 @@ def dmperm(A):
 
 
 def srank(A):
+    """Compute structural rank of matrix."""
     _, _, _, _, rr, _ = dmperm(A)
     return rr[3]
 
 
 class DMResult:
+    """Dulmage-Mendelsohn decomposition base class."""
+
     def __init__(self):
+        """Initializer."""
         self.Mm = []
         self.M0 = []
         self.Mp = []
@@ -38,15 +45,19 @@ class DMResult:
 
 
 class EqBlock:
+    """EqBlock class."""
+
     row = np.array([], dtype=np.int64)
     col = np.array([], dtype=np.int64)
 
     def __init__(self, r, c):
+        """Initializer."""
         self.row = r
         self.col = c
 
 
 def MSO(X):
+    """Compute set of MSO sets."""
     if sp.issparse(X):
         return sa.findmso_internal(CSCDict(X))
     else:
@@ -54,6 +65,7 @@ def MSO(X):
 
 
 def GetDMParts(X):
+    """Compute Dulmage-Mendelsohn decomposition."""
     if sp.issparse(X):
         p, q, r, s, _, _ = dmperm(X)
     else:
@@ -82,15 +94,15 @@ def GetDMParts(X):
         else:
             res.Mm = EqBlock([], [])
 
-        while (idx < r.size-1) and (r[idx+1]-r[idx]) == (s[idx+1]-s[idx]):
+        while (idx < r.size - 1) and (r[idx + 1] - r[idx]) == (s[idx + 1] - s[idx]):
             # M0 block exists
-            res.M0.append(EqBlock(np.sort(p[r[idx]:r[idx+1]]),
-                                  np.sort(q[s[idx]:s[idx+1]])))
-            idx = idx+1
+            res.M0.append(EqBlock(np.sort(p[r[idx]:r[idx + 1]]),
+                                  np.sort(q[s[idx]:s[idx + 1]])))
+            idx = idx + 1
 
-        if idx < r.size-1:  # M+ exists
-            res.Mp = EqBlock(np.sort(p[r[idx]:r[idx+1]]),
-                             np.sort(q[s[idx]:s[idx+1]]))
+        if idx < r.size - 1:  # M+ exists
+            res.Mp = EqBlock(np.sort(p[r[idx]:r[idx + 1]]),
+                             np.sort(q[s[idx]:s[idx + 1]]))
         else:
             res.Mp = EqBlock([], [])
         res.rowp = p
@@ -106,6 +118,7 @@ def GetDMParts(X):
 
 
 def PSODecomposition(X):
+    """Compute PSO decomposition."""
     if not IsPSO(X):
         print("PSO Decomposition for PSO structures only, exiting...")
         return
@@ -154,6 +167,7 @@ def PSODecomposition(X):
 
 
 def IsPSO(X, *args):
+    """Return True if PSO."""
     if len(args) > 0:
         eq = args[0]
     else:
@@ -164,6 +178,7 @@ def IsPSO(X, *args):
 
 
 def IsObservable(Xin, eq=[]):
+    """Return True if observable."""
     def DiffConstraints(X):
         diffEqs = np.where(np.any(X == 2, axis=1))[0]
         algEqs = np.array([ei for ei in np.arange(0, ne)
@@ -201,22 +216,22 @@ def IsObservable(Xin, eq=[]):
 
     A = X[algEqs, :][:, np.hstack((x1Idx, x2Idx, dx1Idx)).astype(np.int64)]
     A11 = A[:, np.arange(0, n1)]
-    A12 = A[:, np.arange(n1, n1+n2)]
-    A13 = A[:, np.arange(n1+n2, 2*n1+n2)]
-    AC = np.vstack((np.hstack((np.zeros((n1, n1+n2)),
+    A12 = A[:, np.arange(n1, n1 + n2)]
+    A13 = A[:, np.arange(n1 + n2, 2 * n1 + n2)]
+    AC = np.vstack((np.hstack((np.zeros((n1, n1 + n2)),
                                np.eye(n1))), A)).astype(np.int64)
-    F = np.vstack((np.hstack((np.eye(n1), np.zeros((n1, n1+n2)))),
-                   np.zeros((ne-n1, n1+n2+n1)))).astype(np.int64)
+    F = np.vstack((np.hstack((np.eye(n1), np.zeros((n1, n1 + n2)))),
+                   np.zeros((ne - n1, n1 + n2 + n1)))).astype(np.int64)
 
     # Condition 1: srank(A-sF)=n1+n2
-    obs = srank(np.hstack((np.logical_or(A11, A13), A12))) == n1+n2
+    obs = srank(np.hstack((np.logical_or(A11, A13), A12))) == n1 + n2
 
     if obs:
         # Condition 2: v(AC)=2*n1+n2
-        obs = srank(AC) == 2*n1+n2
+        obs = srank(AC) == 2 * n1 + n2
     if obs:
         # Condition 3: no s-argc in Hall components of AC-sF
-        G3 = np.maximum(AC, 2*F)
+        G3 = np.maximum(AC, 2 * F)
         dm = GetDMParts(G3)
         if len(dm.M0) > 0:
             hc_sarcs = list(
@@ -227,6 +242,7 @@ def IsObservable(Xin, eq=[]):
 
 
 def IsHighIndex(X, eq=[]):
+    """Return True if high differential index."""
     if len(eq) == 0:
         eq = np.arange(0, X.shape[0])
     X1 = X[eq, :]
@@ -237,16 +253,18 @@ def IsHighIndex(X, eq=[]):
     col_2 = np.all(X1[row_d, :] == 0, axis=0)
     Xhod = X1[row_a, :][:, np.logical_or(col_d1, col_2)]
     nz = sum(np.all(Xhod == 0, axis=0))
-    return srank(Xhod) < Xhod.shape[1]-nz
+    return srank(Xhod) < Xhod.shape[1] - nz
 
 
 def IsLowIndex(X, eq=[]):
+    """Return True if low differential index."""
     if len(eq) == 0:
         eq = np.arange(0, X.shape[0])
     return not IsHighIndex(X, eq)
 
 
 def Mplus(X, causality='mixed'):
+    """Compute over-determined part."""
     def Gp(G):
         dm = GetDMParts(G[2])
         if len(dm.Mp.row) == 0 or len(dm.Mp.col) == 0:
@@ -368,6 +386,7 @@ def Mplus(X, causality='mixed'):
 
 
 def MixedCausalityMatching(Gin):
+    """Compute mixed causality matching."""
     def FindAdmissibleIntEdge(G):
         X = G[2]
         dm = GetDMParts(X)
@@ -404,6 +423,7 @@ def MixedCausalityMatching(Gin):
 
 
 def MTES(self):
+    """Compute set of MTES sets."""
     S = {'eq': [], 'f': [], 'sr': []}
     m = MTES_initModel(self)  # overdetermined or empty
     if m['sr'] > 0 and len(m['f']) > 0:
@@ -412,6 +432,7 @@ def MTES(self):
 
 
 def MTES_storeFS(m):
+    """internal."""
     #    eq = np.sort(np.hstack(m['e'])).tolist()
     #    f = np.sort(np.hstack(m['f'])).tolist()
     eq = np.sort(np.hstack(m['e']))
@@ -420,6 +441,7 @@ def MTES_storeFS(m):
 
 
 def MTES_initModel(model):
+    """internal."""
     dm = GetDMParts(model.X)
     row_over = dm.Mp.row
     col_over = dm.Mp.col
@@ -437,17 +459,19 @@ def MTES_initModel(model):
 
 
 def MTES_GetPartialModel(m, rows):
+    """internal."""
     n = {}
     vars = np.any(m['X'][rows, :], axis=0)
     n['X'] = m['X'][rows, :][:, vars]
     n['e'] = list(np.array(m['e'])[rows])
     n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
-    n['sr'] = n['X'].shape[0]-n['X'].shape[1]
+    n['sr'] = n['X'].shape[0] - n['X'].shape[1]
     n['delrow'] = np.sum(rows < m['delrow'])
     return n
 
 
 def MTES_FindMTES(m, p):
+    """internal."""
     m, _ = MTES_LumpExt(m, 0)
     if len(m['f']) == 1:  # m is an MTES
         S = MTES_storeFS(m)
@@ -470,11 +494,12 @@ def MTES_FindMTES(m, p):
 
 
 def MTES_LumpExt(m, row):
+    """MTES lumping."""
     n = {}
 
     no_rows = m['X'].shape[0]
-    remRows = np.hstack((np.arange(0, row), np.arange(row+1, no_rows)))
-    remRowsf = np.hstack((np.arange(0, row), np.arange(row+1, len(m['f']))))
+    remRows = np.hstack((np.arange(0, row), np.arange(row + 1, no_rows)))
+    remRowsf = np.hstack((np.arange(0, row), np.arange(row + 1, len(m['f']))))
 
     dm = GetDMParts(m['X'][remRows, :])
     row_just = dm.M0eqs
@@ -514,7 +539,7 @@ def MTES_LumpExt(m, row):
         n['sr'] = m['sr']
 
         if no_rows_before > 0:
-            n['delrow'] = n['delrow']+1
+            n['delrow'] = n['delrow'] + 1
     else:
         n = m
 
@@ -523,6 +548,7 @@ def MTES_LumpExt(m, row):
 
 
 def MTES_addResults(S, Sn):
+    """internal."""
     return {'eq': S['eq'] + Sn['eq'],
             'f': S['f'] + Sn['f'],
             'sr': S['sr'] + Sn['sr']}

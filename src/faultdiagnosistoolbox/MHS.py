@@ -1,8 +1,9 @@
+"""Minimal Hitting Set functionality."""
 import numpy as np
 
 
 def MHS(conflist):
-    """ Returns Minimal Hitting Set for a set of sets
+    """Return Minimal Hitting Set for a set of sets.
 
     Input
     -----
@@ -14,7 +15,7 @@ def MHS(conflist):
         while j < len(mmhs):
             if len(np.intersect1d(c, mmhs[j])) == 0:
                 tmp = mmhs.pop(j)
-                j = j-1
+                j = j - 1
                 for ci in c:
                     newCand = np.concatenate((tmp, [ci]))
                     candmin = True
@@ -23,8 +24,8 @@ def MHS(conflist):
                         if len([x for x in mmhs[k] if x in newCand]) == len(mmhs[k]):
                             candmin = False
                             break
-                        k = k+1
+                        k = k + 1
                     if candmin:
                         mmhs.append(newCand)
-            j = j+1
+            j = j + 1
     return mmhs
