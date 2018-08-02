@@ -1,8 +1,11 @@
+"""Test selection functionality."""
+
 import numpy as np
 from faultdiagnosistoolbox.MHS import MHS
 
 
 def TestSelection(self, arr, method='aminc', isolabilitymatrix=''):
+    """Select set of arrs based on structural information."""
     if len(isolabilitymatrix) == 0:
         im = self.IsolabilityAnalysisArrs(arr)
     else:
@@ -18,15 +21,17 @@ def TestSelection(self, arr, method='aminc', isolabilitymatrix=''):
 
 
 def TestSets(FSM, im):
+    """internal."""
     isolProperty = np.argwhere(im == 0)
     ts = []
     for iprop in isolProperty:
-        ts = ts+list(np.where(np.logical_and(FSM[:, iprop[1]] == 1,
-                                             FSM[:, iprop[0]] == 0)))
+        ts = ts + list(np.where(np.logical_and(FSM[:, iprop[1]] == 1,
+                                               FSM[:, iprop[0]] == 0)))
     return ts
 
 
 def aminc(pi, n):
+    """Find, appriximative, minimal cardinality minimal hitting set."""
     piM = np.zeros((len(pi), n))
     for k, p in enumerate(pi):
         piM[k, p] = 1
