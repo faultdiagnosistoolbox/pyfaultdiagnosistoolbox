@@ -81,6 +81,11 @@ class DiagnosisModel(object):
         if modeldef['type'] is 'Symbolic':
             self.syme = np.array(_ToEquations(modeldef['rels']))
 
+        if np.any(np.sum(self.X > 1, 0) > 1):
+            print("The model has higher order derivatives, " +
+                  "please rewrite as a set of first order " +
+                  "differential equations")
+
         self.P = np.arange(0, len(self.x))
         self.Pfault = []
 
