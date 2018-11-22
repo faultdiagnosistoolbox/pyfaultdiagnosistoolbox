@@ -23,4 +23,5 @@ are:
 
 """
 from . DiagnosisModel import DiagnosisModel, DiffConstraint, IsDifferentialConstraint
+from . testselection_rf import RandomForestTestSelection, IsolabilityMatrix, DiagnosesAndConfusionMatrix, PlotConfusionMatrix
 from . MHS import MHS
