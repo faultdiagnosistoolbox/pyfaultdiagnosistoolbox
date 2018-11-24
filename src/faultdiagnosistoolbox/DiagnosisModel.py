@@ -1026,3 +1026,4 @@ def _ToEquations(rels):
         else:
             return rel
     return list(map(lambda r: _ToEquation(r), rels))
+    
