@@ -44,9 +44,10 @@ def RandomForestTestSelection(data, n_estimators=100):
              The dictionary contains the keys
              - sortidx : A sorted list of indices to residuals with the most
                          important residuals first.
-             - pfa : Performance curve for the false alarm probability
-             - pmd : Performace curve for missed detection
-             - pfi : Performance curve for fault isolation
+             - pfa  : Performance curve for the false alarm probability
+             - pmd  : Performace curve for missed detection
+             - pfi  : Performance curve for fault isolation
+             - pmfi : Maximal isolation performance per fault mode
              - residualimportance : List of relative residual importance.
                                     The list is not sorted.
     C : A confusion matrix when computing consistency based diagnoses using
