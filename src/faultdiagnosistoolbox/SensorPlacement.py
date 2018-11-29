@@ -212,13 +212,14 @@ def SensorPlacementIsolability(model, Ispec):
                 detSets = detSets + isolDetSets
         sIdx = MHS(detSets)
 
-    # Remove duplicates
-    keepIdx = np.ones(len(sIdx), dtype=np.int64).astype(np.bool)
-    for k in np.arange(0, len(sIdx)):
-        for l in np.arange(k + 1, len(sIdx)):
-            if np.array_equal(sIdx[k], sIdx[l]):
-                keepIdx[l] = False
-    sIdx = [sIdx[k] for k in np.arange(0, len(sIdx)) if keepIdx[k]]
+    # Remove duplicates and supersets from solution
+    # keepIdx = np.ones(len(sIdx), dtype=np.int64).astype(np.bool)
+    # for k in np.arange(0, len(sIdx)):
+    #     for l in np.arange(k + 1, len(sIdx)):
+    #         if np.array_equal(sIdx[k], sIdx[l]):
+    #             keepIdx[l] = False
+    # sIdx = [sIdx[k] for k in np.arange(0, len(sIdx)) if keepIdx[k]]
+    sIdx = MHS(MHS(sIdx))  # Is there a more efficient way?
 
     # Compute list of variable names
     s = list(map(lambda s: list(np.array(model.x)[s]), sIdx))
