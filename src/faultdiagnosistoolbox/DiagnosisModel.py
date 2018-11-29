@@ -241,6 +241,43 @@ class DiagnosisModel(object):
         """
         return dmperm.IsObservable(self.X, eq)
 
+    def Pantelides(self):
+        """Compute structural index and differentiation vector for exactly determined models
+
+        idx, nu = model.Pantelides()
+
+        Returns
+        -----
+          idx : Structural index of model
+          nu  : Differentiation vector as defined in
+                Pantelides, Constantinos C. "The consistent initialization of
+                differential-algebraic systems." SIAM Journal on Scientific and
+                Statistical Computing 9.2 (1988): 213-231.
+        """
+        X = self.X.copy()
+        ne, nx = X.shape
+        if dmperm.srank(X) < nx:
+            print("Error: Pantelides can only be called for square, " +
+                    "exactly determined models")
+            return None
+        der = np.zeros((ne, 1), dtype=np.int)
+        X[X == 3] = 1
+        X = X - 1
+        cmatching = False
+        while not cmatching:
+            Xder = X + der@np.ones((1, nx))
+            Xder[X < 0] = -1
+
+            hd = np.max(Xder, axis=0)
+            hod = (Xder == (np.ones((ne, 1))@hd.reshape((1, -1))))
+            if dmperm.srank(hod) == nx:
+                cmatching = True
+            else:
+                dm = dmperm.GetDMParts(hod)
+                der[dm.Mp.row] = der[dm.Mp.row] + 1
+        idx = np.max(der) + np.any(hd == 0)
+        return (idx, der.reshape(-1))
+
     def IsHighIndex(self, eq=[]):
         """Return true if the model is high structural differential index.
 
