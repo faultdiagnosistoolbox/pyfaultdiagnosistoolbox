@@ -77,7 +77,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    setup_requires=['numpy'],
+    setup_requires=['numpy', 'wheel'],
     install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'sklearn'],
 
     # List additional groups of dependencies here (e.g. development

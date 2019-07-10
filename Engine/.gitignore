@@ -1,0 +1,4 @@
+ResGen*.cc
+ResGen*.py
+build
+.eggs
