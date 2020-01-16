@@ -1059,7 +1059,7 @@ def _ToEquations(rels):
     """Convert relation into symbolic equations."""
     def _ToEquation(rel):
         if IsSymbolic(rel) and not isinstance(rel, sym.Equality):
-            return sym.Eq(rel)
+            return sym.Eq(rel, 0)
         else:
             return rel
     return list(map(lambda r: _ToEquation(r), rels))
