@@ -15,11 +15,7 @@ sdist:
 	python setup.py sdist
 
 CSparse/Lib/libcsparse.a:
-# Anaconda python sets MACOSX_DEPLOYMENT_TARGET to 10.6, so to avoid
-# warnings, this is needed also for supporting libraries
-# Should not affect Linux builds
-	cd CSparse && MACOSX_DEPLOYMENT_TARGET=10.6 make 
-
+	cd CSparse && make library
 clean:
 	rm -rf build *~ faultdiagnosistoolbox/*.so
 
