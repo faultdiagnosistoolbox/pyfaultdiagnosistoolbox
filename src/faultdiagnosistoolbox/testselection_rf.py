@@ -7,7 +7,7 @@ from . diag_util import IsolabilityMatrix, DiagnosesAndConfusionMatrix
 
 
 def RandomForestTestSelection(data, n_estimators=100):
-    """Select residuals for fault isolation unsing Random Forests.
+    """Select residuals for fault isolation using Random Forests.
 
     Implementation of the residual selection approach described in the
     paper
