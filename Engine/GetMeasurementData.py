@@ -1,5 +1,5 @@
 from VEP_par import TC_ENGINE
-from misc import loadmat
+from diagutil import loadmat
 from scipy.interpolate import interp1d
 import numpy as np
 
