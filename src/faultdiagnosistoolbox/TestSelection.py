@@ -11,10 +11,13 @@ def TestSelection(self, arr, method='aminc', isolabilitymatrix=''):
     else:
         im = isolabilitymatrix
     FSM = self.FSM(arr)
-    if method is 'aminc':
+    if method=='aminc':
         return np.sort(aminc(TestSets(FSM, im), FSM.shape[0]))
-    elif method is 'full':
-        return np.sort(MHS(TestSets(FSM, im), FSM.shape[0]))
+    elif method=='full':
+        ts = np.array(MHS(TestSets(FSM, im)))
+        sort_arg = np.argsort([len(ti) for ti in ts])
+        return [np.sort(ts_i) for ts_i in ts[sort_arg]]
+#         return np.sort(MHS(TestSets(FSM, im), FSM.shape[0]))
     else:
         print('Unknown test selection method')
         return

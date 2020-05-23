@@ -20,11 +20,11 @@ def UsedVars(rels, variables):
 
 def ExprToCode(expr, language, user_functions={}):
     """Convert symbolic expression to code."""
-    if language is 'C':
+    if language=='C':
         genCode = ccode(expr, user_functions=user_functions)
-    elif language is 'Matlab':
+    elif language=='Matlab':
         genCode = octave_code(expr, user_functions=user_functions)
-    elif language is 'Python':
+    elif language=='Python':
         genCode = str(expr)
     else:
         print("Unknown language")
@@ -33,20 +33,20 @@ def ExprToCode(expr, language, user_functions={}):
 
 def CodeEOL(language):
     """Return EOL character for different languages."""
-    if language is 'C' or language is 'Matlab':
+    if language=='C' or language=='Matlab':
         return ';'
-    elif language is 'Python':
+    elif language=='Python':
         return ''
     return ''
 
 
 def CodeComment(language):
     """Return comment characters for different languages."""
-    if language is 'C':
+    if language=='C':
         return '//'
-    elif language is 'Matlab':
+    elif language=='Matlab':
         return '%'
-    elif language is 'Python':
+    elif language=='Python':
         return '#'
     return '#'
 
@@ -65,21 +65,21 @@ def SeqResGenCausality(Gamma, e, diffres):
     """Return causality of matching."""
     if not fdt.IsDifferentialConstraint(e):
         return Gamma.matchType
-    elif diffres is 'int':
+    elif diffres=='int':
         # Treat differential residual constraint in integral causality
-        if Gamma.matchType is 'der':
+        if Gamma.matchType=='der':
             return 'mixed'
-        elif Gamma.matchType is 'int' or Gamma.matchType is 'mixed':
+        elif Gamma.matchType=='int' or Gamma.matchType=='mixed':
             return Gamma.matchType
-        elif Gamma.matchType is 'algebraic':
+        elif Gamma.matchType=='algebraic':
             return 'int'
     else:
         # Treat differential residual constraint in derivative causality
-        if Gamma.matchType is 'int':
+        if Gamma.matchType=='int':
             return 'mixed'
-        elif Gamma.matchType is 'der' or Gamma.matchType is 'mixed':
+        elif Gamma.matchType=='der' or Gamma.matchType=='mixed':
             return Gamma.matchType
-        elif Gamma.matchType is 'algebraic':
+        elif Gamma.matchType=='algebraic':
             return 'der'
 
 
@@ -88,7 +88,8 @@ def AlgebraicHallComponent(model, g, language, user_functions={}):
     fzSub = list(zip(model.f, np.zeros(len(model.f), dtype=np.int64)))
     eqs = list(map(lambda eq: eq.subs(fzSub), model.syme[g.row]))
     hcVars = list(np.array(model.x)[g.col])
-    sol = sym.solve(eqs, hcVars)
+    sol = sym.solve(eqs, hcVars, dict=True)
+    sol = sol[0]  # Take the first solution
     resGen = []
     for varSol in sol:
         if len(hcVars) == 1:
@@ -111,10 +112,10 @@ def AlgebraicHallComponent(model, g, language, user_functions={}):
 
 def CodeApproxInt(v, dv, enum, language):
     """Generate code for simple approximate integrator."""
-    if language is 'Matlab':
+    if language=='Matlab':
         return 'ApproxInt(%s,state.%s,Ts)%s %s %s' % (
             dv, v, CodeEOL(language), CodeComment(language), enum)
-    elif language is 'C':
+    elif language=='C':
         return 'ApproxInt(%s,state->%s,Ts)%s %s %s' % (
             dv, v, CodeEOL(language), CodeComment(language), enum)
 
@@ -125,10 +126,10 @@ def CodeApproxInt(v, dv, enum, language):
 
 def CodeApproxDer(v, enum, language):
     """Generate code for simple approximate differentiator."""
-    if language is 'Matlab':
+    if language=='Matlab':
         return 'ApproxDiff(%s,state.%s,Ts)%s %s %s' % (
             v, v, CodeEOL(language), CodeComment(language), enum)
-    elif language is 'C':
+    elif language=='C':
         return 'ApproxDiff(%s,state->%s,Ts)%s %s %s' % (
             v, v, CodeEOL(language), CodeComment(language), enum)
     else:
@@ -174,13 +175,13 @@ def MixedHallComponent(model, g, language, user_functions={}):
                 v, ExprToCode(sol[0], language, user_functions),
                 CodeEOL(language), CodeComment(language), enum)
             resGen.append(genCode)
-        elif v is IVar(e):
+        elif v==IVar(e):
             dv = DVar(e)
 #            iv = IVar(e)
             genCode = v + " = " + CodeApproxInt(v, dv, enum, language)
             integ.append(genCode)
             iState.append(v)
-        else:  # v is DVar(e)
+        else:  # v==DVar(e)
             genCode = v + " = " + CodeApproxDer(IVar(e), enum, language)
             resGenM0.append(genCode)
             dState.append(Ivar(e))
@@ -191,7 +192,7 @@ def MixedHallComponent(model, g, language, user_functions={}):
 def GenerateResidualEquations(model, resEq, diffres, language,
                               user_functions={}):
     """Generate code for the residual equations."""
-    if language is 'C':
+    if language=='C':
         resvar = 'r[0]'
     else:
         resvar = 'r'
@@ -210,7 +211,7 @@ def GenerateResidualEquations(model, resEq, diffres, language,
         dState = []
         integ = []
     else:  # IsDifferentialConstraint(e)
-        if diffres is 'der':
+        if diffres=='der':
             iv = IVar(e)
             dv = DVar(e)
             genCode = ['%s = %s-%s' % (
@@ -219,10 +220,10 @@ def GenerateResidualEquations(model, resEq, diffres, language,
             iState = []
             dState = [dv]
             integ = []
-        else:  # diffres is 'int'
+        else:  # diffres=='int'
             iv = IVar(e)
             dv = DVar(e)
-            if language is 'Python':
+            if language=='Python':
                 genCode = ["%s = %s-state['%s']%s %s %s" % (
                     resvar, iv, iv, CodeEOL(language),
                     CodeComment(language), np.array(model.e)[resEq])]
@@ -247,21 +248,21 @@ def GenerateExactlyDetermined(model, Gamma, language, user_functions={}):
     for g in Gamma.matching:
         sys.stdout.write('.')
         sys.stdout.flush()
-        if g.matchType is 'algebraic':
+        if g.matchType=='algebraic':
             codeGen = AlgebraicHallComponent(model, g, language,
                                              user_functions)
             resGenM0 = np.concatenate((resGenM0, codeGen))
-        elif g.matchType is 'int':
+        elif g.matchType=='int':
             codeGen, gInteg, giState = IntegralHallComponent(model, g, language, user_functions)
             iState = np.concatenate((iState, giState))
             resGenM0 = np.concatenate((resGenM0, codeGen))
             integ = np.concatenate((integ, gInteg))
-        elif g.matchType is 'der':
+        elif g.matchType=='der':
             dc = model.syme[g.row[0]]
             codeGen = DVar(dc) + " = " + CodeApproxDer(IVar(dc), model.e[g.row[0]], language)
             resGenM0 = np.concatenate((resGenM0, [codeGen]))
             dState = np.concatenate((dState, [IVar(dc)]))
-        elif g.matchType is 'mixed':
+        elif g.matchType=='mixed':
             codeGen, gInteg, giState, gdState = IntegralHallComponent(model, g, language, user_functions)
             resGenM0 = np.concatenate((resGenM0, codeGen))
             iState = np.concatenate((iState, giState))
@@ -273,30 +274,30 @@ def GenerateExactlyDetermined(model, Gamma, language, user_functions={}):
 
 def WriteApproxIntFunction(f, language):
     """Write code for approximate integration function."""
-    if language is 'C':
+    if language=='C':
         f.write('double\n')
         f.write('ApproxInt(double dx, double x0, double Ts)\n')
         f.write('{\n')
         f.write('  return x0 + Ts*dx;\n')
         f.write('}\n')
-    elif language is 'Python':
+    elif language=='Python':
         f.write('    def ApproxInt(dx,x0,Ts):\n')
         f.write('        return x0 + Ts*dx\n')
-    elif language is 'Matlab':
+    elif language=='Matlab':
         pass
 
 
 def WriteApproxDerFunction(f, language):
     """Write code for approximate differentiation function."""
-    if language is 'C':
+    if language=='C':
         f.write('double\nApproxDiff(double x, double xold, double Ts)\n')
         f.write('{\n')
         f.write('  return (x-xold)/Ts;\n')
         f.write('}\n')
-    elif language is 'Python':
+    elif language=='Python':
         f.write('    def ApproxDiff(x,xold,Ts):\n')
         f.write('        return (x-xold)/Ts\n')
-    elif language is 'Matlab':
+    elif language=='Matlab':
         f.write('function dx=ApproxDiff(x,xold,Ts)\n')
         f.write('  if length(xold)==1\n')
         f.write('    dx = (x-xold)/Ts;\n')
@@ -409,11 +410,11 @@ def WriteResGenPython(model, resGen, state, integ, name, batch,
         f.write(tab + '"""')
         f.write('\n')
 
-        if resGenCausality is 'int' or resGenCausality is 'mixed':
+        if resGenCausality=='int' or resGenCausality=='mixed':
             WriteApproxIntFunction(f, 'Python')
             f.write('\n')
 
-        if resGenCausality is 'der' or resGenCausality is 'mixed':
+        if resGenCausality=='der' or resGenCausality=='mixed':
             WriteApproxDerFunction(f, 'Python')
             f.write('\n')
 
@@ -455,11 +456,11 @@ def WriteResGenPython(model, resGen, state, integ, name, batch,
         f.write(tab + '"""')
         f.write('\n')
 
-        if resGenCausality is 'int' or resGenCausality is 'mixed':
+        if resGenCausality=='int' or resGenCausality=='mixed':
             WriteApproxIntFunction(f, 'Python')
             f.write('\n')
 
-        if resGenCausality is 'der' or resGenCausality is 'mixed':
+        if resGenCausality=='der' or resGenCausality=='mixed':
             WriteApproxDerFunction(f, 'Python')
             f.write('\n')
 
@@ -481,7 +482,7 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python',
               batch=False, api='Python', user_functions={},
               external_src=[], external_headers=[]):
     """Generate code for sequential residual generator."""
-    if not (model.modelType is 'Symbolic'):
+    if not (model.modelType=='Symbolic'):
         print("Code generation only possible for symbolic models")
         return []
 
@@ -513,14 +514,14 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python',
     for g in Gamma.matching:
         resGenEqs = np.concatenate((resGenEqs, g.row))
     resGenEqs = np.concatenate((resGenEqs, [resEq]))
-    if language is 'Python':
+    if language=='Python':
         WriteResGenPython(model, resGenCode, resGenState, resGenInteg, name,
                           batch, resGenCausality, resGenEqs, external_src)
         print('File ' + name + '.py generated.')
-    elif language is 'Matlab':
+    elif language=='Matlab':
         pass
-    elif language is 'C':
-        if api is 'Python':
+    elif language=='C':
+        if api=='Python':
             WriteResGenCPython(model, resGenCode, resGenState, resGenInteg,
                                name, batch, resGenCausality, resGenEqs,
                                external_src, external_headers)
@@ -540,7 +541,7 @@ def WriteResGenCoreC(f, name, model, resGen, state, integ, resGenEqs, batch):
         f.write(name + '_core(double* r, PyArrayObject *pyZ, ')
     else:
         f.write(name + '_core(double* r, PyArrayObject *pyZ, npy_intp k, ')
-    if len(resGen) > 0:
+    if len(state) > 0:
         f.write('ResState* state, ')
     if len(usedParams) > 0:
         f.write('const Parameters *params, ')
@@ -756,9 +757,9 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
             f.write('\n')
 
         # Declare function prototypes
-        if resGenCausality is 'int' or resGenCausality is 'mixed':
+        if resGenCausality=='int' or resGenCausality=='mixed':
             f.write('double ApproxInt(double dx, double x0, double Ts);\n')
-        if resGenCausality is 'der' or resGenCausality is 'mixed':
+        if resGenCausality=='der' or resGenCausality=='mixed':
             f.write('double ApproxDiff(double x, double xold, double Ts);\n')
         if len(usedParams) > 0:
             f.write('void GetParameters( PyObject *pyParams, Parameters* params );\n')
@@ -815,11 +816,11 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
                          resGenEqs, batch)
         f.write('\n')
 
-        if resGenCausality is 'int' or resGenCausality is 'mixed':
+        if resGenCausality=='int' or resGenCausality=='mixed':
             WriteApproxIntFunction(f, 'C')
             f.write('\n')
 
-        if resGenCausality is 'der' or resGenCausality is 'mixed':
+        if resGenCausality=='der' or resGenCausality=='mixed':
             WriteApproxDerFunction(f, 'C')
             f.write('\n')
 
@@ -874,16 +875,18 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
         f.write('// Let z be the observations matrix, each column corresponding to a known signal and Ts the sampling time,\n')
         f.write('// then the residual generator can be simulated by:\n')
         f.write('//\n')
-        f.write("// state = {")
-        for s in resGenState[:-1]:
-            f.write("'" + s + "': " + s + '_0, ')
-        f.write("'" + resGenState[-1] + "': " + resGenState[-1] + '_0}\n')
-        f.write("// r = " + name + '( z, state, params, Ts )\n')
-        f.write('//\n')
-        f.write('// State is a dictionary with the keys: ')
-        for s in resGenState[:-1]:
-            f.write(s + ', ')
-        f.write(resGenState[-1] + '\n')
+
+        if len(resGenState) > 0:
+            f.write("// state = {")
+            for s in resGenState[:-1]:
+                f.write("'" + s + "': " + s + '_0, ')
+            f.write("'" + resGenState[-1] + "': " + resGenState[-1] + '_0}\n')
+            f.write("// r = " + name + '( z, state, params, Ts )\n')
+            f.write('//\n')
+            f.write('// State is a dictionary with the keys: ')
+            for s in resGenState[:-1]:
+                f.write(s + ', ')
+            f.write(resGenState[-1] + '\n')
         f.write('\n')
         f.write('// File generated ' + time.strftime('%c') + '\n')
         f.write('\n')
@@ -906,9 +909,9 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
             f.write('\n')
 
         # Declare function prototypes
-        if resGenCausality is 'int' or resGenCausality is 'mixed':
+        if resGenCausality=='int' or resGenCausality=='mixed':
             f.write('double ApproxInt(double dx, double x0, double Ts);\n')
-        if resGenCausality is 'der' or resGenCausality is 'mixed':
+        if resGenCausality=='der' or resGenCausality=='mixed':
             f.write('double ApproxDiff(double x, double xold, double Ts);\n')
         if len(usedParams) > 0:
             f.write('void GetParameters( PyObject *pyParams, Parameters* params );\n')
@@ -973,11 +976,11 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
                          resGenEqs, batch)
         f.write('\n')
 
-        if resGenCausality is 'int' or resGenCausality is 'mixed':
+        if resGenCausality=='int' or resGenCausality=='mixed':
             WriteApproxIntFunction(f, 'C')
             f.write('\n')
 
-        if resGenCausality is 'der' or resGenCausality is 'mixed':
+        if resGenCausality=='der' or resGenCausality=='mixed':
             WriteApproxDerFunction(f, 'C')
             f.write('\n')
 
