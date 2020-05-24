@@ -1,4 +1,5 @@
 env
+build
 
 *.a
 *.ipynb_checkpoints
