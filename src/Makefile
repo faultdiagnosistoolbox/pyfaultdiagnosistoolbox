@@ -25,3 +25,5 @@ cleanall:
 	rm -rf faultdiagnosistoolbox.egg-info
 	rm -rf dist
 
+test:
+	python -m pytest -v
