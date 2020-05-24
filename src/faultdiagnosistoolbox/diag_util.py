@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
+
 def IsolabilityMatrix(fsm):
     """Compute isolability matrix based on a fault signature matrix"""
     nf = fsm.shape[1]
@@ -11,6 +12,7 @@ def IsolabilityMatrix(fsm):
     for ri in fsm:
         im[np.ix_(ri > 0, ri == 0)] = 0
     return im
+
 
 def DiagnosesAndConfusionMatrix(data, residx=None):
     """Compute consistency based diagnoses and corresponding confusion matrix
@@ -145,4 +147,3 @@ summer_cmap = make_colormap([
     (0.968, 0.984, 0.400),
     (0.984, 0.992, 0.400),
     (1.000, 1.000, 0.400)])
-

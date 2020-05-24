@@ -30,7 +30,7 @@ class DiagnosisModel(object):
 
         self.vGen = VarIdGen()
         self.modelType = 'Structural'
-        if modeldef['type'] is 'VarStruc' or modeldef['type'] is 'Symbolic':
+        if modeldef['type'] == 'VarStruc' or modeldef['type'] == 'Symbolic':
             self.X = _ModelStructure(modeldef['rels'], modeldef['x'])
             self.x = modeldef['x']
             self.F = _ModelStructure(modeldef['rels'], modeldef['f'])
@@ -38,12 +38,12 @@ class DiagnosisModel(object):
             self.Z = _ModelStructure(modeldef['rels'], modeldef['z'])
             self.z = modeldef['z']
             self.e = list(map(lambda x: self.vGen.NewE(), np.arange(0, self.ne())))
-            if modeldef['type'] is 'Symbolic':
+            if modeldef['type'] == 'Symbolic':
                 self.modelType = 'Symbolic'
 
             if 'parameters' in modeldef:
                 self.parameters = modeldef['parameters']
-        elif modeldef['type'] is 'MatrixStruc':
+        elif modeldef['type'] == 'MatrixStruc':
             self.X = np.array(modeldef['X'], dtype=np.int64)
             ne = self.X.shape[0]
             if len(modeldef['F']) > 0:
@@ -78,7 +78,7 @@ class DiagnosisModel(object):
             print('Model definition type ' + modeldef['type'] +
                   ' is not supported (yet)')
 
-        if modeldef['type'] is 'Symbolic':
+        if modeldef['type'] == 'Symbolic':
             self.syme = np.array(_ToEquations(modeldef['rels']))
 
         if np.any(np.sum(self.X > 1, 0) > 1):
@@ -208,7 +208,7 @@ class DiagnosisModel(object):
 
         If model is symbolic, it will be converted into a structural model
         """
-        if self.modelType is 'Symbolic':
+        if self.modelType == 'Symbolic':
             self.Structural()
 
         X = self.X
@@ -232,13 +232,15 @@ class DiagnosisModel(object):
         self.Pfault = []
         self.P = np.arange(0, len(self.x))
 
-    def IsObservable(self, eq=[]):
+    def IsObservable(self, eq=None):
         """Return true if the model is observable.
 
         Input
         -----
           eq : Set of equations to analyze. (default: all equations)
         """
+        if eq is None:
+            eq = []
         return dmperm.IsObservable(self.X, eq)
 
     def Pantelides(self):
@@ -258,12 +260,13 @@ class DiagnosisModel(object):
         ne, nx = X.shape
         if dmperm.srank(X) < nx:
             print("Error: Pantelides can only be called for square, " +
-                    "exactly determined models")
+                  "exactly determined models")
             return None
         der = np.zeros((ne, 1), dtype=np.int)
         X[X == 3] = 1
         X = X - 1
         cmatching = False
+        hd = None
         while not cmatching:
             Xder = X + der@np.ones((1, nx))
             Xder[X < 0] = -1
@@ -276,26 +279,30 @@ class DiagnosisModel(object):
                 dm = dmperm.GetDMParts(hod)
                 der[dm.Mp.row] = der[dm.Mp.row] + 1
         idx = np.max(der) + np.any(hd == 0)
-        return (idx, der.reshape(-1))
+        return idx, der.reshape(-1)
 
-    def IsHighIndex(self, eq=[]):
+    def IsHighIndex(self, eq=None):
         """Return true if the model is high structural differential index.
 
         Input
         -----
           eq : Set of equations to analyze. (default: all equations)
         """
+        if eq is None:
+            eq = []
         if len(eq) == 0:
             eq = np.arange(0, self.X.shape[0])
         return dmperm.IsHighIndex(self.X, eq)
 
-    def IsLowIndex(self, eq=[]):
+    def IsLowIndex(self, eq=None):
         """Return true if the model is low structural differential index.
 
         Input
         -----
           eq : Set of equations to analyze. (default: all equations)
         """
+        if eq is None:
+            eq = []
         if len(eq) == 0:
             eq = np.arange(0, self.X.shape[0])
         return dmperm.IsLowIndex(self.X, eq)
@@ -309,18 +316,18 @@ class DiagnosisModel(object):
         """Return indices to the differential constraints."""
         return np.where(np.any(self.X == 2, axis=1))[0]
 
-    def DynamicVariables(model):
+    def DynamicVariables(self):
         """Return variables and index to dynamic variables in model."""
-        idx = np.where(np.any(model.X == 2, axis=0))[0]
-        c = list(np.array(model.x)[idx])
-        return (c, idx)
+        idx = np.where(np.any(self.X == 2, axis=0))[0]
+        c = list(np.array(self.x)[idx])
+        return c, idx
 
-    def AlgebraicVariables(model):
+    def AlgebraicVariables(self):
         """Return variables and index to algebraic variables in model."""
-        dyn_idx = np.where(np.any(model.X == 2, axis=0))[0]
-        idx = [x for x in range(model.nx()) if not(x in dyn_idx)]
-        c = list(np.array(model.x)[idx])
-        return (c, idx)
+        dyn_idx = np.where(np.any(self.X == 2, axis=0))[0]
+        idx = [x for x in range(self.nx()) if not(x in dyn_idx)]
+        c = list(np.array(self.x)[idx])
+        return c, idx
 
     def FSM(self, eqs_sets, plot=False):
         """Return the fault signature matrix for a set of equation sets.
@@ -372,12 +379,12 @@ class DiagnosisModel(object):
                       this option is given, the diffres key have no
                       effect.
         """
-        def IsDifferentialStructure(X, eq):
-            return np.any(X[eq, :] == 3)
+        def IsDifferentialStructure(Xi, eq):
+            return np.any(Xi[eq, :] == 3)
 
-        if (causality is 'der') and (not (diffres is 'der')):
+        if (causality == 'der') and (not (diffres == 'der')):
             diffres = 'der'
-        if (causality is 'int') and (not (diffres is 'int')):
+        if (causality == 'int') and (not (diffres == 'int')):
             diffres = 'int'
         res = []
         X = self.X
@@ -387,22 +394,22 @@ class DiagnosisModel(object):
 
             if not IsDifferentialStructure(X, red):
                 res.append(Gamma.matchType)
-            elif diffres is 'int':
-                if Gamma.matchType is 'der':
+            elif diffres == 'int':
+                if Gamma.matchType == 'der':
                     res.append('mixed')
-                elif Gamma.matchType is 'int' or Gamma.matchType is 'mixed':
+                elif (Gamma.matchType == 'int') or (Gamma.matchType == 'mixed'):
                     res.append(Gamma.matchType)
-                elif Gamma.matchType is 'algebraic':
+                elif Gamma.matchType == 'algebraic':
                     res.append('int')
-            elif diffres is 'der':
-                if Gamma.matchType is 'int':
+            elif diffres == 'der':
+                if Gamma.matchType == 'int':
                     res.append('mixed')
-                elif Gamma.matchType is 'der' or Gamma.matchType is 'mixed':
+                elif (Gamma.matchType == 'der') or (Gamma.matchType == 'mixed'):
                     res.append(Gamma.matchType)
-                elif Gamma.matchType is 'algebraic':
+                elif Gamma.matchType == 'algebraic':
                     res.append('der')
         if len(causality) > 0:
-            res = np.array(list(map(lambda c: c is causality or c is 'algebraic', res)))
+            res = np.array(list(map(lambda c: c == causality or c == 'algebraic', res)))
         return res
 
     def MeasurementEquations(self, m):
@@ -488,8 +495,10 @@ class DiagnosisModel(object):
         """Return True if model is static."""
         return not self.IsDynamic()
 
-    def Redundancy(self, eqs=[]):
+    def Redundancy(self, eqs=None):
         """Return the redundancy of the model."""
+        if eqs is None:
+            eqs = []
         if len(eqs) == 0:
             eqs = np.arange(0, self.ne())
 
@@ -564,7 +573,7 @@ class DiagnosisModel(object):
             labelVars = True
         smplot.PlotMatching(self, Gamma, verbose=labelVars)
 
-    def PossibleSensorLocations(self, x=-1):
+    def PossibleSensorLocations(self, x=None):
         """Set possible sensor locations.
 
         Input
@@ -573,7 +582,7 @@ class DiagnosisModel(object):
               The sensor positions x can be given either as
               indices into model.x or variable names (default: all positions)
         """
-        if x == -1:
+        if x is None:
             self.P = np.arange(0, len(self.x))  # Assume all possible sensor locations
         else:
             if issubclass(type(x[0]), str):  # list of strings
@@ -581,7 +590,7 @@ class DiagnosisModel(object):
             else:
                 self.P = x.copy()
 
-    def SensorLocationsWithFaults(self, x=[]):
+    def SensorLocationsWithFaults(self, x=None):
         """Set possible sensor locations that has faults in new sensors.
 
         Input
@@ -592,15 +601,15 @@ class DiagnosisModel(object):
               given either as indices into model.x or variable
               names
         """
-        if len(x) > 0:
+        if x is None:
+            self.Pfault = []
+        else:
             if issubclass(type(x[0]), str):  # list of strings
                 self.Pfault = np.array([self.x.index(xi) for xi in x if xi in self.x])
             else:
                 self.Pfault = x.copy()
-        else:
-            self.Pfault = []
 
-    def SensorPlacementIsolability(self, isolabilityspecification=-1):
+    def SensorPlacementIsolability(self, isolabilityspecification=None):
         """Compute all minimal sensor sets that achieves maximal fault isolability of the faults in the model.
 
         Krysander, Mattias, and Erik Frisk, "Sensor placement for fault
@@ -623,8 +632,10 @@ class DiagnosisModel(object):
         res - list of all minimal sensor sets, represented by strings
         idx - same as res, but represented with indicices into model.f
         """
-        if isolabilityspecification == -1:
+        if isolabilityspecification is None:
             Ispec = np.eye(self.nf())
+        else:
+            Ispec = isolabilityspecification
 
         return sensplace.SensorPlacementIsolability(self, Ispec)
 
@@ -642,7 +653,7 @@ class DiagnosisModel(object):
         """
         return sensplace.SensorPlacementDetectability(self)
 
-    def AddSensors(self, sensors, name=[], fault=[]):
+    def AddSensors(self, sensors, name=None, fault=None):
         """Add sensor equations to a model.
 
         Input
@@ -662,6 +673,10 @@ class DiagnosisModel(object):
           name    : List with names of new sensor variables
           fault   : List with names of fault variables for new sensors
         """
+        if fault is None:
+            fault = []
+        if name is None:
+            name = []
         if issubclass(type(sensors[0]), str):  # list of strings, convert to indices into self.x
             s = np.array([self.x.index(xi) for xi in sensors if xi in self.x])
         else:
@@ -708,6 +723,7 @@ class DiagnosisModel(object):
                 zName = name[idx]
             self.z = self.z + [zName]
 
+            fName = 'fx'
             if fs[idx]:
                 if len(fault) == 0:
                     fName = 'f' + zName
@@ -715,7 +731,7 @@ class DiagnosisModel(object):
                     fName = fault[idx]
                 self.f = self.f + [fName]
 
-            if self.modelType is 'Symbolic':
+            if self.modelType == 'Symbolic':
                 if fs[idx]:
                     rel = sym.Eq(sym.symbols(zName), sym.symbols(self.x[zi]) +
                                  sym.symbols(fName))
@@ -723,7 +739,7 @@ class DiagnosisModel(object):
                     rel = sym.Eq(sym.symbols(zName), sym.symbols(self.x[zi]))
                 self.syme = np.concatenate((self.syme, [rel]))
 
-    def DetectabilityAnalysis(model, causality='mixed'):
+    def DetectabilityAnalysis(self, causality='mixed'):
         """Perform a structural detectability analysis.
 
         Inputs
@@ -744,15 +760,17 @@ class DiagnosisModel(object):
           df  : Detectable faults
           ndf : Non-detectable faults
         """
-        MplusCausal = lambda X: dmperm.Mplus(X, causality=causality)
+        # MplusCausal = lambda X: dmperm.Mplus(X, causality=causality)
+        def MplusCausal(X):
+            return dmperm.Mplus(X, causality=causality)
 
-        dm = MplusCausal(model.X)
+        dm = MplusCausal(self.X)
 
-        df = [model.f[fidx] for fidx in np.arange(0, model.F.shape[1])
-              if np.argwhere(model.F[:, fidx])[:, 0] in dm]
-        ndf = [model.f[fidx] for fidx in np.arange(0, model.F.shape[1])
-               if np.argwhere(model.F[:, fidx])[:, 0] not in dm]
-        return (df, ndf)
+        df = [self.f[fidx] for fidx in np.arange(0, self.F.shape[1])
+              if np.argwhere(self.F[:, fidx])[:, 0] in dm]
+        ndf = [self.f[fidx] for fidx in np.arange(0, self.F.shape[1])
+               if np.argwhere(self.F[:, fidx])[:, 0] not in dm]
+        return df, ndf
 
     def IsolabilityAnalysis(self, plot=False, permute=True, causality='mixed'):
         """Perform structural single fault isolability analysis of model.
@@ -780,11 +798,16 @@ class DiagnosisModel(object):
           im        : Isolability matrix, im(i,j)=1 if fault i can be isolated
                       from fault j, 0 otherwise
         """
-        MplusCausal = lambda X: dmperm.Mplus(X, causality=causality)
+
+        # MplusCausal = lambda X: dmperm.Mplus(X, causality=causality)
+        def MplusCausal(X_i):
+            return dmperm.Mplus(X_i, causality=causality)
+
+
 #        ne = self.X.shape[0]
         nf = len(self.f)
 
-        plusRow = MplusCausal(self.X)
+        # plusRow = MplusCausal(self.X)
 
         # Determine equations for each fault
 #        feq = list(map(lambda fi: np.argwhere(self.F[:, fi])[0][0],
@@ -819,9 +842,9 @@ class DiagnosisModel(object):
                 titleString = "Isolability matrix for '%s'" % self.name
             else:
                 titleString = "Isolability matrix"
-            if causality is 'der':
+            if causality == 'der':
                 titleString = "%s (derivative causality)" % titleString
-            elif causality is 'int':
+            elif causality == 'int':
                 titleString = "%s (integral causality)" % titleString
             plt.title(titleString)
             plt.gca().xaxis.tick_bottom()
@@ -890,8 +913,8 @@ class DiagnosisModel(object):
         return im
 
     def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python',
-                  batch=False, api='Python', user_functions={},
-                  external_src=[], external_headers=[]):
+                  batch=False, api='Python', user_functions=None,
+                  external_src=None, external_headers=None):
         """(Experimental) Generate Python/C code for sequential residual generator.
 
         Given a matching and a residual equation, generate code implementing the
@@ -922,6 +945,15 @@ class DiagnosisModel(object):
           external_headers : List of external header files to include in
                              generated C source
         """
+        if user_functions is None:
+            user_functions = {}
+        if external_headers is None:
+            external_headers = []
+        if external_src is None:
+            external_src = []
+        if api != 'Python':
+            print("Error, only python api supported")
+
         codegen.SeqResGen(self, Gamma, resEq, name, diffres=diffres,
                           language=language, batch=batch,
                           user_functions=user_functions,
@@ -1047,12 +1079,12 @@ def _RelModelStructure(rel, x):
 
 def IsDifferentialConstraint(rel):
     """Return true if relation is differential constraint."""
-    return isinstance(rel, list) and len(rel) == 3 and rel[2] is "diff"
+    return isinstance(rel, list) and (len(rel) == 3) and (rel[2] == "diff")
 
 
 def IsSymbolic(v):
     """Return true if variable is symbolic."""
-    return isinstance(v, tuple(sym.core.all_classes))
+    return isinstance(v, tuple(sym.core.core.all_classes))
 
 
 def _ToEquations(rels):
@@ -1063,4 +1095,3 @@ def _ToEquations(rels):
         else:
             return rel
     return list(map(lambda r: _ToEquation(r), rels))
-    

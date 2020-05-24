@@ -103,7 +103,7 @@ def RandomForestTestSelection(data, n_estimators=100):
     imk = IsolabilityMatrix(data['fsm'])
     imk[0] = np.zeros(nf)
     imk[0, 0] = 1
-
+    C = None
     for k in range(1, nr):
         dx, C = DiagnosesAndConfusionMatrix(data, residx=sortIdx[0:k])
         pfa[k-1] = 1-C[0, 0]
@@ -116,6 +116,3 @@ def RandomForestTestSelection(data, n_estimators=100):
     return ({'sortidx': sortIdx, 'pfa': pfa, 'pmd': pmd, 'pfi': pfi,
              'pmfi': pmfi, 'residualimportance': residualImportance},
             C, rf, Crf)
-
-
-

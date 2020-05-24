@@ -12,8 +12,12 @@ class HallComponentMatching:
     intState = []
     derState = []
 
-    def __init__(self, t, r, c, derState=[], intState=[]):
+    def __init__(self, t, r, c, derState=None, intState=None):
         """Initialize matching."""
+        if intState is None:
+            intState = []
+        if derState is None:
+            derState = []
         self.matchType = t
         self.row = r
         self.col = c

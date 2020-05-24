@@ -16,21 +16,21 @@ class VarIdGen:
         self.f = 1
         self.e = 1
 
-    def setXLabel(self, l):
+    def setXLabel(self, lab):
         """Set x label."""
-        self.xlabel = l
+        self.xlabel = lab
 
-    def setFLabel(self, l):
+    def setFLabel(self, lab):
         """Set f label."""
-        self.flabel = l
+        self.flabel = lab
 
-    def setZLabel(self, l):
+    def setZLabel(self, lab):
         """Set z label."""
-        self.zlabel = l
+        self.zlabel = lab
 
-    def setELabel(self, l):
+    def setELabel(self, lab):
         """Set e label."""
-        self.elabel = l
+        self.elabel = lab
 
     def reset(self):
         """Reset all name generators."""
@@ -41,7 +41,7 @@ class VarIdGen:
 
     def state(self):
         """Return full state of name generators."""
-        return (self.x, self.z, self.f, self.e)
+        return self.x, self.z, self.f, self.e
 
     def setState(self, s):
         """Set full state of name generators."""

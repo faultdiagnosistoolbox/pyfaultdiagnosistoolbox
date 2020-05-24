@@ -30,7 +30,7 @@ def PlotModel(model, **options):
 
     if model.nx() < 50:
         fSize = 12
-    elif model.nx() > 50 and model.nx() < 75:
+    elif model.nx() < 75:
         fSize = 10
     else:
         fSize = 8
@@ -88,17 +88,23 @@ def PlotMatching(model, Gamma, **options):
     # Plot structure
     if model.nx() < 50:
         fSize = 12
-    elif model.nx() > 50 and model.nx() < 75:
+    elif model.nx() < 75:
         fSize = 10
     else:
         fSize = 8
 
     plt.spy(Xm == 1, markersize=4, marker="o", color="b")
-    for idx, val in enumerate(np.argwhere(Xm == 3)):
+    # for idx, val in enumerate(np.argwhere(Xm == 3)):
+    #     plt.text(val[1], val[0], 'D', color="b", fontsize=fSize,
+    #              horizontalalignment="center", verticalalignment="center")
+    #     for idx, val in enumerate(np.argwhere(Xm == 2)):
+    #         plt.text(val[1], val[0], 'I', color="b", fontsize=fSize,
+    #                  horizontalalignment="center", verticalalignment="center")
+    for val in np.argwhere(Xm == 3):
         plt.text(val[1], val[0], 'D', color="b", fontsize=fSize,
                  horizontalalignment="center", verticalalignment="center")
-        for idx, val in enumerate(np.argwhere(Xm == 2)):
-            plt.text(val[1], val[0], 'I', color="b", fontsize=fSize,
+        for val_i in np.argwhere(Xm == 2):
+            plt.text(val_i[1], val_i[0], 'I', color="b", fontsize=fSize,
                      horizontalalignment="center", verticalalignment="center")
 
     # Plot axis ticks
@@ -146,8 +152,8 @@ def PlotDM(model, **options):
         fault = False
 
     dm = dmperm.GetDMParts(X)
-    rowp = dm.rowp
-
+    # rowp = dm.rowp
+    P = {}
     if eqclass and len(dm.Mp.row) > 0:
         # Perform PSO decomposition of M+
         Xp = X[dm.Mp.row, :][:, dm.Mp.col]
@@ -176,7 +182,7 @@ def PlotDM(model, **options):
 
     if model.nx() < 50:
         fSize = 12
-    elif model.nx() > 50 and model.nx() < 75:
+    elif model.nx() < 75:
         fSize = 10
     else:
         fSize = 8

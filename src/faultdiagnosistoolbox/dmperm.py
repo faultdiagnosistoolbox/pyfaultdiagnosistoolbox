@@ -147,10 +147,10 @@ def PSODecomposition(X):
     X0 = np.sort([x for x in np.arange(0, m) if not (x in Mi)])
     if len(X0) == 0:
         X0 = []
-    res = {}
-    res['eqclass'] = eqclass
-    res['trivclass'] = trivclass
-    res['X0'] = X0
+
+    res = {'eqclass': eqclass,
+           'trivclass': trivclass,
+           'X0': X0}
 
     p = np.array([], dtype=np.int64)
     q = np.array([], dtype=np.int64)
@@ -265,29 +265,29 @@ def IsLowIndex(X, eq=[]):
 
 def Mplus(X, causality='mixed'):
     """Compute over-determined part."""
-    def Gp(G):
-        dm = GetDMParts(G[2])
+    def Gp(Gi):
+        dm = GetDMParts(Gi[2])
         if len(dm.Mp.row) == 0 or len(dm.Mp.col) == 0:
             return (np.array([]), np.array([]), np.array([[]]))
-        G1 = copy.deepcopy(G)
+        G1 = copy.deepcopy(Gi)
         return (G1[0][dm.Mp.row],
                 G1[1][dm.Mp.col],
                 G1[2][dm.Mp.row, :][:, dm.Mp.col])
 
-    def Gm(G):
-        dm = GetDMParts(G[2])
+    def Gm(Gi):
+        dm = GetDMParts(Gi[2])
         if len(dm.Mm.row) == 0 or len(dm.Mm.col) == 0:
             return (np.array([]), np.array([]), np.array([[]]))
-        G1 = copy.deepcopy(G)
+        G1 = copy.deepcopy(Gi)
         return (G1[0][dm.Mm.row],
                 G1[1][dm.Mm.col],
                 G1[2][dm.Mm.row, :][:, dm.Mm.col])
 
-    def G0(G):
-        dm = GetDMParts(G[2])
+    def G0(Gi):
+        dm = GetDMParts(Gi[2])
         if len(dm.M0eqs) == 0 or len(dm.M0vars) == 0:
             return (np.array([]), np.array([]), np.array([[]]))
-        G1 = copy.deepcopy(G)
+        G1 = copy.deepcopy(Gi)
         return (G1[0][dm.M0eqs],
                 G1[1][dm.M0vars],
                 G1[2][dm.M0eqs, :][:, dm.M0vars])
@@ -302,29 +302,29 @@ def Mplus(X, causality='mixed'):
         A1[A2 == 2] = 2
         return (c1, x1, A1)
 
-    def CGX(G, X):
+    def CGX(Gi, X):
         if len(X) == 0:
             return []
-        xIdx = [np.where(G[1] == ii)[0][0] for ii in X]
-        idx = np.unique([e[0] for e in np.argwhere(G[2][:, xIdx] > 0)])
+        xIdx = [np.where(Gi[1] == ii)[0][0] for ii in X]
+        idx = np.unique([e[0] for e in np.argwhere(Gi[2][:, xIdx] > 0)])
         if len(idx) == 0:
             return []
 
-        return G[0][idx]
+        return Gi[0][idx]
 
-    def CGE(G, E):
-        return G[0][np.where(np.any(Ei, axis=1))[0]]
+    def CGE(Gi, E):
+        return Gi[0][np.where(np.any(Ei, axis=1))[0]]
 
-    def GsubC(G, C):
-        c, x, A = copy.deepcopy(G)
-        Cidx = list(map(lambda ci: np.argwhere(G[0] == ci)[0][0], C))
+    def GsubC(Gi, C):
+        c, x, A = copy.deepcopy(Gi)
+        Cidx = list(map(lambda ci: np.argwhere(Gi[0] == ci)[0][0], C))
         A = np.delete(A, Cidx, axis=0)
         c = np.array([ci for ci in c if not (ci in C)])
         return (c, x, A)
 
-    def GsubX(G, X):
-        c, x, A = copy.deepcopy(G)
-        Xidx = list(map(lambda xi: np.argwhere(G[1] == xi)[0][0], X))
+    def GsubX(Gi, X):
+        c, x, A = copy.deepcopy(Gi)
+        Xidx = list(map(lambda xi: np.argwhere(Gi[1] == xi)[0][0], X))
         A = np.delete(A, Xidx, axis=1)
         x = np.array([xi for xi in x if not (xi in X)])
         return (c, x, A)
@@ -335,10 +335,10 @@ def Mplus(X, causality='mixed'):
          np.arange(0, Xc.shape[1], dtype=np.int64),
          Xc)
 
-    if causality is 'mixed':
+    if causality == 'mixed':
         return Gp(G)[0]
 
-    elif causality is 'int':
+    elif causality == 'int':
         while True:
             # G := G+
             G = Gp(G)
@@ -356,7 +356,7 @@ def Mplus(X, causality='mixed'):
             else:
                 break
         return G[0]
-    elif causality is 'der':
+    elif causality == 'der':
         Xc = []
         while True:
             # Gnc := G - Xc
@@ -449,20 +449,25 @@ def MTES_initModel(model):
     ef = np.argwhere(np.any(model.F, axis=1)).flatten()
     ef = np.intersect1d(ef, row_over)
     idx = np.hstack((ef, np.setdiff1d(row_over, ef)))
-    m = {}
-    m['sr'] = len(row_over) - len(col_over)
-    m['X'] = model.X[idx, :][:, col_over]
-    m['f'] = list(map(lambda fi: np.argwhere(fi)[0], model.F[ef, :]))
-    m['delrow'] = 0
-    m['e'] = list(map(lambda ei: np.array([ei]), idx))
+    # m = {}
+    # m['sr'] = len(row_over) - len(col_over)
+    # m['X'] = model.X[idx, :][:, col_over]
+    # m['f'] = list(map(lambda fi: np.argwhere(fi)[0], model.F[ef, :]))
+    # m['delrow'] = 0
+    # m['e'] = list(map(lambda ei: np.array([ei]), idx))
+    m = {'sr': len(row_over) - len(col_over),
+         'X': model.X[idx, :][:, col_over],
+         'f': list(map(lambda fi: np.argwhere(fi)[0], model.F[ef, :])),
+         'delrow': 0,
+         'e': list(map(lambda ei: np.array([ei]), idx))}
     return m
 
 
 def MTES_GetPartialModel(m, rows):
     """internal."""
     n = {}
-    vars = np.any(m['X'][rows, :], axis=0)
-    n['X'] = m['X'][rows, :][:, vars]
+    variables = np.any(m['X'][rows, :], axis=0)
+    n['X'] = m['X'][rows, :][:, variables]
     n['e'] = list(np.array(m['e'])[rows])
     n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
     n['sr'] = n['X'].shape[0] - n['X'].shape[1]
@@ -544,7 +549,7 @@ def MTES_LumpExt(m, row):
         n = m
 
     row = row + 1
-    return (n, row)
+    return n, row
 
 
 def MTES_addResults(S, Sn):

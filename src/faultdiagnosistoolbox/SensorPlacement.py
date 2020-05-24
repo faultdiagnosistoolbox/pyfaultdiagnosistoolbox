@@ -43,9 +43,9 @@ def SensorPlacementDetectability(model, **options):
         sensSets = []
 
     # Compute list of variable names
-    s = list(map(lambda s: list(np.array(model.x)[s]), sensSets))
+    s = list(map(lambda si: list(np.array(model.x)[si]), sensSets))
 
-    return (s, sensSets)
+    return s, sensSets
 
 
 def NewSensorEqs(s, nx, nf, Pfault):
@@ -63,7 +63,7 @@ def NewSensorEqs(s, nx, nf, Pfault):
             fs.append(si)
         else:
             Fs[sIdx, :] = np.zeros((1, nf))
-    return (Xs, Fs, fs)
+    return Xs, Fs, fs
 
 
 def IsolabilitySubProblem(X, F, P, fi, Ispec):
@@ -222,6 +222,6 @@ def SensorPlacementIsolability(model, Ispec):
     sIdx = MHS(MHS(sIdx))  # Is there a more efficient way?
 
     # Compute list of variable names
-    s = list(map(lambda s: list(np.array(model.x)[s]), sIdx))
+    s = list(map(lambda si: list(np.array(model.x)[si]), sIdx))
 
-    return (s, sIdx)
+    return s, sIdx
