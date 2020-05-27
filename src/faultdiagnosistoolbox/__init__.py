@@ -26,3 +26,4 @@ from . DiagnosisModel import DiagnosisModel, DiffConstraint, IsDifferentialConst
 from . testselection_rf import RandomForestTestSelection
 from . diag_util import IsolabilityMatrix, DiagnosesAndConfusionMatrix, PlotConfusionMatrix
 from . MHS import MHS
+from . import models
