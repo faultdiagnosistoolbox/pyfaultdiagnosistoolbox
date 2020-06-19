@@ -18,18 +18,18 @@ strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
 if not path.isfile('CSparse/Lib/libcsparse.a'):
     system('(cd CSparse; MACOSX_DEPLOYMENT_TARGET=10.6 make)')
 
-readme = open('README.rst', 'r')
+readme = open('README.md', 'r')
 README_TEXT = readme.read()
 readme.close()
 
 setup(
     name='faultdiagnosistoolbox',
-    version='0.1',
+    version='0.11',
 
     description='A Fault Diagnosis Toolbox',
     long_description=README_TEXT,
 
-    url='http://www.fs.isy.liu.se/Software/',
+    url='https://faultdiagnosistoolbox.github.io',
 
     # Author details
     author='Erik Frisk',
@@ -79,7 +79,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     setup_requires=['numpy', 'wheel'],
     install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'sklearn'],
-
+    python_requires='>=3.6'
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
