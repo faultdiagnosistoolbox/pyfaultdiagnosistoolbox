@@ -1035,7 +1035,7 @@ def WriteSetupBuild(name, external_src):
     f.write("],\n")
     f.write("                    include_dirs=[incdir]")
     if platform.system() != "Windows":
-        f.write("                    extra_compile_args=[,\n'-Wno-unused-function'])\n")
+        f.write(",\n                    extra_compile_args=['-Wno-unused-function'])\n")
     else:
         f.write(")\n")
     f.write('\n')
