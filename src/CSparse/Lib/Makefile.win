@@ -11,17 +11,17 @@ CS = cs_add.obj cs_amd.obj cs_chol.obj cs_cholsol.obj cs_counts.obj cs_cumsum.ob
 .SUFFIXES:
 .SUFFIXES: .obj .c
 
-all: libcsparse.lib
+all: csparse.lib
 
 {../Source}.c.obj:
        cl /c /O2 /I ..\Include ../Source/$*.c
 
-libcsparse.lib: $(CS)
-	lib -nologo -out:libcsparse.lib $(CS)
+csparse.lib: $(CS)
+	lib -nologo -out:csparse.lib $(CS)
 
 clean:
 	del *.obj
 
 cleanall:
-	del *.obj libcsparse.lib
+	del *.obj csparse.lib
 

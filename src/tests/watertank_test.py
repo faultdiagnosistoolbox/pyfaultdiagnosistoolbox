@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import re
+import platform
 
 # Initial model exploration
 from watertank_model import model
@@ -73,7 +74,11 @@ def test_codegen():
         red_k = msos[test][redIdx]
         resName = f"r{k + 1}"
         print(f"Compiling residual generator: {resName} ... ", end='')
-        if os.system(f"python {resName}_setup.py build_ext --inplace  >/dev/null") == 0:
+        if platform.system() == "Windows":
+            compile_cmd = f"python {resName}_setup.py build_ext --inplace"
+        else:
+            compile_cmd = f"python {resName}_setup.py build_ext --inplace > /dev/null"
+        if os.system(compile_cmd) == 0:
             assert True
         else:
             assert False

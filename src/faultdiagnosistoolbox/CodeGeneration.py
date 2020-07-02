@@ -7,7 +7,7 @@ import faultdiagnosistoolbox as fdt
 from sympy.printing import ccode, octave_code
 import time
 import os
-
+import platform
 
 def UsedVars(rels, variables):
     """Determine used variables in expression."""
@@ -1033,8 +1033,11 @@ def WriteSetupBuild(name, external_src):
     for src in external_src:
         f.write(", '" + src + "'")
     f.write("],\n")
-    f.write("                    include_dirs=[incdir],\n")
-    f.write("                    extra_compile_args=['-Wno-unused-function'])\n")
+    f.write("                    include_dirs=[incdir]")
+    if platform.system() != "Windows":
+        f.write("                    extra_compile_args=[,\n'-Wno-unused-function'])\n")
+    else:
+        f.write(")\n")
     f.write('\n')
     f.write("setup (name = '" + name + "',\n")
     f.write("       version = '0.1',\n")

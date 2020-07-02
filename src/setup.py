@@ -20,7 +20,7 @@ strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
                     include_dirs=[incdir,'CSparse/Include'],
                     extra_compile_args=extra_compile,
                     library_dirs=['CSparse/Lib'],
-                    libraries=['libcsparse'])
+                    libraries=['csparse'])
 
 if platform.system() == "Windows":
     if not path.isfile('CSparse/Lib/libcsparse.lib'):
