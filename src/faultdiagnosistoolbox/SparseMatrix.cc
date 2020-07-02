@@ -76,15 +76,18 @@ operator<<(ostream& s, SparseMatrix M)
 void
 SparseMatrix::Print( ostream& s )
 {
-  int m[sm->n][sm->m];
+  int* m = new int[sm->n * sm->m];
   int col, row, k;
 
   // Fill array m with zeros
-  for( row=0; row < sm->m; row++ ) {
-    for( col=0; col < sm->n; col++ ) {
-      m[col][row]=0;
-    }
+  for(int i=0; i < sm->n * sm->m; i++) {
+    m[i] = 0;
   }
+  //  for( row=0; row < sm->m; row++ ) {
+  //  for( col=0; col < sm->n; col++ ) {
+  //    m[col][row]=0;
+  //  }
+  //}
   
   // Fill array m with elements from sparse representation
   col=-1;
@@ -92,17 +95,20 @@ SparseMatrix::Print( ostream& s )
     while( col < sm->n && k==sm->p[col+1] ) {
       col++;
     }
-    m[col][sm->i[k]] = 1;
+    //    m[col][sm->i[k]] = 1;
+    m[col + sm->i[k] * sm->n] = 1;
   }
 
   // Print matrix row by row
   for( row=0; row < sm->m; row++ ) {
     s << "|";
     for( col=0; col < sm->n; col++ ) {
-      if (m[col][row]==0) {
+      //      if (m[col][row]==0) {
+      if (m[col + row * sm->n] == 0) {
         s << " ";
       } else {
-        s << m[col][row];
+	//        s << m[col][row];
+        s << m[col + row * sm->n];
       }
       if( col < sm->n-1 ) {
         s << " ";
@@ -110,6 +116,7 @@ SparseMatrix::Print( ostream& s )
     }
     s << "|"<< endl;
   }
+  delete[] m;
 }
 
 void

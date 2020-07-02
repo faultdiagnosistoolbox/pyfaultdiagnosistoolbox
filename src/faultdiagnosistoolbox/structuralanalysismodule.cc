@@ -214,8 +214,8 @@ DictToCS( PyObject *csDict, cs **sm )
 PyObject*
 CreateDMpermOutput( csd* dm, cs* sm )
 {
-  PyObject* p=PyArray_SimpleNewFromData(1, (long *)&(sm->m), NPY_INT64, (void *)dm->p); 
-  PyObject* q=PyArray_SimpleNewFromData(1, (long *)&(sm->n), NPY_INT64, (void *)dm->q);
+  PyObject* p=PyArray_SimpleNewFromData(1, (npy_intp *)&(sm->m), NPY_INT64, (void *)dm->p); 
+  PyObject* q=PyArray_SimpleNewFromData(1, (npy_intp *)&(sm->n), NPY_INT64, (void *)dm->q);
 
   npy_intp numBlocks = dm->nb+1;
   PyObject* r=PyArray_SimpleNewFromData(1, &numBlocks, NPY_INT64, (void *)dm->r);  

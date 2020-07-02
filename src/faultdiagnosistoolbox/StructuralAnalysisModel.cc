@@ -482,7 +482,7 @@ StructuralAnalysisModel::ExportToMatlab(string fileName, string XvarName, string
 void
 StructuralAnalysisModel::Print()
 {
-  int m[sm->n][sm->m];
+  int* m = new int[sm->n * sm->m];
   long col, row, k, ne;
   csi* colP = sm->p;
   csi* rowP = sm->i;
@@ -490,7 +490,7 @@ StructuralAnalysisModel::Print()
   // Fill array m with zeros
   for( row=0; row < sm->m; row++ ) {
     for( col=0; col < sm->n; col++ ) {
-      m[col][row]=0;
+      m[col + row * sm->n]=0;
     }
   }
   
@@ -500,7 +500,7 @@ StructuralAnalysisModel::Print()
     while( col < sm->n && k==colP[col+1] ) {
       col++;
     }
-    m[col][rowP[k]] = 1;
+    m[col + rowP[k] * sm->n] = 1;
   }
   
   // Print matrix row by row
@@ -510,7 +510,7 @@ StructuralAnalysisModel::Print()
   for( row=0; row < sm->m; row++ ) {
     cout << "|";
     for( col=0; col < sm->n; col++ ) {
-      cout << m[col][row];
+      cout << m[col + row * sm->n];
       if( col < sm->n-1 ) {
         cout << " ";
       }
@@ -530,5 +530,6 @@ StructuralAnalysisModel::Print()
     cout << "}"<< endl;
     p++;
   }
+  delete[] m;
 }
 

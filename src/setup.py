@@ -3,20 +3,31 @@ from setuptools import setup, find_packages, Extension
 from codecs import open
 from os import path, system
 import numpy as np
+import platform
 
 here = path.abspath(path.dirname(__file__))
 
 incdir = np.get_include()
 
-strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
-                    sources = ['faultdiagnosistoolbox/structuralanalysismodule.cc', 'faultdiagnosistoolbox/SparseMatrix.cc', 'faultdiagnosistoolbox/StructuralAnalysisModel.cc', 'faultdiagnosistoolbox/MSOAlg.cc'],
-                    include_dirs=[incdir,'CSparse/Include'],
-                    extra_compile_args=['-Wno-unused-function', '-Wno-unknown-pragmas'],
-                    library_dirs=['CSparse/Lib'],
-                    libraries=['csparse'])
+if platform.system() == "Windows":
+    extra_compile = []
+else:
+    extra_compile = ['-Wno-unused-function', '-Wno-unknown-pragmas']
 
-if not path.isfile('CSparse/Lib/libcsparse.a'):
-    system('(cd CSparse; MACOSX_DEPLOYMENT_TARGET=10.6 make)')
+strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
+                    sources = ['faultdiagnosistoolbox/structuralanalysismodule.cc', 'faultdiagnosistoolbox/SparseMatrix.cc',
+                               'faultdiagnosistoolbox/StructuralAnalysisModel.cc', 'faultdiagnosistoolbox/MSOAlg.cc'],
+                    include_dirs=[incdir,'CSparse/Include'],
+                    extra_compile_args=extra_compile,
+                    library_dirs=['CSparse/Lib'],
+                    libraries=['libcsparse'])
+
+if platform.system() == "Windows":
+    if not path.isfile('CSparse/Lib/libcsparse.lib'):
+        system('cd CSparse/Lib & nmake -f Makefile.win')
+else:
+    if not path.isfile('CSparse/Lib/libcsparse.a'):
+        system('(cd CSparse; MACOSX_DEPLOYMENT_TARGET=10.6 make)')
 
 readme = open('README.md', 'r')
 README_TEXT = readme.read()

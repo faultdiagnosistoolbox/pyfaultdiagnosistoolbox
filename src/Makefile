@@ -16,6 +16,10 @@ sdist:
 
 CSparse/Lib/libcsparse.a:
 	cd CSparse && make library
+
+CSparse/Lib/csparse.lib:
+	cd CSparse/Lib && nmake -f Makefile.win
+
 clean:
 	rm -rf build *~ faultdiagnosistoolbox/*.so
 
