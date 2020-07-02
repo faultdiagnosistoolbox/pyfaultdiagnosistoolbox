@@ -79,7 +79,7 @@ class DiagnosisModel(object):
                   ' is not supported (yet)')
 
         if modeldef['type'] == 'Symbolic':
-            self.syme = np.array(_ToEquations(modeldef['rels']))
+            self.syme = np.array(_ToEquations(modeldef['rels']), dtype=np.object)
 
         if np.any(np.sum(self.X > 1, 0) > 1):
             print("The model has higher order derivatives, " +

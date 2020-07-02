@@ -35,9 +35,9 @@ class DMResult:
 
     def __init__(self):
         """Initializer."""
-        self.Mm = []
+        self.Mm = EqBlock([], [])
         self.M0 = []
-        self.Mp = []
+        self.Mp = EqBlock([], [])
         self.rowp = []
         self.colp = []
         self.M0eqs = []
@@ -428,7 +428,7 @@ def MTES(self):
     m = MTES_initModel(self)  # overdetermined or empty
     if m['sr'] > 0 and len(m['f']) > 0:
         S = MTES_FindMTES(m, 0)
-    return np.array(S['eq'])
+    return np.array(S['eq'], dtype=object)
 
 
 def MTES_storeFS(m):
@@ -468,8 +468,8 @@ def MTES_GetPartialModel(m, rows):
     n = {}
     variables = np.any(m['X'][rows, :], axis=0)
     n['X'] = m['X'][rows, :][:, variables]
-    n['e'] = list(np.array(m['e'])[rows])
-    n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
+    n['e'] = list(np.array(m['e'], dtype=np.ndarray)[rows])
+    n['f'] = list(np.array(m['f'], dtype=np.ndarray)[[ei for ei in rows if ei < len(m['f'])]])
     n['sr'] = n['X'].shape[0] - n['X'].shape[1]
     n['delrow'] = np.sum(rows < m['delrow'])
     return n
@@ -527,18 +527,22 @@ def MTES_LumpExt(m, row):
         x2 = np.any(m['X'][eqcls, :][:, col_over], axis=0).astype(np.int64)
         n['X'] = np.vstack((x1, x2, x3))
 
-        foo = remRows[row_over[0:rowinsert]].astype(np.int64) if len(row_over[0:rowinsert]) > 0 else np.array([], dtype=np.int64)
-        e1 = list(np.array(m['e'])[foo])
-        e2 = list([np.hstack(np.array(m['e'])[eqcls])])
+        foo = remRows[row_over[0:rowinsert]].astype(np.int64) \
+            if len(row_over[0:rowinsert]) > 0 else np.array([], dtype=np.int64)
+#        e1 = list(np.array(m['e'], dtype=np.ndarray)[foo])
+        e1 = [m['e'][idx] for idx in foo]
+#        e2 = list([np.hstack(np.array(m['e'], dtype=np.ndarray)[eqcls])])
+        e2 = list([np.hstack([m['e'][idx] for idx in eqcls])])
         foo = remRows[row_over[rowinsert:]].astype(np.int64) if len(row_over[rowinsert:]) > 0 else np.array([], dtype=np.int64)
-        e3 = list(np.array(m['e'])[foo])
+#        e3 = list(np.array(m['e'], dtype=np.ndarray)[foo])
+        e3 = [m['e'][idx] for idx in foo]
         n['e'] = e1 + e2 + e3
 
         foo = remRowsf[row_overf[0:rowinsert]].astype(np.int64) if len(row_overf[0:rowinsert]) > 0 else np.array([], dtype=np.int64)
-        ef1 = list(np.array(m['f'])[foo])
-        ef2 = list([np.hstack(np.array(m['f'])[eqclsf])])
+        ef1 = list(np.array(m['f'], dtype=np.ndarray)[foo])
+        ef2 = list([np.hstack(np.array(m['f'], dtype=np.ndarray)[eqclsf])])
         foo = remRowsf[row_overf[rowinsert:]].astype(np.int64) if len(row_overf[rowinsert:]) > 0 else np.array([], dtype=np.int64)
-        ef3 = list(np.array(m['f'])[foo])
+        ef3 = list(np.array(m['f'], dtype=np.ndarray)[foo])
         n['f'] = ef1 + ef2 + ef3
 
         n['sr'] = m['sr']
