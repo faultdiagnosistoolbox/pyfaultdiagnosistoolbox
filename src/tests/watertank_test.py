@@ -23,7 +23,7 @@ def test_define_model():
     assert dm.M0 == []
     assert dm.Mm.row == []
     assert dm.Mm.col == []
-    assert np.all(dm.Mp.row == np.array([ 0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10]))
+    assert np.all(dm.Mp.row == np.array([0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10]))
     assert np.all(dm.Mp.col == np.array([0, 1, 2, 3, 4, 5, 6]))
 
 
