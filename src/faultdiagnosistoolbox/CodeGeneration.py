@@ -703,6 +703,12 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
         f.write('#include <Python.h>\n')
         f.write('#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n')
         f.write('#include <numpy/ndarrayobject.h>\n')
+
+        f.write('\n#ifdef _WIN32\n')
+        f.write('#define _USE_MATH_DEFINES\n')
+        f.write('#include <cmath>\n')
+        f.write('#endif\n\n')
+
         for header in external_headers:
             f.write('#include "' + header + '"\n')
         f.write('\n')
@@ -855,6 +861,12 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
         f.write('#include <Python.h>\n')
         f.write('#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION\n')
         f.write('#include <numpy/ndarrayobject.h>\n')
+
+        f.write('\n#ifdef _WIN32\n')
+        f.write('#define _USE_MATH_DEFINES\n')
+        f.write('#include <cmath>\n')
+        f.write('#endif\n\n')
+
         for header in external_headers:
             f.write('#include "' + header + '"\n')
         f.write('\n')
