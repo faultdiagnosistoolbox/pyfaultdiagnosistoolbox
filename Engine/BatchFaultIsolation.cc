@@ -49,13 +49,15 @@ BatchFaultIsolation(PyObject *self, PyObject * args)
   }
 
   PyObject *dx = PyList_New(n_dc);
+  PyArrayObjectp* res = new PyArrayObjectp[n_r];
+  long* alarm_streak = new long[n_r];  
   for( int tc = 0; tc < n_dc; tc++ ) { // Iterate over all test cases, tc - test case index
     std::string testCase = dc[tc];
     //    PySys_WriteStdout( "Testcase: %s\n", testCase.c_str());
 
     // Get object pointers to all residuals
-    PyArrayObjectp res[n_r];
-    long alarm_streak[n_r];
+    //    PyArrayObjectp res[n_r];
+    //    long alarm_streak[n_r];
 
     for( int j=0; j < n_r; j++ ) {
       res[j] = (PyArrayObject *)PyDict_GetItemString(PyList_GetItem(py_r, j ), dc[tc].c_str());
@@ -108,7 +110,8 @@ BatchFaultIsolation(PyObject *self, PyObject * args)
     }
     PyList_SetItem(dx, (Py_ssize_t)tc, (PyObject *)dec_k);
   }
-  
+  delete[] res;
+  delete[] alarm_streak;
   return dx;
 }
 
