@@ -1,6 +1,12 @@
 #ifndef _EXTMODELFUNS_H_
 #define _EXTMODELFUNS_H_
 
+#ifdef _WIN32
+#define _USE_MATH_DEFINES
+#include <cmath>
+#endif
+
+
 double eta_c_fun(double eta_cmax, double eta_cmin, double W_ccorr, double W_ccorrmax, double PI_c, double PI_cmax, double Q_c11, double Q_c12, double Q_c22);
 double eta_t_fun( double k3, double BSR, double k4, double eta_min );
 double PHI_model_fun(double K1, double K2, double PSI_c);
