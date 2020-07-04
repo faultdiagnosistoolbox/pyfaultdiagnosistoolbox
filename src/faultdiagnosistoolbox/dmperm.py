@@ -428,7 +428,7 @@ def MTES(self):
     m = MTES_initModel(self)  # overdetermined or empty
     if m['sr'] > 0 and len(m['f']) > 0:
         S = MTES_FindMTES(m, 0)
-    return np.array(S['eq'], dtype=object)
+    return np.array(S['eq'], dtype=np.ndarray)
 
 
 def MTES_storeFS(m):
@@ -468,8 +468,10 @@ def MTES_GetPartialModel(m, rows):
     n = {}
     variables = np.any(m['X'][rows, :], axis=0)
     n['X'] = m['X'][rows, :][:, variables]
-    n['e'] = list(np.array(m['e'], dtype=np.ndarray)[rows])
-    n['f'] = list(np.array(m['f'], dtype=np.ndarray)[[ei for ei in rows if ei < len(m['f'])]])
+#    n['e'] = list(np.array(m['e'])[rows])
+    n['e'] = [m['e'][k] for k in range(len(m['e'])) if k in rows]
+#    n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
+    n['f'] = [m['f'][ei] for ei in rows if ei < len(m['f'])]
     n['sr'] = n['X'].shape[0] - n['X'].shape[1]
     n['delrow'] = np.sum(rows < m['delrow'])
     return n
