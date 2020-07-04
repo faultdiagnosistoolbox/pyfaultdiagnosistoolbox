@@ -5,10 +5,10 @@ build_ext: CSparse/Lib/csparse.lib
 
 alldist: build wheel sdist
 
-build: CSparse/Lib/csparse.lib
+build: CSparse/Lib/csparse.lib build_ext
 	python setup.py build
 
-wheel: CSparse/Lib/csparse.lib
+wheel: CSparse/Lib/csparse.lib build_ext
 	python setup.py bdist_wheel
 
 sdist:
