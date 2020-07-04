@@ -8,6 +8,7 @@ from importlib import reload
 import numpy as np
 from scipy.stats import gaussian_kde
 import seaborn as sns
+import platform
 
 if not('Engine' in sys.path):
     sys.path.append(os.getcwd() + '/Engine')
@@ -26,11 +27,9 @@ reload(VEP4Engine)
 model = VEP4Engine.model
 model.Lint()
 
-
 # Plot the structural model
 plt.figure(10)
 model.PlotModel(verbose=False)
-
 
 # Plot isolability properties and the extended Dulmage-Mendelsohn decomposition with equivalence classes for the over-determined part
 plt.figure(20)
@@ -45,9 +44,8 @@ model.IsolabilityAnalysis(plot=True, causality='der')
 plt.figure(23)
 model.PlotDM(fault=True, eqclass=True)
 
-
-# # MSO sets and test selection
-print("Searchin for MSO sets ...")
+# MSO sets and test selection
+print("Searching for MSO sets ...")
 msos = model.MSO()
 print(f"  Found {len(msos)} MSO sets")
 
@@ -103,7 +101,12 @@ for test, redIdx in zip(ts, re):
     red = msos[test][redIdx]
     resName = f"ResGen_{test}_{red}"
     print(f"Compiling residual generator: {resName} ... ", end='')
-    if os.system(f"python {resName}_setup.py build_ext --inplace") == 0:
+    compile_cmd = f"python {resName}_setup.py build_ext --inplace"
+    if platform.system == "Windows":
+        compile_cmd = compile_cmd + " > nul"
+    else:
+        compile_cmd = compile_cmd + " > /dev/null"
+    if os.system(compile_cmd) == 0:
         print('Success!')
     else:
         print('Failure!')
@@ -116,6 +119,10 @@ import ResGen_4017_84
 import ResGen_4066_1
 import ResGen_4074_84
 import ResGen_4477_86
+
+res_gens = [ResGen_1649_1.ResGen_1649_1, ResGen_4011_1.ResGen_4011_1, ResGen_4016_1.ResGen_4016_1,
+            ResGen_4017_84.ResGen_4017_84, ResGen_4066_1.ResGen_4066_1, ResGen_4074_84.ResGen_4074_84,
+            ResGen_4477_86.ResGen_4477_86]
 
 # # Import measurement data
 dataDir = f'{pathlib.Path.home()}/Diagnosis/Work/EngineDiagnosis/Work/Data/'
@@ -231,21 +238,12 @@ plt.subplots_adjust(top=0.9)
 _ = plt.suptitle('Measurement data, no-fault dataset', fontsize=14, weight='bold')
 
 # Run residual generators on measurement data
-print("r1: MSO 1649")
-r1 = RunResgenOnDataSets(ResGen_1649_1.ResGen_1649_1, data, VEP4Engine.diag_par)
-print("\nr2: MSO 4011")
-r2 = RunResgenOnDataSets(ResGen_4011_1.ResGen_4011_1, data, VEP4Engine.diag_par)
-print("\nr3: MSO 4016")
-r3 = RunResgenOnDataSets(ResGen_4016_1.ResGen_4016_1, data, VEP4Engine.diag_par)
-print("\nr4: MSO 4017")
-r4 = RunResgenOnDataSets(ResGen_4017_84.ResGen_4017_84, data, VEP4Engine.diag_par)
-print("\nr5: MSO 4066")
-r5 = RunResgenOnDataSets(ResGen_4066_1.ResGen_4066_1, data, VEP4Engine.diag_par)
-print("\nr6: MSO 4074")
-r6 = RunResgenOnDataSets(ResGen_4074_84.ResGen_4074_84, data, VEP4Engine.diag_par)
-print("\nr7: MSO 4477")
-r7 = RunResgenOnDataSets(ResGen_4477_86.ResGen_4477_86, data, VEP4Engine.diag_par)
-r = [r1, r2, r3, r4, r5, r6, r7]
+r = []
+for k, ri in enumerate(res_gens):
+    print(f"r{k + 1}: MSO {ri.__name__.split('_')[1]}")
+    r.append(RunResgenOnDataSets(ri, data, VEP4Engine.diag_par))
+    print('')
+
 for ri in r:
     if 'NF' in ri:
         bias = np.mean(ri['NF']) * 0.0
@@ -254,7 +252,6 @@ for ri in r:
             ri[FM] = 1 / normFact * (ri[FM] - bias)
 
 #  Simple threshold selection strategy
-
 alpha = 1e-3
 J = np.zeros(len(r))
 for rIdx, ri in enumerate(r):
