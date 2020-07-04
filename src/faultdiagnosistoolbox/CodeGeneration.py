@@ -184,8 +184,8 @@ def MixedHallComponent(model, g, language, user_functions={}):
             iState.append(v)
         else:  # v == DVar(e)
             genCode = v + " = " + CodeApproxDer(IVar(e), enum, language)
-            resGenM0.append(genCode)
-            dState.append(Ivar(e))
+            resGen.append(genCode)
+            dState.append(IVar(e))
 
     return resGen, integ, iState, dState
 
