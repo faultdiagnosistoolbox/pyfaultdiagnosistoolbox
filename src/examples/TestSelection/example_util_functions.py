@@ -1,21 +1,4 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 import scipy.io as sio
-
-
-    
-def BoxOff(*argin):
-    """Remove (ugly) box around plots."""
-    if len(argin)>0:
-        ax=argin[0]
-    else:
-        ax=plt.gca();
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.yaxis.set_ticks_position('left')
-    ax.xaxis.set_ticks_position('bottom')
-
 
 def loadmat(filename):
     '''
