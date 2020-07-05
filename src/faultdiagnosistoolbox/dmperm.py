@@ -428,7 +428,8 @@ def MTES(self):
     m = MTES_initModel(self)  # overdetermined or empty
     if m['sr'] > 0 and len(m['f']) > 0:
         S = MTES_FindMTES(m, 0)
-    return np.array(S['eq'], dtype=np.ndarray)
+#    return np.array(S['eq'], dtype=object)
+    return S['eq']
 
 
 def MTES_storeFS(m):

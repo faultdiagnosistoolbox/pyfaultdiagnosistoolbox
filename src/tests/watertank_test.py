@@ -15,7 +15,7 @@ I_int = model.IsolabilityAnalysis(causality='int')
 
 ts = [0, 1, 5, 10, 13]
 red = [1, 1, 5, 1, 0]
-FSM = model.FSM(msos[ts])
+FSM = model.FSM([msos[ti] for ti in ts])
 
 def test_define_model():
     assert model
@@ -47,14 +47,14 @@ def test_mso():
     assert np.sum(li_mso) == 15
 
 def test_fsm():
-    assert np.all(FSM == np.array([[1, 0, 0, 0, 1, 0],
-                                   [0, 1, 1, 0, 0, 0],
-                                   [0, 1, 0, 1, 1, 0],
-                                   [0, 1, 0, 0, 0, 1],
-                                   [1, 0, 1, 1, 0, 1]]))
+    assert np.all(np.array(FSM) == np.array([[1, 0, 0, 0, 1, 0],
+                                             [0, 1, 1, 0, 0, 0],
+                                             [0, 1, 0, 1, 1, 0],
+                                             [0, 1, 0, 0, 0, 1],
+                                             [1, 0, 1, 1, 0, 1]]))
 
 
-    assert np.all(I_mixed == model.IsolabilityAnalysisArrs(msos[ts]))
+    assert np.all(I_mixed == model.IsolabilityAnalysisArrs([msos[ti] for ti in ts]))
 
 def test_codegen():
     for k, (test, redIdx) in enumerate(zip(ts, red)):
