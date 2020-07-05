@@ -42,7 +42,7 @@ readme.close()
 
 setup(
     name='faultdiagnosistoolbox',
-    version='0.11',
+    version='0.12rc1',
 
     description='A Fault Diagnosis Toolbox',
     long_description=README_TEXT,
@@ -85,7 +85,7 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=find_packages(exclude=['Misc', 'Models']),
+    packages=find_packages(),
 
     # Alternatively, if you want to distribute just a my_module.py, uncomment
     # this:
@@ -95,7 +95,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    setup_requires=['numpy', 'wheel'],
+    setup_requires=['cython', 'numpy', 'wheel'],
     install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'sklearn', 'wheel'],
     python_requires='>=3.6'
     # List additional groups of dependencies here (e.g. development
