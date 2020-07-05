@@ -1,27 +1,19 @@
-Fault Diagnosis Toolbox is a toolbox for analysis and design of
-fault diagnosis systems for dynamic systems, primarily described by
-differential equations. In particular, the toolbox is focused on
-techniques that utilize structural analysis, i.e., methods that
-analyze and utilize the model structure. The model structure is the
-interconnections of model variables and is often described as a
-bi-partite graph or an incidence matrix. Key features of the toolbox
-are:
+PyFaultDiagnosisToolbox - A Python toolbox for fault diagnosis
+--------
 
-* Defining diagnosis models, using only model structure or full
-  symbolic expressions.
-* Diagnosability analysis - analyze a given model to
-  determine which faults that can be detected and which faults that
-  can be isolated
-* Model exploration and analysis, e.g., plotting model properties,
-  Dulmage-Mendelsohn decomposition, DAE index analysis, ...
-* Finding overdetermined sets of equations (MSO sets), which are
-  minimal submodels that can be used to design fault detectors
-* Sensor placement - determine minimal sets of sensors needed to
-  be able to detect and isolate faults
-* Code generation (C and Python) for residual generators. 
+Fault Diagnosis Toolbox is a Python package for analysis and design of fault diagnosis systems for dynamic systems, 
+primarily described by differential-algebraic equations. Key features of the toolbox are extensive support for 
+structural analysis of large-scale dynamic models, fault isolability analysis, sensor placement analysis, 
+and code generation in C/C++ and Python.
 
-The toolbox available under a MIT license. The latest
-version can always be downloaded from our website at
-http://www.fs.isy.liu.se/Software/PyFaultDiagnosisToolbox/ and
-links to relevant publications can be found also at our list of
-publications http://www.fs.isy.liu.se/Publications.
+The toolbox is an adaptation of our Matlab toolbox that can be downloaded from https://faultdiagnosistoolbox.github.io where you 
+can also find [documentation](https://faultdiagnosistoolbox.github.io/_releases/user-manual_2018-12-09.pdf). The latest version of the python package can always be pip-installed.
+
+For a quick introduction, see the [use case](https://faultdiagnosistoolbox.github.io/usecase/) where an industrial 
+size example, an automotive engine, is analyzed, C-code for residual generators is generated, and the resulting 
+diagnosis system is evaluated on test-cell measurements from our engine laboratory.
+
+If you use this toolbox in your research, please cite any relevant papers of ours, see list of 
+[references](https://faultdiagnosistoolbox.github.io/references) for details.
+
+The toolbox is freely available under a MIT license. 
