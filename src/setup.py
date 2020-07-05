@@ -2,12 +2,19 @@ from setuptools import setup, find_packages, Extension
 # To use a consistent encoding
 from codecs import open
 from os import path, system
-import numpy as np
 import platform
 
 here = path.abspath(path.dirname(__file__))
 
-incdir = np.get_include()
+# incdir = np.get_include()
+
+class get_numpy_include(object):
+    """Defer numpy.get_include() until after numpy is installed."""
+
+    def __str__(self):
+        import numpy
+        return numpy.get_include()
+    
 
 if platform.system() == "Windows":
     extra_compile = []
@@ -17,7 +24,7 @@ else:
 strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
                     sources = ['faultdiagnosistoolbox/structuralanalysismodule.cc', 'faultdiagnosistoolbox/SparseMatrix.cc',
                                'faultdiagnosistoolbox/StructuralAnalysisModel.cc', 'faultdiagnosistoolbox/MSOAlg.cc'],
-                    include_dirs=[incdir,'CSparse/Include'],
+                    include_dirs=[get_numpy_include(),'CSparse/Include'],
                     extra_compile_args=extra_compile,
                     library_dirs=['CSparse/Lib'],
                     libraries=['csparse'])
@@ -89,7 +96,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     setup_requires=['numpy', 'wheel'],
-    install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'sklearn'],
+    install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'sklearn', 'wheel'],
     python_requires='>=3.6'
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

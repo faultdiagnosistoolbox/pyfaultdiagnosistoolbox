@@ -6,7 +6,6 @@ Todo
 ====
 GenSimulationModel
 RemoveFaultVariables
-Pantelides
 
 Low prio
 ========
@@ -41,6 +40,7 @@ MSOCausalitySweep
 MTES
 MTESRedundancy
 Matching
+Pantelides
 PlotDM
 PlotMatching
 PlotModel

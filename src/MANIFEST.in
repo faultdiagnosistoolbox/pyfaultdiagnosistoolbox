@@ -2,6 +2,6 @@ recursive-include CSparse *
 recursive-exclude CSparse *.o
 recursive-exclude CSparse *.a
 include faultdiagnosistoolbox/*.h
-recursive-include examples *.py
-include examples/TestSelection/data.mat
+recursive-include faultdiagnosistoolbox/examples *.py
+include faultdiagnosistoolbox/examples/TestSelection/data.mat
 
