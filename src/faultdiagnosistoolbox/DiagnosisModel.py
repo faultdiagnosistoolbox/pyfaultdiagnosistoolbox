@@ -123,7 +123,7 @@ class DiagnosisModel(object):
         Systems, Man and Cybernetics, Part A: Systems and Humans,
         IEEE Transactions on 38.1 (2008): 197-206.
         """
-        return dmperm.MSO(self.X)
+        return list(dmperm.MSO(self.X))
 
     def MTES(self):
         """Return the set of MTES sets.

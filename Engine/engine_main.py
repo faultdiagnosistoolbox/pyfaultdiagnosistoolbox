@@ -64,7 +64,7 @@ for msoIdx, redIdx in zip(ts, re):
     m0 = [e for e in mso if e != red]
     Gamma = model.Matching(m0)
     print(f"MSO {msoIdx} with redundant equation {red}, causality: {Gamma.matchType}")
-FSM = model.FSM(msos[ts])
+FSM = model.FSM([msos[ti] for ti in ts])
 
 # Plot fault signature matrix and fault isolation matrix for selected set of tests
 fIdx = [model.f.index(fi) for fi in ['fyw_af', 'fyp_im', 'fyp_ic', 'fyT_ic']]
@@ -77,7 +77,7 @@ plt.gca().xaxis.tick_bottom()
 plt.title('Fault Signature Matrix')
 
 plt.subplot(1, 2, 2)
-IM = model.IsolabilityAnalysisArrs(msos[ts])
+IM = model.IsolabilityAnalysisArrs([msos[ti] for ti in ts])
 plt.spy(IM[fIdx, :][:, fIdx], markersize=6, marker="o", color="b")
 plt.xticks(np.arange(0, len(fIdx)), np.array(model.f)[fIdx])
 plt.yticks(np.arange(0, len(fIdx)), np.array(model.f)[fIdx])
