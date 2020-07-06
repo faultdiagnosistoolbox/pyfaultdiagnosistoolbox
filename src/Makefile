@@ -27,7 +27,6 @@ cleanall:
 	make clean
 	cd CSparse && make purge
 	rm -rf faultdiagnosistoolbox.egg-info
-	rm -rf dist
 
 test:
 	python -m pytest -v

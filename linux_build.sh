@@ -45,5 +45,5 @@ mv -f wheelhouse/* .
 cd ..
 deactivate
 
-rm -rf src/dist/wheelhouse
+rm -rf dist/wheelhouse
 

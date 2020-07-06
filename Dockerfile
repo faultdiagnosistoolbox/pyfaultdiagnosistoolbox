@@ -1,4 +1,4 @@
-FROM quay.io/pypa/manylinux2014_x86_64:latest
+FROM quay.io/pypa/manylinux2010_x86_64:latest
 
 RUN mkdir /py_env && mkdir /fdt_build
 
