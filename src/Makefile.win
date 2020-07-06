@@ -24,7 +24,6 @@ cleanall:
 	nmake -f Makefile.win clean
 	cd CSparse/Lib/ & nmake -f Makefile.win cleanall
 	del /q faultdiagnosistoolbox.egg-info
-	del /q dist
 
 test:
 	python -m pytest -v
