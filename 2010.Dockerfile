@@ -22,4 +22,4 @@ RUN /opt/python/cp38-cp38/bin/python3 -m venv /py_env/env38 && \
 
 WORKDIR /fdt_build
 
-CMD ./linux_build.sh
+CMD ./linux_create_wheels.sh
