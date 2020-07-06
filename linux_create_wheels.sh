@@ -5,6 +5,9 @@
 
 cd src
 
+make cleanall
+
+if [ ! $AUDITWHEEL_PLAT == "manylinux1_x86_64" ]; then
 # Generate Python3.6
 . /py_env/env36/bin/activate
 make build_ext
@@ -31,6 +34,7 @@ rm -f $wheel_name
 mv -f wheelhouse/* .
 cd ..
 deactivate
+fi
 
 # Generate Python3.8
 . /py_env/env38/bin/activate

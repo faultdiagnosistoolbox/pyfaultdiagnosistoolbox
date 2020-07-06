@@ -42,7 +42,7 @@ readme.close()
 
 setup(
     name='faultdiagnosistoolbox',
-    version='0.12rc3',
+    version='0.12',
 
     description='A Fault Diagnosis Toolbox',
     long_description=README_TEXT,
