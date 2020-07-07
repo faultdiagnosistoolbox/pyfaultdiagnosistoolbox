@@ -3,7 +3,7 @@ import sympy as sym
 modelDef = {}
 modelDef['type'] = 'Symbolic'
 modelDef['x'] = ['i_a','i_b','lambda_a', 'lambda_b','w',
-                 'di_a','di_b','dlambda_a', 'dlambda_b','dw', 'q_a', 'q_b', , 'Tl']
+                 'di_a','di_b','dlambda_a', 'dlambda_b','dw', 'q_a', 'q_b', 'Tl']
 modelDef['f'] = ['f_a', 'f_b']
 modelDef['z'] = ['u_a', 'u_b', 'y1', 'y2', 'y3']
 modelDef['parameters'] = ['a', 'b', 'c', 'd', 'L_M', 'k','c_f', 'c_t']
