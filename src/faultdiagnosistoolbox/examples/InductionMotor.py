@@ -106,4 +106,14 @@ ax.set_xlabel('Fault')
 ax.set_title('Fault Signature Matrix (MTES sets)')
 plt.tight_layout()
 
+# Generate C-code for residual generator based on first MTES
+model.MSOCausalitySweep(mtes[0])
+red_eq = mtes[0][10]
+model.syme[red_eq]
+M0 = [e for e in mtes[0] if e != red_eq]
+
+Gamma = model.Matching(M0)
+model.SeqResGen(Gamma, red_eq, 'ResGen', batch=True, language='C')
+
+
 plt.show()
