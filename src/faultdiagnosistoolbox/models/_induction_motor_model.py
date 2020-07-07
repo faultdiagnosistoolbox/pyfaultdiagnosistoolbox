@@ -3,9 +3,9 @@ import sympy as sym
 modelDef = {}
 modelDef['type'] = 'Symbolic'
 modelDef['x'] = ['i_a','i_b','lambda_a', 'lambda_b','w',
-                 'di_a','di_b','dlambda_a', 'dlambda_b','dw', 'q_a', 'q_b']
+                 'di_a','di_b','dlambda_a', 'dlambda_b','dw', 'q_a', 'q_b', , 'Tl']
 modelDef['f'] = ['f_a', 'f_b']
-modelDef['z'] = ['u_a', 'u_b', 'y1', 'y2', 'y3', 'Tl']
+modelDef['z'] = ['u_a', 'u_b', 'y1', 'y2', 'y3']
 modelDef['parameters'] = ['a', 'b', 'c', 'd', 'L_M', 'k','c_f', 'c_t']
 
 sym.var(modelDef['x'])
@@ -25,6 +25,7 @@ modelDef['rels'] = [
     fdt.DiffConstraint('di_b','i_b'),
     fdt.DiffConstraint('dlambda_a','lambda_a'),
     fdt.DiffConstraint('dlambda_b','lambda_b'),
+    fdt.DiffConstraint('dw','w'),
     -y1 + i_a + f_a,
     -y2 + i_b + f_b,
     -y3 + w]
