@@ -7,16 +7,16 @@ cd src
 
 make cleanall
 
-if [ ! $AUDITWHEEL_PLAT == "manylinux1_x86_64" ]; then
+if [ ! "$AUDITWHEEL_PLAT" == "manylinux1_x86_64" ]; then
 # Generate Python3.6
 . /py_env/env36/bin/activate
 make build_ext
 python setup.py bdist_wheel > log.txt
-wheel_name=`grep "creating 'dist/" log.txt | sed "s/.*dist\/\(.*\)' and .*/\1/g"`
+wheel_name=$(grep "creating 'dist/" log.txt | sed "s/.*dist\/\(.*\)' and .*/\1/g")
 rm -f log.txt
 cd dist
-auditwheel repair $wheel_name
-rm -f $wheel_name
+auditwheel repair "$wheel_name"
+rm -f "$wheel_name"
 mv -f wheelhouse/* .
 cd ..
 deactivate
@@ -26,11 +26,11 @@ deactivate
 . /py_env/env37/bin/activate
 python setup.py build_ext --inplace
 python setup.py bdist_wheel > log.txt
-wheel_name=`grep "creating 'dist/" log.txt | sed "s/.*dist\/\(.*\)' and .*/\1/g"`
+wheel_name=$(grep "creating 'dist/" log.txt | sed "s/.*dist\/\(.*\)' and .*/\1/g")
 rm -f log.txt
 cd dist
-auditwheel repair $wheel_name
-rm -f $wheel_name
+auditwheel repair "$wheel_name"
+rm -f "$wheel_name"
 mv -f wheelhouse/* .
 cd ..
 deactivate
@@ -40,11 +40,11 @@ fi
 . /py_env/env38/bin/activate
 python setup.py build_ext --inplace
 python setup.py bdist_wheel > log.txt
-wheel_name=`grep "creating 'dist/" log.txt | sed "s/.*dist\/\(.*\)' and .*/\1/g"`
+wheel_name=$(grep "creating 'dist/" log.txt | sed "s/.*dist\/\(.*\)' and .*/\1/g")
 rm -f log.txt
 cd dist
-auditwheel repair $wheel_name
-rm -f $wheel_name
+auditwheel repair "$wheel_name"
+rm -f "$wheel_name"
 mv -f wheelhouse/* .
 cd ..
 deactivate
