@@ -45,6 +45,8 @@ model.Lint()
 # Plot model
 plt.figure(10)
 model.PlotModel()
+ax = plt.gca()
+ax.set_xticklabels(latex_var['x'] + latex_var['f'] + latex_var['z'], rotation=0)
 
 # Isolability analysis
 plt.figure(20)
@@ -62,15 +64,20 @@ plt.title('Isolability with mixed causality')
 plt.figure(23)
 model.PlotDM(fault=True, eqclass=True)
 
-# Find set of MSOS
+# Find set of MSOS and MTES
 msos = model.MSO()
 mtes = model.MTES()
 print(f"Found {len(msos)} MSO sets and {len(mtes)} MTES sets.")
 
+# Check observability and low index for MSO sets
+oi_mso = [model.IsObservable(m_i) for m_i in msos]
+li_mso = [model.IsLowIndex(m_i) for m_i in msos]
+print(f'Out of {len(msos)} MSO sets, {sum(oi_mso)} observable, {sum(li_mso)} low (structural) differential index')
+
 # Check observability and low index for MTES sets
-oi = [model.IsObservable(mtes_i) for mtes_i in mtes]
-li = [model.IsLowIndex(mtes_i) for mtes_i in mtes]
-print(f'Out of {len(mtes)} MTES sets, {sum(oi)} observable, {sum(li)} low (structural) differential index')
+oi_mtes = [model.IsObservable(m_i) for m_i in mtes]
+li_mtes = [model.IsLowIndex(m_i) for m_i in mtes]
+print(f'Out of {len(mtes)} MTES sets, {sum(oi_mtes)} observable, {sum(li_mtes)} low (structural) differential index')
 
 # Isolability analysis and FSM of set of MSO and MTES sets
 FSM = model.FSM(msos)

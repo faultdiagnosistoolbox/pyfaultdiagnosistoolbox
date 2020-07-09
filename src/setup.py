@@ -3,10 +3,18 @@ from setuptools import setup, find_packages, Extension
 from codecs import open
 from os import path, system
 import platform
+import re
 
 here = path.abspath(path.dirname(__file__))
 
-# incdir = np.get_include()
+VERSIONFILE="faultdiagnosistoolbox/_version.py"
+verstrline = open(VERSIONFILE, "rt").read()
+VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
+mo = re.search(VSRE, verstrline, re.M)
+if mo:
+    ver_str = mo.group(1)
+else:
+    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
 
 class get_numpy_include(object):
     """Defer numpy.get_include() until after numpy is installed."""
@@ -42,7 +50,7 @@ readme.close()
 
 setup(
     name='faultdiagnosistoolbox',
-    version='0.12',
+    version=ver_str,
 
     description='A Fault Diagnosis Toolbox',
     long_description=README_TEXT,
