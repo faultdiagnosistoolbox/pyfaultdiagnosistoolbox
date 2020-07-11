@@ -1,28 +1,38 @@
 """Compute matchings."""
 import numpy as np
 import faultdiagnosistoolbox.dmperm as dmperm
+from dataclasses import dataclass, field
 
 
+# class HallComponentMatching:
+#     """Base class for Hall Component matching."""
+#
+#     matchType = ''
+#     row = []
+#     col = []
+#     intState = []
+#     derState = []
+#
+#     def __init__(self, t, r, c, derState=None, intState=None):
+#         """Initialize matching."""
+#         if intState is None:
+#             intState = []
+#         if derState is None:
+#             derState = []
+#         self.matchType = t
+#         self.row = r
+#         self.col = c
+#         self.intState = intState
+#         self.derState = derState
+@dataclass
 class HallComponentMatching:
     """Base class for Hall Component matching."""
 
-    matchType = ''
-    row = []
-    col = []
-    intState = []
-    derState = []
-
-    def __init__(self, t, r, c, derState=None, intState=None):
-        """Initialize matching."""
-        if intState is None:
-            intState = []
-        if derState is None:
-            derState = []
-        self.matchType = t
-        self.row = r
-        self.col = c
-        self.intState = intState
-        self.derState = derState
+    matchType: str
+    row: list
+    col: list
+    intState: list = field(default_factory=lambda: [])
+    derState: list = field(default_factory=lambda: [])
 
 
 class Matching:
@@ -62,11 +72,11 @@ class Matching:
                 intCausal = True
             else:  # Non-trivial component with dynamic constraints
                 Gamma_mixed = MixedCausalityMatching(hc, X)
-                if Gamma_mixed.matchType is 'int':
+                if Gamma_mixed.matchType == 'int':
                     intCausal = True
-                elif Gamma_mixed.matchType is 'der':
+                elif Gamma_mixed.matchType == 'der':
                     derCausal = True
-                elif Gamma_mixed.matchType is 'mixed':
+                elif Gamma_mixed.matchType == 'mixed':
                     derCausal = True
                     intCausal = True
                 self.matching.append(

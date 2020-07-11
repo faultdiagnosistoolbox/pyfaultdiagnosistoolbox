@@ -552,7 +552,7 @@ class DiagnosisModel(object):
         smplot.PlotModel(self, verbose=labelVars)
 
     def PlotMatching(self, Gamma, **options):
-        """Plot a matchingself.
+        """Plot a matching.
 
         Plot the structure in an upper-triangular
         incidence matrix with the matched variables in the diagonal.

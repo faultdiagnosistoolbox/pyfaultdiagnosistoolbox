@@ -3,6 +3,7 @@ import faultdiagnosistoolbox.structuralanalysis as sa
 import scipy.sparse as sp
 import numpy as np
 import copy
+from dataclasses import dataclass, field
 
 
 def CSCDict(A):
@@ -30,30 +31,46 @@ def srank(A):
     return rr[3]
 
 
-class DMResult:
-    """Dulmage-Mendelsohn decomposition base class."""
-
-    def __init__(self):
-        """Initializer."""
-        self.Mm = EqBlock([], [])
-        self.M0 = []
-        self.Mp = EqBlock([], [])
-        self.rowp = []
-        self.colp = []
-        self.M0eqs = []
-        self.M0vars = []
-
-
+# class EqBlock:
+#     """EqBlock class."""
+#
+#     row = np.array([], dtype=np.int64)
+#     col = np.array([], dtype=np.int64)
+#
+#     def __init__(self, r, c):
+#         """Initializer."""
+#         self.row = r
+#         self.col = c
+@dataclass
 class EqBlock:
     """EqBlock class."""
 
-    row = np.array([], dtype=np.int64)
-    col = np.array([], dtype=np.int64)
+    row: np.array = np.array([], dtype=np.int64)
+    col: np.array = np.array([], dtype=np.int64)
 
-    def __init__(self, r, c):
-        """Initializer."""
-        self.row = r
-        self.col = c
+# class DMResult:
+#     """Dulmage-Mendelsohn decomposition base class."""
+#
+#     def __init__(self):
+#         """Initializer."""
+#         self.Mm = EqBlock([], [])
+#         self.M0 = []
+#         self.Mp = EqBlock([], [])
+#         self.rowp = []
+#         self.colp = []
+#         self.M0eqs = []
+#         self.M0vars = []
+@dataclass
+class DMResult:
+    """Dulmage-Mendelsohn decomposition base class."""
+
+    Mm: EqBlock = EqBlock([], [])
+    M0: list = field(default_factory=lambda: [])
+    Mp: EqBlock = EqBlock([], [])
+    rowp: list = field(default_factory=lambda: [])
+    colp: list = field(default_factory=lambda: [])
+    M0eqs: list = field(default_factory=lambda: [])
+    M0vars: list = field(default_factory=lambda: [])
 
 
 def MSO(X):
