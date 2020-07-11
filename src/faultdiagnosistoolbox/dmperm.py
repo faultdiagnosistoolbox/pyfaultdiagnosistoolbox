@@ -177,7 +177,7 @@ def IsPSO(X, *args):
     return (len(dm.Mm.row) == 0) and (len(dm.M0) == 0)
 
 
-def IsObservable(Xin, eq=[]):
+def IsObservable(Xin, eq=None):
     """Return True if observable."""
     def DiffConstraints(X):
         diffEqs = np.where(np.any(X == 2, axis=1))[0]
@@ -190,9 +190,9 @@ def IsObservable(Xin, eq=[]):
                 x1Idx)))
         x2Idx = np.array([xi for xi in np.arange(0, nx)
                           if (not (xi in x1Idx)) and (not (xi in dx1Idx))])
-        return (diffEqs, algEqs, x1Idx, dx1Idx, x2Idx)
+        return diffEqs, algEqs, x1Idx, dx1Idx, x2Idx
 
-    if len(eq) == 0:
+    if eq is None:
         X = Xin
     else:
         X = Xin[eq, :]
@@ -241,9 +241,9 @@ def IsObservable(Xin, eq=[]):
     return obs
 
 
-def IsHighIndex(X, eq=[]):
+def IsHighIndex(X, eq=None):
     """Return True if high differential index."""
-    if len(eq) == 0:
+    if eq is None:
         eq = np.arange(0, X.shape[0])
     X1 = X[eq, :]
 
@@ -252,13 +252,13 @@ def IsHighIndex(X, eq=[]):
     row_d = np.any(X1 > 1, axis=1)
     col_2 = np.all(X1[row_d, :] == 0, axis=0)
     Xhod = X1[row_a, :][:, np.logical_or(col_d1, col_2)]
-    nz = sum(np.all(Xhod == 0, axis=0))
+    nz = np.sum(np.all(Xhod == 0, axis=0))
     return srank(Xhod) < Xhod.shape[1] - nz
 
 
-def IsLowIndex(X, eq=[]):
+def IsLowIndex(X, eq=None):
     """Return True if low differential index."""
-    if len(eq) == 0:
+    if eq is None:
         eq = np.arange(0, X.shape[0])
     return not IsHighIndex(X, eq)
 
@@ -268,7 +268,7 @@ def Mplus(X, causality='mixed'):
     def Gp(Gi):
         dm = GetDMParts(Gi[2])
         if len(dm.Mp.row) == 0 or len(dm.Mp.col) == 0:
-            return (np.array([]), np.array([]), np.array([[]]))
+            return np.array([]), np.array([]), np.array([[]])
         G1 = copy.deepcopy(Gi)
         return (G1[0][dm.Mp.row],
                 G1[1][dm.Mp.col],
@@ -277,7 +277,7 @@ def Mplus(X, causality='mixed'):
     def Gm(Gi):
         dm = GetDMParts(Gi[2])
         if len(dm.Mm.row) == 0 or len(dm.Mm.col) == 0:
-            return (np.array([]), np.array([]), np.array([[]]))
+            return np.array([]), np.array([]), np.array([[]])
         G1 = copy.deepcopy(Gi)
         return (G1[0][dm.Mm.row],
                 G1[1][dm.Mm.col],
@@ -286,21 +286,21 @@ def Mplus(X, causality='mixed'):
     def G0(Gi):
         dm = GetDMParts(Gi[2])
         if len(dm.M0eqs) == 0 or len(dm.M0vars) == 0:
-            return (np.array([]), np.array([]), np.array([[]]))
+            return np.array([]), np.array([]), np.array([[]])
         G1 = copy.deepcopy(Gi)
         return (G1[0][dm.M0eqs],
                 G1[1][dm.M0vars],
                 G1[2][dm.M0eqs, :][:, dm.M0vars])
 
-    def Gadd(G1, G2):
-        c1, x1, A1 = copy.deepcopy(G1)
-        c2, x2, A2 = copy.deepcopy(G2)
-
-        c1 = np.unique(np.concatenate((c1, c2)))
-        x1 = np.unique(np.concatenate((x1, x2)))
-        A1[A2 == 1] = 1
-        A1[A2 == 2] = 2
-        return (c1, x1, A1)
+    # def Gadd(G1, G2):
+    #     c1, x1, A1 = copy.deepcopy(G1)
+    #     c2, x2, A2 = copy.deepcopy(G2)
+    #
+    #     c1 = np.unique(np.concatenate((c1, c2)))
+    #     x1 = np.unique(np.concatenate((x1, x2)))
+    #     A1[A2 == 1] = 1
+    #     A1[A2 == 2] = 2
+    #     return c1, x1, A1
 
     def CGX(Gi, X):
         if len(X) == 0:
@@ -312,7 +312,7 @@ def Mplus(X, causality='mixed'):
 
         return Gi[0][idx]
 
-    def CGE(Gi, E):
+    def CGE(Gi, Ei):
         return Gi[0][np.where(np.any(Ei, axis=1))[0]]
 
     def GsubC(Gi, C):
@@ -320,14 +320,14 @@ def Mplus(X, causality='mixed'):
         Cidx = list(map(lambda ci: np.argwhere(Gi[0] == ci)[0][0], C))
         A = np.delete(A, Cidx, axis=0)
         c = np.array([ci for ci in c if not (ci in C)])
-        return (c, x, A)
+        return c, x, A
 
     def GsubX(Gi, X):
         c, x, A = copy.deepcopy(Gi)
         Xidx = list(map(lambda xi: np.argwhere(Gi[1] == xi)[0][0], X))
         A = np.delete(A, Xidx, axis=1)
         x = np.array([xi for xi in x if not (xi in X)])
-        return (c, x, A)
+        return c, x, A
 
     Xc = np.array(X.copy())
     # Represent graph as a tuple G=(constraints,variables, adjacency matrix)

@@ -17,6 +17,7 @@ ts = [0, 1, 5, 10, 13]
 red = [1, 1, 5, 1, 0]
 FSM = model.FSM([msos[ti] for ti in ts])
 
+
 def test_define_model():
     assert model
 
@@ -33,6 +34,7 @@ def test_isolability_analysis():
     assert np.all(np.abs((I_der - np.eye(6))) < 1e-10)
     assert np.all(np.abs((I_int - np.eye(6))) < 1e-10)
 
+
 def test_mso():
     oi_mso = np.array([model.IsObservable(mi) for mi in msos])
     li_mso = np.array([model.IsLowIndex(mi) for mi in msos])
@@ -46,6 +48,7 @@ def test_mso():
     assert np.sum(li_mtes) == 8
     assert np.sum(li_mso) == 15
 
+
 def test_fsm():
     assert np.all(np.array(FSM) == np.array([[1, 0, 0, 0, 1, 0],
                                              [0, 1, 1, 0, 0, 0],
@@ -53,8 +56,8 @@ def test_fsm():
                                              [0, 1, 0, 0, 0, 1],
                                              [1, 0, 1, 1, 0, 1]]))
 
-
     assert np.all(I_mixed == model.IsolabilityAnalysisArrs([msos[ti] for ti in ts]))
+
 
 def test_codegen():
     for k, (test, redIdx) in enumerate(zip(ts, red)):
@@ -70,8 +73,7 @@ def test_codegen():
         except:
             assert False
 
-    for k, (test, redIdx) in enumerate(zip(ts, red)):
-        red_k = msos[test][redIdx]
+    for k, _ in enumerate(zip(ts, red)):
         resName = f"r{k + 1}"
         print(f"Compiling residual generator: {resName} ... ", end='')
         if platform.system() == "Windows":

@@ -25,7 +25,8 @@ def SensorPlacementDetectability(model, **options):
     if 'fdet' in options:
         fdet = options['fdet']
         if isinstance(fdet[0], str):
-            fdet = list(map(lambda fi: model.f.index(fi), fdet))
+            # fdet = list(map(lambda fi: model.f.index(fi), fdet))
+            fdet = np.array(map(lambda fi: model.f.index(fi), fdet))
     else:
         fdet = np.arange(0, len(model.f))
 

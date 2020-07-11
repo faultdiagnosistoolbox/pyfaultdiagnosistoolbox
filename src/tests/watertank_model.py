@@ -1,12 +1,11 @@
 import faultdiagnosistoolbox as fdt
 import sympy as sym
 
-modeldef = {}
-modeldef['type'] = 'Symbolic'
-modeldef['x'] = ['h1','h2','xc1','xl2','xl3','dh1','dh2']
-modeldef['f'] = ['fh2','ff1','fc1','fl2','fl3','fa']
-modeldef['z'] = ['y1','y2','y3','y4', 'u']
-modeldef['parameters'] = ['d1','d2','d3','d4','d5','d6']
+modeldef = {'type': 'Symbolic',
+            'x': ['h1', 'h2', 'xc1', 'xl2', 'xl3', 'dh1', 'dh2'],
+            'f': ['fh2', 'ff1', 'fc1', 'fl2', 'fl3', 'fa'],
+            'z': ['y1', 'y2', 'y3', 'y4', 'u'],
+            'parameters': ['d1', 'd2', 'd3', 'd4', 'd5', 'd6']}
 
 sym.var(modeldef['x'])
 sym.var(modeldef['f'])

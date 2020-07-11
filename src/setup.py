@@ -7,7 +7,7 @@ import re
 
 here = path.abspath(path.dirname(__file__))
 
-VERSIONFILE="faultdiagnosistoolbox/_version.py"
+VERSIONFILE = "faultdiagnosistoolbox/_version.py"
 verstrline = open(VERSIONFILE, "rt").read()
 VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
 mo = re.search(VSRE, verstrline, re.M)
@@ -15,6 +15,7 @@ if mo:
     ver_str = mo.group(1)
 else:
     raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
+
 
 class get_numpy_include(object):
     """Defer numpy.get_include() until after numpy is installed."""
@@ -30,12 +31,14 @@ else:
     extra_compile = ['-Wno-unused-function', '-Wno-unknown-pragmas']
 
 strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
-                    sources = ['faultdiagnosistoolbox/structuralanalysismodule.cc', 'faultdiagnosistoolbox/SparseMatrix.cc',
-                               'faultdiagnosistoolbox/StructuralAnalysisModel.cc', 'faultdiagnosistoolbox/MSOAlg.cc'],
-                    include_dirs=[get_numpy_include(),'CSparse/Include'],
-                    extra_compile_args=extra_compile,
-                    library_dirs=['CSparse/Lib'],
-                    libraries=['csparse'])
+                              sources=['faultdiagnosistoolbox/structuralanalysismodule.cc',
+                                       'faultdiagnosistoolbox/SparseMatrix.cc',
+                                       'faultdiagnosistoolbox/StructuralAnalysisModel.cc',
+                                       'faultdiagnosistoolbox/MSOAlg.cc'],
+                              include_dirs=[get_numpy_include(), 'CSparse/Include'],
+                              extra_compile_args=extra_compile,
+                              library_dirs=['CSparse/Lib'],
+                              libraries=['csparse'])
 
 if platform.system() == "Windows":
     if not path.isfile('CSparse/Lib/libcsparse.lib'):
@@ -61,9 +64,9 @@ setup(
     author='Erik Frisk',
     author_email='erik.frisk@liu.se',
 
-    ext_modules = [strucanalysis_ext],
+    ext_modules=[strucanalysis_ext],
 
-    include_package_data = True, 
+    include_package_data=True,
     
     # Choose your license
     license='MIT',
@@ -110,30 +113,30 @@ setup(
     # dependencies). You can install these using the following syntax,
     # for example:
     # $ pip install -e .[dev,test]
-#    extras_require={
-#        'dev': ['check-manifest'],
-#        'test': ['coverage'],
-#    },
+    #    extras_require={
+    #        'dev': ['check-manifest'],
+    #        'test': ['coverage'],
+    #    },
 
     # If there are data files included in your packages that need to be
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
-#    package_data={
-#        'sample': ['package_data.dat'],
-#    },
+    #    package_data={
+    #        'sample': ['package_data.dat'],
+    #    },
 
     # Although 'package_data' is the preferred approach, in some case you may
     # need to place data files outside of your packages. See:
     # http://docs.python.org/3.4/distutils/setupscript.html#installing-additional-files # noqa
     # In this case, 'data_file' will be installed into '<sys.prefix>/my_data'
- #   data_files=[('my_data', ['data/data_file'])],
+    #   data_files=[('my_data', ['data/data_file'])],
 
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
-    #entry_points={
+    # entry_points={
     #    'console_scripts': [
     #        'sample=sample:main',
     #    ],
-    #},
+    # },
 )

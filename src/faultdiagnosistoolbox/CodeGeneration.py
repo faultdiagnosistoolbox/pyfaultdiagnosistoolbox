@@ -9,6 +9,7 @@ import time
 import os
 import platform
 
+
 def UsedVars(rels, variables):
     """Determine used variables in expression."""
     uv = set([])
@@ -18,13 +19,15 @@ def UsedVars(rels, variables):
     return [v for v in variables if v in uv]
 
 
-def ExprToCode(expr, language, user_functions={}):
+def ExprToCode(expr, language, user_functions=None):
     """Convert symbolic expression to code."""
     genCode = ""
+    usr_fun = {} if user_functions is None else user_functions
+
     if language == 'C':
-        genCode = ccode(expr, user_functions=user_functions)
+        genCode = ccode(expr, user_functions=usr_fun)
     elif language == 'Matlab':
-        genCode = octave_code(expr, user_functions=user_functions)
+        genCode = octave_code(expr, user_functions=usr_fun)
     elif language == 'Python':
         genCode = str(expr)
     else:
@@ -84,7 +87,7 @@ def SeqResGenCausality(Gamma, e, diffres):
             return 'der'
 
 
-def AlgebraicHallComponent(model, g, language, user_functions={}):
+def AlgebraicHallComponent(model, g, language, user_functions=None):
     """Generate code for Algebraic Hall component."""
     fzSub = list(zip(model.f, np.zeros(len(model.f), dtype=np.int64)))
     eqs = list(map(lambda eq: eq.subs(fzSub), model.syme[g.row]))
@@ -138,7 +141,7 @@ def CodeApproxDer(v, enum, language):
             v, v, CodeEOL(language), CodeComment(language), enum)
 
 
-def IntegralHallComponent(model, g, language, user_functions={}):
+def IntegralHallComponent(model, g, language, user_functions=None):
     """Generate code for Integral Hall component."""
     fzSub = list(zip(model.f, np.zeros(len(model.f), dtype=np.int64)))
     resGen = []
@@ -161,7 +164,7 @@ def IntegralHallComponent(model, g, language, user_functions={}):
     return resGen, integ, iState
 
 
-def MixedHallComponent(model, g, language, user_functions={}):
+def MixedHallComponent(model, g, language, user_functions=None):
     """Generate code for Mixed Hall component."""
     fzSub = list(zip(model.f, np.zeros(len(model.f), dtype=np.int64)))
     resGen = []
@@ -191,7 +194,7 @@ def MixedHallComponent(model, g, language, user_functions={}):
 
 
 def GenerateResidualEquations(model, resEq, diffres, language,
-                              user_functions={}):
+                              user_functions=None):
     """Generate code for the residual equations."""
     if language == 'C':
         resvar = 'r[0]'
@@ -239,7 +242,7 @@ def GenerateResidualEquations(model, resEq, diffres, language,
     return np.array(genCode), iState, dState, integ
 
 
-def GenerateExactlyDetermined(model, Gamma, language, user_functions={}):
+def GenerateExactlyDetermined(model, Gamma, language, user_functions=None):
     """Generate code for exectly determined part."""
     resGenM0 = np.array([])
     integ = np.array([])
@@ -264,7 +267,7 @@ def GenerateExactlyDetermined(model, Gamma, language, user_functions={}):
             resGenM0 = np.concatenate((resGenM0, [codeGen]))
             dState = np.concatenate((dState, [IVar(dc)]))
         elif g.matchType == 'mixed':
-            codeGen, gInteg, giState, gdState = IntegralHallComponent(model, g, language, user_functions)
+            codeGen, gInteg, giState, gdState = MixedHallComponent(model, g, language, user_functions)
             resGenM0 = np.concatenate((resGenM0, codeGen))
             iState = np.concatenate((iState, giState))
             dState = np.concatenate((dState, gdState))
@@ -480,12 +483,16 @@ def WriteResGenPython(model, resGen, state, integ, name, batch,
 
 
 def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python',
-              batch=False, api='Python', user_functions={},
-              external_src=[], external_headers=[]):
+              batch=False, api='Python', user_functions=None,
+              external_src=None, external_headers=None):
     """Generate code for sequential residual generator."""
     if not (model.modelType == 'Symbolic'):
         print("Code generation only possible for symbolic models")
         return []
+
+    usr_fun = user_functions if user_functions is not None else {}
+    ext_src = external_src if external_src is not None else []
+    ext_head = external_headers if external_headers is not None else []
 
     sys.stdout.write("Generating residual generator " + name + " (" +
                      language + ', ')
@@ -496,11 +503,11 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python',
     sys.stdout.write(")\n")
 
     sys.stdout.write("  Generating code for the exactly determined part: ")
-    m0Code, m0iState, m0dState, m0integ = GenerateExactlyDetermined(model, Gamma, language, user_functions)
+    m0Code, m0iState, m0dState, m0integ = GenerateExactlyDetermined(model, Gamma, language, usr_fun)
 
     sys.stdout.flush()
     print("  Generating code for the residual equations")
-    resCode, resiState, resdState, resinteg = GenerateResidualEquations(model, resEq, diffres, language, user_functions)
+    resCode, resiState, resdState, resinteg = GenerateResidualEquations(model, resEq, diffres, language, usr_fun)
 
     # Collect code, integrators, and states
     resGenCode = np.concatenate((m0Code, [' '], resCode))
@@ -517,7 +524,7 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python',
     resGenEqs = np.concatenate((resGenEqs, [resEq]))
     if language == 'Python':
         WriteResGenPython(model, resGenCode, resGenState, resGenInteg, name,
-                          batch, resGenCausality, resGenEqs, external_src)
+                          batch, resGenCausality, resGenEqs, ext_src)
         print('File ' + name + '.py generated.')
     elif language == 'Matlab':
         pass
@@ -525,7 +532,7 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python',
         if api == 'Python':
             WriteResGenCPython(model, resGenCode, resGenState, resGenInteg,
                                name, batch, resGenCausality, resGenEqs,
-                               external_src, external_headers)
+                               ext_src, ext_head)
             print('Files ' + name + '.cc and ' + name + '_setup.py generated')
             print('Compile by running: python ' + name +
                   '_setup.py build_ext --inplace')
