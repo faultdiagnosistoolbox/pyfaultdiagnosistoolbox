@@ -15,7 +15,76 @@ import sys
 
 
 class DiagnosisModel(object):
-    """Base class for diagnosis models."""
+    """Diagnosis model.
+
+    DiagnosisModel(model_def)
+    where model_def is a dictionary with the keys
+
+    type - type of model (Symbolic, VarStruc, MatrixStruc)
+    x - list of unknown variables in the model
+    f - list of fault variables
+    z - list of known variables
+    rels - list of model equations (in case of symbolic model)
+    X/F/Z - structure matrices (in case of MatrixStruc model)
+    parameters - list of parameters (optional) For the induction motor model, this corresponds to
+
+    Example
+    -------
+    Consider a dynamic model described by the equations below with unknown variables
+    x = (i_a, i_b, lambda_a, lambda_b, w, di_a, di_b, dlambda_a, dlambda_b, dw, q_a, q_b, Tl),
+    three measurements y1, y2, y3, and known input controls u_a, and u_b,
+    z = (u_a, u_b, y1, y2, y3), and two sensor faults f=(f_a, f_b).
+
+    q_a = w*lambda_a,
+    q_b = w*lambda_b,
+    di_a = -a*i_a + b*c*lambda_a + b*q_b + d*u_a,
+    di_b = -a*i_b + b*c*lambda_b + b*q_a + d*u_b,
+    dlambda_a = L_M*c*i_a - c*lambda_a-q_b,
+    dlambda_b = L_M*c*i_b - c*lambda_b-q_a,
+    dw = -k*c_f*w + k*c_t*(i_a*lambda_b - i_b*lambda_a) - k*Tl,
+    d/dt i_a = di_a
+    d/dt i_b = di_b
+    d/dt lambda_a = dlambda_a
+    d/dt lambda_b = dlambda_b
+    d/dt w = dw
+    y1 = i_a + f_a
+    y2 = i_b + f_b
+    y3 = w
+
+    To define a symbolic model, define model variables,
+    model_def = {'type': 'Symbolic',
+                 'x': ['i_a', 'i_b', 'lambda_a', 'lambda_b', 'w',
+                       'di_a', 'di_b', 'dlambda_a', 'dlambda_b', 'dw', 'q_a', 'q_b', 'Tl'],
+                 'f': ['f_a', 'f_b'],
+                 'z': ['u_a', 'u_b', 'y1', 'y2', 'y3'],
+                 'parameters': ['a', 'b', 'c', 'd', 'L_M', 'k', 'c_f', 'c_t']}
+    and make variables symolic using SymPy.
+    sym.var(model_def['x'])
+    sym.var(model_def['f'])
+    sym.var(model_def['z'])
+    sym.var(model_def['parameters'])
+
+    Then, the model equations can be represented by
+    model_def['rels'] = [
+      -q_a + w*lambda_a,
+      -q_b + w*lambda_b,
+      -di_a + -a*i_a + b*c*lambda_a + b*q_b + d*u_a,
+      -di_b + -a*i_b + b*c*lambda_b + b*q_a + d*u_b,
+      -dlambda_a + L_M*c*i_a - c*lambda_a-q_b,
+      -dlambda_b + L_M*c*i_b - c*lambda_b-q_a,
+      -dw + -k*c_f*w + k*c_t*(i_a*lambda_b - i_b*lambda_a) - k*Tl,
+      fdt.DiffConstraint('di_a','i_a'),
+      fdt.DiffConstraint('di_b','i_b'),
+      fdt.DiffConstraint('dlambda_a','lambda_a'),
+      fdt.DiffConstraint('dlambda_b','lambda_b'),
+      fdt.DiffConstraint('dw','w'),
+      -y1 + i_a + f_a,
+      -y2 + i_b + f_b,
+      -y3 + w]
+
+    Now, the model can be defined using
+    model = fdt.DiagnosisModel(model_def, name ='Induction motor')
+    """
 
     def __init__(self, modeldef, name=''):
         """Initialize DiagnosisModel object."""
