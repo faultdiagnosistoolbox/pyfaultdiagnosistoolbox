@@ -55,7 +55,7 @@ setup(
     name='faultdiagnosistoolbox',
     version=ver_str,
 
-    description='A Fault Diagnosis Toolbox',
+    description='A toolbox for Model Based Fault Diagnosis of dynamic systems based on structural analysis',
     long_description=README_TEXT,
 
     url='https://faultdiagnosistoolbox.github.io',
