@@ -125,7 +125,7 @@ res_gens = [ResGen_1649_1.ResGen_1649_1, ResGen_4011_1.ResGen_4011_1, ResGen_401
             ResGen_4477_86.ResGen_4477_86]
 
 # # Import measurement data
-dataDir = f'{pathlib.Path.home()}/Diagnosis/Work/EngineDiagnosis/Work/Data/'
+dataDir = f'{pathlib.Path.home()}/Research/Diagnosis/Data/EngineData/2016_EngineData/'
 dataSets = {'NF': 'driving_cycle_FTP75_highway_no_fault_dataset1_16-01-20.mat',
             'fyp_im': 'driving_cycle_FTP75Highway_fault_y_pim_dataset_7_26-01-2016.mat',
             'fyw_af': 'driving_cycle_FTP75Highway_fault_y_waf_dataset_5_26-01-2016',
