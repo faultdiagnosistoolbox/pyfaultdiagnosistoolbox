@@ -21,6 +21,7 @@ import GetMeasurementData as gm
 sns.set(style='white', rc={'lines.linewidth': 0.75, 'axes.linewidth': 0.5})
 
 # # Model
+from VEP4Engine import model
 
 import VEP4Engine
 reload(VEP4Engine)
