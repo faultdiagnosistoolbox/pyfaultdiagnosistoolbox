@@ -91,7 +91,8 @@ def AlgebraicHallComponent(model, g, language, user_functions=None):
     """Generate code for Algebraic Hall component."""
     fzSub = list(zip(model.f, np.zeros(len(model.f), dtype=np.int64)))
     eqs = list(map(lambda eq: eq.subs(fzSub), model.syme[g.row]))
-    hcVars = list(np.array(model.x)[g.col])
+#    hcVars = list(np.array(model.x)[g.col])
+    hcVars = [sym.var(vi) for vi in np.array(model.x)[g.col]]
     sol = sym.solve(eqs, hcVars, dict=True)
     sol = sol[0]  # Take the first solution
     resGen = []
@@ -124,20 +125,20 @@ def CodeApproxInt(v, dv, enum, language):
             dv, v, CodeEOL(language), CodeComment(language), enum)
 
     else:
-        return "ApproxInt(%s,state['%s'],Ts)%s %s %s" % (
+        return "ApproxInt(%s, state['%s'], Ts)%s %s %s" % (
             dv, v, CodeEOL(language), CodeComment(language), enum)
 
 
 def CodeApproxDer(v, enum, language):
     """Generate code for simple approximate differentiator."""
     if language == 'Matlab':
-        return 'ApproxDiff(%s,state.%s,Ts)%s %s %s' % (
+        return 'ApproxDiff(%s, state.%s, Ts)%s %s %s' % (
             v, v, CodeEOL(language), CodeComment(language), enum)
     elif language == 'C':
-        return 'ApproxDiff(%s,state->%s,Ts)%s %s %s' % (
+        return 'ApproxDiff(%s, state->%s, Ts)%s %s %s' % (
             v, v, CodeEOL(language), CodeComment(language), enum)
     else:
-        return "ApproxDiff(%s,state['%s'],Ts)%s %s %s" % (
+        return "ApproxDiff(%s, state['%s'], Ts)%s %s %s" % (
             v, v, CodeEOL(language), CodeComment(language), enum)
 
 
@@ -147,10 +148,11 @@ def IntegralHallComponent(model, g, language, user_functions=None):
     resGen = []
     integ = []
     iState = []
-    for e, v, enum in zip(model.syme[g.row], np.array(model.x)[g.col],
+    for e, v, enum in zip(model.syme[g.row],
+                          np.array(model.x)[g.col],
                           np.array(model.e)[g.row]):
         if not fdt.IsDifferentialConstraint(e):
-            sol = sym.solve(e.subs(fzSub), v)
+            sol = sym.solve(e.subs(fzSub), sym.var(v))
             genCode = "%s = %s%s %s %s" % (
                 v, ExprToCode(sol[0], language, user_functions),
                 CodeEOL(language), CodeComment(language), enum)
@@ -171,10 +173,11 @@ def MixedHallComponent(model, g, language, user_functions=None):
     iState = []
     dState = []
     integ = []
-    for e, v, enum in zip(model.syme[g.row], np.array(model.x)[g.col],
+    for e, v, enum in zip(model.syme[g.row],
+                          np.array(model.x)[g.col],
                           np.array(model.e)[g.row]):
         if not fdt.IsDifferentialConstraint(e):
-            sol = sym.solve(e.subs(fzSub), v)
+            sol = sym.solve(e.subs(fzSub), sym.var(v))
             genCode = "%s = %s%s %s %s" % (
                 v, ExprToCode(sol[0], language, user_functions),
                 CodeEOL(language), CodeComment(language), enum)
@@ -285,7 +288,7 @@ def WriteApproxIntFunction(f, language):
         f.write('  return x0 + Ts*dx;\n')
         f.write('}\n')
     elif language == 'Python':
-        f.write('    def ApproxInt(dx,x0,Ts):\n')
+        f.write('    def ApproxInt(dx, x0, Ts):\n')
         f.write('        return x0 + Ts*dx\n')
     elif language == 'Matlab':
         pass
@@ -299,12 +302,12 @@ def WriteApproxDerFunction(f, language):
         f.write('  return (x-xold)/Ts;\n')
         f.write('}\n')
     elif language == 'Python':
-        f.write('    def ApproxDiff(x,xold,Ts):\n')
-        f.write('        return (x-xold)/Ts\n')
+        f.write('    def ApproxDiff(x, xold, Ts):\n')
+        f.write('        return (x - xold) / Ts\n')
     elif language == 'Matlab':
-        f.write('function dx=ApproxDiff(x,xold,Ts)\n')
+        f.write('function dx=ApproxDiff(x, xold, Ts)\n')
         f.write('  if length(xold) == 1\n')
-        f.write('    dx = (x-xold)/Ts;\n')
+        f.write('    dx = (x - xold) / Ts;\n')
         f.write('  end\n')
         f.write('end\n')
 
