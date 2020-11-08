@@ -1,6 +1,5 @@
 """Code generation."""
 import numpy as np
-# import faultdiagnosistoolbox.dmperm as dmperm
 import sympy as sym
 import sys
 import faultdiagnosistoolbox as fdt
@@ -246,7 +245,7 @@ def GenerateResidualEquations(model, resEq, diffres, language,
 
 
 def GenerateExactlyDetermined(model, Gamma, language, user_functions=None):
-    """Generate code for exectly determined part."""
+    """Generate code for exactly determined part."""
     resGenM0 = np.array([])
     integ = np.array([])
     iState = np.array([])
@@ -370,7 +369,7 @@ def WriteResGenPython(model, resGen, state, integ, name, batch,
     f = open(name + ".py", 'w')
     tab = '    '
     f.write('import numpy as np\n')
-    f.write('from numpy import * # For access to all fundamental funcations, constants etc.\n')
+    f.write('from numpy import * # For access to all fundamental functions, constants etc.\n')
     if batch:
         f.write('from copy import deepcopy\n\n')
 
@@ -396,7 +395,8 @@ def WriteResGenPython(model, resGen, state, integ, name, batch,
         f.write(fSens[-1] + '\n')
         f.write('\n')
         f.write(tab + 'Example of basic usage:\n')
-        f.write(tab + 'Let z be the observations matrix, each column corresponding to a known signal and Ts the sampling time,\n')
+        f.write(tab + 'Let z be the observations matrix, each column corresponding to ' +
+                'a known signal and Ts the sampling time,\n')
         f.write(tab + 'then the residual generator can be simulated by:\n')
         f.write('\n')
         f.write(tab + "r = np.zeros(N) # N number of data points\n")
@@ -445,7 +445,8 @@ def WriteResGenPython(model, resGen, state, integ, name, batch,
         f.write(fSens[-1] + '\n')
         f.write('\n')
         f.write(tab + 'Example of basic usage:\n')
-        f.write(tab + 'Let z be the observations matrix, each column corresponding to a known signal and Ts the sampling time,\n')
+        f.write(tab + 'Let z be the observations matrix, each column corresponding to a known signal ' +
+                'and Ts the sampling time,\n')
         f.write(tab + 'then the residual generator can be simulated by:\n')
         f.write('\n')
         f.write(tab + "state = {")
@@ -474,7 +475,7 @@ def WriteResGenPython(model, resGen, state, integ, name, batch,
         WriteResGenCorePython(f, name, model, resGen, state, integ, resGenEqs)
 
         f.write('\n')
-        f.write(tab + 'N = z.shape[0] # Number of datapoints\n')
+        f.write(tab + 'N = z.shape[0] # Number of data points\n')
         f.write(tab + 'r = np.zeros(N)\n')
         f.write(tab + 'dynState = deepcopy(state)\n')
         f.write(tab + 'for k,zk in enumerate(z):\n')
@@ -542,7 +543,7 @@ def SeqResGen(model, Gamma, resEq, name, diffres='int', language='Python',
 
 
 def WriteResGenCoreC(f, name, model, resGen, state, integ, resGenEqs, batch):
-    """Write code for resgen core C function."""
+    """Write code for residual generator core C function."""
     usedParams = UsedVars(model.syme[resGenEqs], model.parameters)
     tab = '  '
 
@@ -551,7 +552,7 @@ def WriteResGenCoreC(f, name, model, resGen, state, integ, resGenEqs, batch):
     if not batch:
         f.write(name + '_core(double* r, PyArrayObject *pyZ, ')
     else:
-        f.write(name + '_core(double* r, PyArrayObject *pyZ, npy_intp k, ')
+        f.write(name + "_core(double* r, PyArrayObject *pyZ, npy_intp k, ")
     if len(state) > 0:
         f.write('ResState* state, ')
     if len(usedParams) > 0:
@@ -737,7 +738,8 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
         f.write(fSens[-1] + '\n')
         f.write('//\n')
         f.write('// Example of basic usage:\n')
-        f.write('// Let z be the observations matrix, each column corresponding to a known signal and Ts the sampling time,\n')
+        f.write('// Let z be the observations matrix, each column corresponding to a known signal ' +
+                'and Ts the sampling time,\n')
         f.write('// then the residual generator can be simulated by:\n')
         f.write('//\n')
         f.write("// r = np.zeros(N) # N number of data points\n")
@@ -799,7 +801,8 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
         f.write('  PyObject *pyParams;\n')
         f.write('  double Ts;\n')
         f.write('\n')
-        f.write('  if (!PyArg_ParseTuple(args, "O!O!O!d", &PyArray_Type, &pyZ, &PyDict_Type, &pyState, &PyDict_Type, &pyParams, &Ts)) {\n')
+        f.write('  if (!PyArg_ParseTuple(args, "O!O!O!d", &PyArray_Type, &pyZ, &PyDict_Type, &pyState, ' +
+                '&PyDict_Type, &pyParams, &Ts)) {\n')
         f.write('    return NULL;\n')
         f.write('  }\n')
         f.write('\n')
@@ -895,7 +898,8 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
         f.write(fSens[-1] + '\n')
         f.write('//\n')
         f.write('// Example of basic usage:\n')
-        f.write('// Let z be the observations matrix, each column corresponding to a known signal and Ts the sampling time,\n')
+        f.write('// Let z be the observations matrix, each column corresponding to a known signal and ' +
+                'Ts the sampling time,\n')
         f.write('// then the residual generator can be simulated by:\n')
         f.write('//\n')
 
@@ -958,7 +962,8 @@ def WriteResGenCPython(model, resGenCode, resGenState, resGenInteg, name,
         f.write('  PyObject *pyParams;\n')
         f.write('  double Ts;\n')
         f.write('\n')
-        f.write('  if (!PyArg_ParseTuple(args, "O!O!O!d", &PyArray_Type, &pyZ, &PyDict_Type, &pyState, &PyDict_Type, &pyParams, &Ts)) {\n')
+        f.write('  if (!PyArg_ParseTuple(args, "O!O!O!d", &PyArray_Type, &pyZ, &PyDict_Type, &pyState, ' +
+                '&PyDict_Type, &pyParams, &Ts)) {\n')
         f.write('    return NULL;\n')
         f.write('  }\n')
         f.write('\n')
