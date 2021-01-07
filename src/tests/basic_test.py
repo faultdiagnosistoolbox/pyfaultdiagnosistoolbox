@@ -66,11 +66,13 @@ def test_isolabilityanalysis():
 
 
 sensSets, idx = model.SensorPlacementIsolability()
+idx = [np.sort(si) for si in idx]
 
+sensSets = [[model.x[xi] for xi in iidx] for iidx in idx]
 
 def test_sensorplacement():
     assert len(sensSets) == len(idx)
-    assert sensSets == [['x6', 'x5'], ['x6', 'x7']]
+    assert sensSets == [['x5', 'x6'], ['x6', 'x7']]
     assert np.all([list(np.array(model.x)[id_i]) == sens_i for (sens_i, id_i) in zip(sensSets, idx)])
 
 
