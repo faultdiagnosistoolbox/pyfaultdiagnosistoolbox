@@ -1,10 +1,12 @@
-import matplotlib
+# %load_ext autoreload
+# %autoreload 2
+
+from matplotlib.ticker import MaxNLocator
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import os
 import sys
 import pathlib
-from importlib import reload
 import numpy as np
 from scipy.stats import gaussian_kde
 import seaborn as sns
@@ -21,34 +23,33 @@ import GetMeasurementData as gm
 sns.set(style='white', rc={'lines.linewidth': 0.75, 'axes.linewidth': 0.5})
 
 # # Model
-from VEP4Engine import model
-
 import VEP4Engine
-reload(VEP4Engine)
 model = VEP4Engine.model
 model.Lint()
 
 # Plot the structural model
-plt.figure(10)
+plt.figure(10, clear=True)
 model.PlotModel(verbose=False)
 
 # Plot isolability properties and the extended Dulmage-Mendelsohn decomposition with equivalence classes for the over-determined part
-plt.figure(20)
-model.IsolabilityAnalysis(plot=True)
+plt.figure(20, clear=True)
+_ = model.IsolabilityAnalysis(plot=True)
 
-plt.figure(21)
-model.IsolabilityAnalysis(plot=True, causality='int')
+plt.figure(21, clear=True)
+_ = model.IsolabilityAnalysis(plot=True, causality='int')
 
-plt.figure(22)
-model.IsolabilityAnalysis(plot=True, causality='der')
+plt.figure(22, clear=True)
+_ = model.IsolabilityAnalysis(plot=True, causality='der')
 
 plt.figure(23)
-model.PlotDM(fault=True, eqclass=True)
+_ = model.PlotDM(fault=True, eqclass=True)
 
 # MSO sets and test selection
 print("Searching for MSO sets ...")
 msos = model.MSO()
+mtes = model.MTES()
 print(f"  Found {len(msos)} MSO sets")
+print(f"  Found {len(mtes)} MTES sets")
 
 print(f"Checking index and observability properties of {len(msos)} MSO sets ...")
 li = [model.IsLowIndex(m) for m in msos]
@@ -69,22 +70,26 @@ FSM = model.FSM([msos[ti] for ti in ts])
 
 # Plot fault signature matrix and fault isolation matrix for selected set of tests
 fIdx = [model.f.index(fi) for fi in ['fyw_af', 'fyp_im', 'fyp_ic', 'fyT_ic']]
-plt.figure(30)
-plt.subplot(1, 2, 1)
-plt.spy(FSM[:, fIdx], markersize=6, marker="o", color="b")
-plt.xticks(np.arange(0, len(fIdx)), np.array(model.f)[fIdx])
-plt.yticks(np.arange(0, len(ts)), [f"MSO {k}" for k in ts])
-plt.gca().xaxis.tick_bottom()
-plt.title('Fault Signature Matrix')
+fig: plt.Figure = plt.figure(30, clear=True)
+ax: plt.Axes = fig.add_subplot(1, 2, 1)
+ax.spy(FSM[:, fIdx], markersize=6, marker="o", color="b")
+ax.set_xticks(range(len(fIdx)))
+ax.set_xticklabels(np.array(model.f)[fIdx])
+ax.set_yticks(range(len(ts)))
+ax.set_yticklabels([f"MSO {k}" for k in ts])
+ax.get_xaxis().set_ticks_position('bottom')
+ax.set_title('Fault Signature Matrix')
 
-plt.subplot(1, 2, 2)
+ax: plt.Axes = fig.add_subplot(1, 2, 2)
 IM = model.IsolabilityAnalysisArrs([msos[ti] for ti in ts])
-plt.spy(IM[fIdx, :][:, fIdx], markersize=6, marker="o", color="b")
-plt.xticks(np.arange(0, len(fIdx)), np.array(model.f)[fIdx])
-plt.yticks(np.arange(0, len(fIdx)), np.array(model.f)[fIdx])
-plt.gca().xaxis.tick_bottom()
-plt.title('Fault isolation matrix')
-plt.tight_layout()
+ax.spy(IM[fIdx, :][:, fIdx], markersize=6, marker="o", color="b")
+ax.set_xticks(range(len(fIdx)))
+ax.set_xticklabels(np.array(model.f)[fIdx])
+ax.set_yticks(range(len(fIdx)))
+ax.set_yticklabels(np.array(model.f)[fIdx])
+ax.get_xaxis().set_ticks_position('bottom')
+ax.set_title('Fault isolation matrix')
+fig.tight_layout()
 
 # Code generation
 for test, redIdx in zip(ts, re):
@@ -141,102 +146,105 @@ print(f' Finished loading {len(data.keys())} datasets')
 ftp75_hwfet = loadmat(dataDir + 'ftp75_hwfet.mat')
 ftp75_hwfet = {'t': ftp75_hwfet['ftp75_hwfet']['t'], 'v': ftp75_hwfet['ftp75_hwfet']['v']}
 
-plt.figure(90)
-plt.plot(ftp75_hwfet['t'] / 60.0, ftp75_hwfet['v'], linewidth=2)
+fig: plt.Figure = plt.figure(90, clear=True)
+ax: plt.Axes = fig.add_subplot()
+ax.plot(ftp75_hwfet['t'] / 60.0, ftp75_hwfet['v'], linewidth=2)
 sns.despine()
-plt.xlabel('t [min]')
-plt.ylabel('Velocity [km/h]')
-plt.title('EPA Highway Fuel Economy Test Cycle (HWFET)')
+ax.set_xlabel('t [min]')
+ax.set_ylabel('Velocity [km/h]')
+_ = ax.set_title('EPA Highway Fuel Economy Test Cycle (HWFET)')
 
 DS = 500  # Down sampling rate in plots
-plt.figure(80)
-plt.subplot(3, 3, 1)
+t_lim = [data['NF']['time'][0], data['NF']['time'][-1] / 60]
+
+fig: plt.Figure = plt.figure(80, clear=True)
+ax: plt.Axes = fig.add_subplot(3, 3, 1)
 yIdx = model.z.index('y_omega_e')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / (2 * np.pi) * 60)
-plt.ylabel('rpm')
-plt.title('Engine speed')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / (2 * np.pi) * 60)
+ax.set_ylabel('rpm')
+ax.set_title('Engine speed')
+ax.set_xlim(t_lim[0], t_lim[1])
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
 
-plt.subplot(3, 3, 2)
+ax: plt.Axes = fig.add_subplot(3, 3, 2)
 yIdx = model.z.index('y_p_im')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / 1e3)
-plt.ylabel('kPa')
-plt.title('Intake manifold pressure')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / 1e3)
+ax.set_ylabel('kPa')
+ax.set_title('Intake manifold pressure')
+ax.set_xlim(t_lim[0], t_lim[1])
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
 
-plt.subplot(3, 3, 3)
+ax: plt.Axes = fig.add_subplot(3, 3, 3)
 yIdx = model.z.index('y_W_af')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx])
-plt.ylabel('kg/s')
-plt.title('Air mass flow')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx])
+ax.set_ylabel('kg/s')
+ax.set_title('Air mass flow')
+ax.set_xlim(t_lim[0], t_lim[1])
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
 
-plt.subplot(3, 3, 4)
+ax: plt.Axes = fig.add_subplot(3, 3, 4)
 yIdx = model.z.index('y_alpha_th')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx])
-plt.ylabel('%')
-plt.title('Throttle position')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx])
+ax.set_ylabel('%')
+ax.set_title('Throttle position')
+ax.set_xlim(t_lim[0], t_lim[1])
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
 
-plt.subplot(3, 3, 5)
+ax: plt.Axes = fig.add_subplot(3, 3, 5)
 yIdx = model.z.index('y_wfc')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] * 1.0e6)
-plt.ylabel('mg/s')
-plt.title('Injected fuel')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] * 1.0e6)
+ax.set_ylabel('mg/s')
+ax.set_title('Injected fuel')
+ax.set_xlim(t_lim[0], t_lim[1])
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
 
-plt.subplot(3, 3, 6)
+ax: plt.Axes = fig.add_subplot(3, 3, 6)
 yIdx = model.z.index('y_u_wg')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] )
-plt.ylabel('%')
-plt.title('Wastegate')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx])
+ax.set_ylabel('%')
+ax.set_title('Wastegate')
+ax.set_xlim(t_lim[0], t_lim[1])
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
 
-plt.subplot(3, 3, 7)
+ax: plt.Axes = fig.add_subplot(3, 3, 7)
 yIdx = model.z.index('y_p_ic')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / 1e3)
-plt.xlabel('t [min]')
-plt.ylabel('kPa')
-plt.title('Intercooler pressure')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / 1e3)
+ax.set_xlabel('t [min]')
+ax.set_ylabel('kPa')
+ax.set_title('Intercooler pressure')
+ax.set_xlim(t_lim[0], t_lim[1])
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
 
-plt.subplot(3, 3, 8)
+ax: plt.Axes = fig.add_subplot(3, 3, 8)
 yIdx = model.z.index('y_T_ic')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx])
-plt.xlabel('t [min]')
-plt.ylabel('K')
-plt.title('Intercooler temperature')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx])
+ax.set_xlabel('t [min]')
+ax.set_ylabel('K')
+ax.set_title('Intercooler temperature')
+ax.set_xlim(t_lim[0], t_lim[1])
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
 
-plt.subplot(3, 3, 9)
+ax: plt.Axes = fig.add_subplot(3, 3, 9)
 yIdx = model.z.index('y_p_amb')
-plt.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / 1.0e3)
-plt.xlabel('t [min]')
-plt.ylabel('kPa')
-plt.title('Ambient pressure')
-plt.xlim([data['NF']['time'][0], data['NF']['time'][-1] / 60])
+ax.plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / 1.0e3)
+ax.set_xlabel('t [min]')
+ax.set_ylabel('kPa')
+ax.set_title('Ambient pressure')
+ax.set_xlim(t_lim[0], t_lim[1])
 sns.despine()
-plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
-plt.ylim(99, 101)
-plt.tight_layout()
-plt.subplots_adjust(top=0.9)
-_ = plt.suptitle('Measurement data, no-fault dataset', fontsize=14, weight='bold')
+ax.get_yaxis().set_major_locator(MaxNLocator(4))
+ax.set_ylim(99, 101)
+fig.tight_layout()
+fig.subplots_adjust(top=0.9)
+_ = fig.suptitle('Measurement data, no-fault dataset', fontsize=14, weight='bold')
 
 # Run residual generators on measurement data
 r = []
@@ -265,37 +273,38 @@ ds = 500
 # dc = ['NF','fyp_im','fyw_af','fyp_ic','fyT_ic']
 dc = ['NF', 'fyw_af']
 for idx, fm in enumerate(dc):
-    ax = []
+    ax_list = []
     if fm in r[0]:  # Data set exists in first residual
-        plt.figure(50 + idx, clear=True)
+        fig: plt.Figure = plt.figure(50 + idx, clear=True)
         for ridx, ri in enumerate(r):
-            ax.append(plt.subplot(3, 3, ridx + 1))
-            plt.plot(data[fm]['time'][::ds] / 60.0, ri[fm][::ds])
-            ax[-1].get_xaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
-            ax[-1].get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
+            ax: plt.Axes = fig.add_subplot(3, 3, ridx + 1)
+            ax_list.append(ax)
+            ax.plot(data[fm]['time'][::ds] / 60.0, ri[fm][::ds])
+            ax.get_xaxis().set_major_locator(MaxNLocator(4))
+            ax.get_yaxis().set_major_locator(MaxNLocator(4))
             if fm in model.f and FSM[ridx, model.f.index(fm)] == 1:
                 for t1Idx, t2Idx in zip(data[fm]['fault_idx'][0:-1:2], data[fm]['fault_idx'][1::2]):
-                    y1, y2 = plt.ylim()
+                    y1, y2 = ax.get_ylim()
                     t1 = data[fm]['time'][t1Idx] / 60.0
                     t2 = data[fm]['time'][t2Idx] / 60.0
-                    plt.gca().add_patch(
+                    ax.add_patch(
                         mpatches.Rectangle((t1, y1), t2 - t1, y2 - y1, facecolor='0.9', edgecolor='none'))
-            plt.plot(data[fm]['time'][::ds] / 60.0, data[fm]['time'][::ds] * 0 + J[ridx], 'k--')
-            plt.plot(data[fm]['time'][::ds] / 60.0, data[fm]['time'][::ds] * 0 - J[ridx], 'k--')
+            ax.plot(data[fm]['time'][::ds] / 60.0, data[fm]['time'][::ds] * 0 + J[ridx], 'k--')
+            ax.plot(data[fm]['time'][::ds] / 60.0, data[fm]['time'][::ds] * 0 - J[ridx], 'k--')
 
             if fm in model.f and FSM[ridx, model.f.index(fm)] == 1:
-                plt.title(f'r{ridx + 1}: MSO {ts[ridx]} (*)', fontsize=10, weight='bold')
+                ax.set_title(f'r{ridx + 1}: MSO {ts[ridx]} (*)', fontsize=10, weight='bold')
             else:
-                plt.title(f'r{ridx + 1}: MSO {ts[ridx]}', fontsize=10, weight='bold')
+                ax.set_title(f'r{ridx + 1}: MSO {ts[ridx]}', fontsize=10, weight='bold')
 
-            plt.xlim((0, np.max(data[fm]['time']) / 60))
+            ax.set_xlim(0, np.max(data[fm]['time']) / 60)
             sns.despine()
-        ax[4].set_xlabel('t [min]')
-        ax[5].set_xlabel('t [min]')
-        ax[6].set_xlabel('t [min]')
-        plt.tight_layout()
-        plt.subplots_adjust(top=0.9)
-        plt.suptitle('Dataset: ' + fm, fontsize=12, weight='bold');
+        ax_list[4].set_xlabel('t [min]')
+        ax_list[5].set_xlabel('t [min]')
+        ax_list[6].set_xlabel('t [min]')
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.9)
+        _ = fig.suptitle('Dataset: ' + fm, fontsize=12, weight='bold')
 
 # Plot residual distributions
 ds = 200
@@ -304,32 +313,32 @@ M = 50  # Number of data points in KDE plots
 dc = ['NF', 'fyw_af']
 for idx, fm in enumerate(dc):
     if fm in r[0]:  # Data set exists in first residual
-        plt.figure(60+idx, clear=True)
+        fig: plt.Figure = plt.figure(60 + idx, clear=True)
         for ridx, ri in enumerate(r):
-            plt.subplot(3, 3, ridx + 1)
+            ax: plt.Axes = fig.add_subplot(3, 3, ridx + 1)
             pNF = gaussian_kde(ri[fm][data[fm]['fault_vector'] == 0][::ds])
-            if not fm == 'NF':
-                pF = gaussian_kde(ri[fm][data[fm]['fault_vector'] == 1][::ds])
+
             rmin = np.min([np.min(ri['NF']), np.min(ri[fm]), -1])
             rmax = np.max([np.max(ri['NF']), np.max(ri[fm]), 1])
             r_range = np.arange(0, M) * (rmax - rmin) * 1.1 / (M - 1) + rmin - (rmax - rmin) * 0.05
-            plt.plot(r_range, pNF(r_range), 'b', linewidth=2)
-            if not fm=='NF':
-                plt.plot(r_range, pF(r_range), 'r', linewidth=2)
-            if fm in model.f and FSM[ridx,model.f.index(fm)] == 1:
-                plt.title(f'r{ridx+1}: MSO {ts[ridx]} (*)', fontsize=10, weight='bold')
+            ax.plot(r_range, pNF(r_range), 'b', linewidth=2)
+            if not fm == 'NF':
+                pF = gaussian_kde(ri[fm][data[fm]['fault_vector'] == 1][::ds])
+                ax.plot(r_range, pF(r_range), 'r', linewidth=2)
+            if fm in model.f and FSM[ridx, model.f.index(fm)] == 1:
+                ax.set_title(f'r{ridx+1}: MSO {ts[ridx]} (*)', fontsize=10, weight='bold')
             else:
-                plt.title(f'r{ridx+1}: MSO {ts[ridx]}', fontsize=10, weight='bold')
+                ax.set_title(f'r{ridx+1}: MSO {ts[ridx]}', fontsize=10, weight='bold')
 
-            plt.gca().get_xaxis().set_major_locator(matplotlib.ticker.MaxNLocator(3))
-            plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
-            yl = plt.ylim()
-            plt.plot([-1, -1], [0, 0.3 * yl[1]], 'k--')
-            plt.plot([1, 1], [0, 0.3 * yl[1]], 'k--')
+            ax.get_xaxis().set_major_locator(MaxNLocator(3))
+            ax.get_yaxis().set_major_locator(MaxNLocator(4))
+            yl = ax.get_ylim()
+            ax.plot([-1, -1], [0, 0.3 * yl[1]], 'k--')
+            ax.plot([1, 1], [0, 0.3 * yl[1]], 'k--')
             sns.despine()
-        plt.tight_layout()
-        plt.subplots_adjust(top=0.9)
-        plt.suptitle('Dataset: ' + fm, fontsize=12, weight='bold')
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.9)
+        fig.suptitle('Dataset: ' + fm, fontsize=12, weight='bold')
 
 
 dc = ['NF', 'fyp_im', 'fyw_af', 'fyp_ic', 'fyT_ic']
@@ -351,39 +360,43 @@ for fiIdx, fi in enumerate(np.array(model.f)[fIdx]):
 
 ds = 1000
 for idx, fm in enumerate(dc):
-    plt.figure(80 + idx, clear=True)
-    ax = []
+    fig: plt.Figure = plt.figure(80 + idx, clear=True)
+    ax_list = []
     for fiIdx in np.arange(0, nf):
-        ax.append(plt.subplot(2, 2, fiIdx + 1))
-        plt.plot(data[fm]['time'][::ds] / 60, dx[idx][fiIdx, :][::ds], 'b')
-        plt.gca().get_yaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
-        plt.gca().get_xaxis().set_major_locator(matplotlib.ticker.MaxNLocator(4))
+        ax: plt.Axes = fig.add_subplot(2, 2, fiIdx + 1)
+        ax_list.append(ax)
+        ax.plot(data[fm]['time'][::ds] / 60, dx[idx][fiIdx, :][::ds], 'b')
+        ax.get_yaxis().set_major_locator(MaxNLocator(4))
+        ax.get_xaxis().set_major_locator(MaxNLocator(4))
 
         if fm in model.f and fm == model.f[fIdx[fiIdx]]:
             for t1Idx, t2Idx in zip(data[fm]['fault_idx'][0:-1:2], data[fm]['fault_idx'][1::2]):
                 y1, y2 = plt.ylim()
                 t1 = data[fm]['time'][t1Idx] / 60.0
                 t2 = data[fm]['time'][t2Idx] / 60.0
-                plt.gca().add_patch(mpatches.Rectangle((t1, 0.05), t2 - t1, 0.9, facecolor='0.9', edgecolor='none'))
+                ax.add_patch(mpatches.Rectangle((t1, 0.05), t2 - t1, 0.9, facecolor='0.9', edgecolor='none'))
             perf = C[list(np.array(model.f)[fIdx]).index(fm), fiIdx]
         else:
             perf = np.sum(dx[idx][fiIdx, :] == 0) / len(data[fm]['fault_vector'])
 
-        plt.title(f'{model.f[fIdx[fiIdx]]} (err={(1 - perf) * 100:.1f}%)', fontsize=10)
+        ax.set_title(f'{model.f[fIdx[fiIdx]]} (err={(1 - perf) * 100:.1f}%)', fontsize=10)
         sns.despine()
-    ax[2].set_xlabel('t [min]')
-    ax[3].set_xlabel('t [min]')
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.9)
-    plt.suptitle('Fault isolation: ' + fm, fontweight='bold', fontsize=12)
+    ax_list[2].set_xlabel('t [min]')
+    ax_list[3].set_xlabel('t [min]')
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.9)
+    fig.suptitle('Fault isolation: ' + fm, fontweight='bold', fontsize=12)
 
-plt.figure(100, clear=True)
+fig: plt.Figure = plt.figure(100, clear=True)
+ax: plt.Axes = fig.add_subplot()
 PlotConfusionMatrix(C)
-plt.title('P(fi diag|fj injected)')
-plt.xticks(np.arange(0, nf), np.array(model.f)[fIdx])
-plt.yticks(np.arange(0, nf), np.array(model.f)[fIdx])
-plt.xlabel('Injected fault')
-plt.ylabel('Diagnosed fault')
-_ = plt.title('Fault Isolation Performance Matrix')
+ax.set_title('P(fi diag|fj injected)')
+ax.set_xticks(np.arange(0, nf))
+ax.set_xticklabels(np.array(model.f)[fIdx])
+ax.set_yticks(np.arange(0, nf))
+ax.set_yticklabels(np.array(model.f)[fIdx])
+ax.set_xlabel('Injected fault')
+ax.set_ylabel('Diagnosed fault')
+_ = ax.set_title('Fault Isolation Performance Matrix')
 
 plt.show()
