@@ -59,6 +59,9 @@ pendulum_def['rels'] = [
 
 pendulum = fdt.DiagnosisModel(pendulum_def, name='Pendulum')
 
+def test_mso_on_empty():
+    assert pendulum.MSO() == []
+    assert pendulum.MTES() == []
 
 def test_isolabilityanalysis():
     assert np.all(model.IsolabilityAnalysis() == 

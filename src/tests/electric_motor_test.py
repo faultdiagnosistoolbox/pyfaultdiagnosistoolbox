@@ -4,7 +4,7 @@ import os
 from electricmotor_model import model
 
 msos = model.MSO()
-
+mtes = model.MTES()
 
 def test_msos():
     assert model
@@ -12,6 +12,9 @@ def test_msos():
     assert all([model.IsLowIndex(mi) for mi in msos])
     assert [len(mi) for mi in msos] == [4, 4, 6]
 
+def test_psos():
+    assert [model.IsPSO(mi) for mi in msos]
+    assert [model.IsPSO(mi) for mi in mtes]
 
 def test_integral():
     mso = np.sort(msos[2])
