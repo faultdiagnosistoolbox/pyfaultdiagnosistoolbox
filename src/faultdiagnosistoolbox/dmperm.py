@@ -31,16 +31,6 @@ def srank(A):
     return rr[3]
 
 
-# class EqBlock:
-#     """EqBlock class."""
-#
-#     row = np.array([], dtype=np.int64)
-#     col = np.array([], dtype=np.int64)
-#
-#     def __init__(self, r, c):
-#         """Initializer."""
-#         self.row = r
-#         self.col = c
 @dataclass
 class EqBlock:
     """EqBlock class."""
@@ -48,18 +38,7 @@ class EqBlock:
     row: np.array = np.array([], dtype=np.int64)
     col: np.array = np.array([], dtype=np.int64)
 
-# class DMResult:
-#     """Dulmage-Mendelsohn decomposition base class."""
-#
-#     def __init__(self):
-#         """Initializer."""
-#         self.Mm = EqBlock([], [])
-#         self.M0 = []
-#         self.Mp = EqBlock([], [])
-#         self.rowp = []
-#         self.colp = []
-#         self.M0eqs = []
-#         self.M0vars = []
+
 @dataclass
 class DMResult:
     """Dulmage-Mendelsohn decomposition base class."""
@@ -183,14 +162,14 @@ def PSODecomposition(X):
     return res
 
 
-def IsPSO(X, *args):
+def IsPSO(X, eq=None):
     """Return True if PSO."""
-    if len(args) > 0:
-        eq = args[0]
+    if eq is None:
+        eqs = np.arange(0, X.shape[0])
     else:
-        eq = np.arange(0, X.shape[0])
+        eqs = eq
 
-    dm = GetDMParts(X[eq, :])
+    dm = GetDMParts(X[eqs, :])
     return (len(dm.Mm.row) == 0) and (len(dm.M0) == 0)
 
 
@@ -443,7 +422,7 @@ def MTES(self):
     """Compute set of MTES sets."""
     S = {'eq': [], 'f': [], 'sr': []}
     m = MTES_initModel(self)  # overdetermined or empty
-    if m['sr'] > 0 and len(m['f']) > 0:
+    if not (m is None) and m['sr'] > 0 and len(m['f']) > 0:
         S = MTES_FindMTES(m, 0)
 #    return np.array(S['eq'], dtype=object)
     return S['eq']
@@ -473,11 +452,15 @@ def MTES_initModel(model):
     # m['f'] = list(map(lambda fi: np.argwhere(fi)[0], model.F[ef, :]))
     # m['delrow'] = 0
     # m['e'] = list(map(lambda ei: np.array([ei]), idx))
-    m = {'sr': len(row_over) - len(col_over),
-         'X': model.X[idx, :][:, col_over],
-         'f': list(map(lambda fi: np.argwhere(fi)[0], model.F[ef, :])),
-         'delrow': 0,
-         'e': list(map(lambda ei: np.array([ei]), idx))}
+    if len(row_over) > 0:
+        m = {'sr': len(row_over) - len(col_over),
+             'X': model.X[idx, :][:, col_over],
+             'f': list(map(lambda fi: np.argwhere(fi)[0], model.F[ef, :])),
+             'delrow': 0,
+             'e': list(map(lambda ei: np.array([ei]), idx))}
+    else:
+        m = None
+
     return m
 
 

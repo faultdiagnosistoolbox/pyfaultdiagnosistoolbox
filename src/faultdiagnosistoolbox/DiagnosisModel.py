@@ -252,19 +252,19 @@ class DiagnosisModel(object):
         """Return the structural rank of the incidence matrix for the unknown variables."""
         return dmperm.srank(self.X)
 
-    def IsPSO(self, *args):
+    def IsPSO(self, eq=None):
         """Return True if the model is a PSO set.
 
         Input
         -----
           eq (optional) : Set of equations to analyze. (default: all equations)
         """
-        if len(args) > 0:
-            eq = args[0]
+        if eq is None:
+            eqs = np.arange(0, self.X.shape[0])
         else:
-            eq = np.arange(0, self.X.shape[0])
+            eqs = eq
 
-        dm = dmperm.GetDMParts(self.X[eq, :])
+        dm = dmperm.GetDMParts(self.X[eqs, :])
         return (len(dm.Mm.row) == 0) and (len(dm.M0) == 0)
 
     def Structural(self):
@@ -371,8 +371,6 @@ class DiagnosisModel(object):
           eq : Set of equations to analyze. (default: all equations)
         """
         if eq is None:
-            eq = []
-        if len(eq) == 0:
             eq = np.arange(0, self.X.shape[0])
         return dmperm.IsLowIndex(self.X, eq)
 
@@ -428,7 +426,7 @@ class DiagnosisModel(object):
         """
         return match.Matching(self.X, np.array(eqs))
 
-    def MSOCausalitySweep(self, mso, diffres='int', causality=''):
+    def MSOCausalitySweep(self, mso, diffres='int', causality=None):
         """Determine casuality for MSO set residual generator.
 
         Determine causality for sequential residual generator for
@@ -529,17 +527,17 @@ class DiagnosisModel(object):
             if len(cxIdx) > 0:
                 sys.stdout.write('Removing unknown variables: ')
                 for xi in cxIdx:
-                    sys.stdout.write(self.x[xi] + '  ')
+                    sys.stdout.write(f"{self.x[xi]} ")
                 sys.stdout.write('\n')
             if len(cfIdx) > 0:
                 sys.stdout.write('Removing fault variables: ')
                 for fi in cfIdx:
-                    sys.stdout.write(self.f[fi] + '  ')
+                    sys.stdout.write(f"{self.f[fi]} ")
                 sys.stdout.write('\n')
             if len(czIdx) > 0:
                 sys.stdout.write('Removing known variables: ')
                 for zi in czIdx:
-                    sys.stdout.write(self.z[zi] + '  ')
+                    sys.stdout.write(f"{self.z[zi]} ")
                 sys.stdout.write('\n')
 
         self.X = self.X[eqs, :][:, xIdx]
@@ -579,7 +577,8 @@ class DiagnosisModel(object):
         eqs = np.argwhere(np.any(self.F, axis=1))[:, 0]
         return self.Redundancy(eqs) + 1
 
-    def PlotDM(self, **options):
+#    def PlotDM(self, **options):
+    def PlotDM(self, eqclass=False, fault=False, verbose=False):
         """Plot Dulmage-Mendelsohn decomposition of model structure.
 
         Plots a Dulmage-Mendelsohn decomposition, originally described in
@@ -595,32 +594,34 @@ class DiagnosisModel(object):
           verbose : If True, use full variable names in plot. If not specified, heuristic
                     decides based on model size of variable names should be printed.
         """
-        labelVars = False
-        if 'verbose' in options:
-            labelVars = options['verbose']
-        elif self.X.shape[0] < 40:
-            labelVars = True
-        if 'eqclass' in options:
-            eqclass = options['eqclass']
-        else:
-            eqclass = False
-        if 'fault' in options:
-            fault = options['fault']
-        else:
-            fault = False
-        smplot.PlotDM(self, verbose=labelVars, eqclass=eqclass, fault=fault)
+        # labelVars = False
+        # if 'verbose' in options:
+        #     labelVars = options['verbose']
+        # elif self.X.shape[0] < 40:
+        #     labelVars = True
+        # if 'eqclass' in options:
+        #     eqclass = options['eqclass']
+        # else:
+        #     eqclass = False
+        # if 'fault' in options:
+        #     fault = options['fault']
+        # else:
+        #     fault = False
+        smplot.PlotDM(self, verbose=verbose, eqclass=eqclass, fault=fault)
 
-    def PlotModel(self, **options):
+    # def PlotModel(self, **options):
+    def PlotModel(self, verbose=False):
         """Plot the model structure."""
-        labelVars = False
-        if 'verbose' in options:
-            labelVars = options['verbose']
-        elif (self.nx() + self.nf() + self.nz()) < 40:
-            labelVars = True
+        # labelVars = False
+        # if 'verbose' in options:
+        #     labelVars = options['verbose']
+        # elif (self.nx() + self.nf() + self.nz()) < 40:
+        #     labelVars = True
 
-        smplot.PlotModel(self, verbose=labelVars)
+        smplot.PlotModel(self, verbose=verbose)
 
-    def PlotMatching(self, Gamma, **options):
+#    def PlotMatching(self, Gamma, **options):
+    def PlotMatching(self, Gamma, verbose=False):
         """Plot a matching.
 
         Plot the structure in an upper-triangular
@@ -636,8 +637,8 @@ class DiagnosisModel(object):
 
         # Determine if axis should be labeled
         labelVars = False
-        if 'verbose' in options:
-            labelVars = options['verbose']
+        if verbose:
+            labelVars = verbose
         elif len(q) < 40:
             labelVars = True
         smplot.PlotMatching(self, Gamma, verbose=labelVars)
