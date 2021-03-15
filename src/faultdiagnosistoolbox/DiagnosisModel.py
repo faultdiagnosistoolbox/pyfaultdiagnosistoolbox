@@ -128,27 +128,23 @@ class DiagnosisModel(object):
             if 'x' in modeldef:
                 self.x = modeldef['x']
             else:
-                self.x = list(map(lambda x: "x" + np.str(x + 1),
-                                  np.arange(0, self.X.shape[1])))
+                self.x = [f"x{x + 1}" for x in range(self.X.shape[1])]
             if 'f' in modeldef:
                 self.f = modeldef['f']
             else:
-                self.f = list(map(lambda x: "f" + np.str(x + 1),
-                                  np.arange(0, self.F.shape[1])))
+                self.f = [f"f{x + 1}" for x in range(self.F.shape[1])]
             if 'z' in modeldef:
                 self.z = modeldef['z']
             else:
-                self.z = list(map(lambda x: "z" + np.str(x + 1),
-                                  np.arange(0, self.Z.shape[1])))
+                self.z = [f"z{x + 1}" for x in range(self.Z.shape[1])]
 
-            self.e = list(map(lambda x: "e" + np.str(x + 1),
-                              np.arange(0, self.ne())))
+            self.e = [f"e{x + 1}" for x in range(self.ne())]
         else:
             print('Model definition type ' + modeldef['type'] +
                   ' is not supported (yet)')
 
         if modeldef['type'] == 'Symbolic':
-            self.syme = np.array(_ToEquations(modeldef['rels']), dtype=np.object)
+            self.syme = np.array(_ToEquations(modeldef['rels']), dtype=object)
 
         if np.any(np.sum(self.X > 1, 0) > 1):
             print("The model has higher order derivatives, " +
@@ -331,7 +327,7 @@ class DiagnosisModel(object):
             print("Error: Pantelides can only be called for square, " +
                   "exactly determined models")
             return None
-        der = np.zeros((ne, 1), dtype=np.int)
+        der = np.zeros((ne, 1), dtype=int)
         X[X == 3] = 1
         X = X - 1
         cmatching = False
@@ -761,7 +757,7 @@ class DiagnosisModel(object):
         Fs = np.zeros((ns, nf), np.int64)
         Zs = np.zeros((ns, nz + ns), np.int64)
 
-        fs = np.zeros(ns).astype(np.bool)
+        fs = np.zeros(ns, dtype=bool)
         for sIdx, si in enumerate(s):
             Xs[sIdx, si] = 1
             Zs[sIdx, sIdx + nz] = 1
