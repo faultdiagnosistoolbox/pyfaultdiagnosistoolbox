@@ -233,6 +233,10 @@ def GenerateResidualEquations(model, resEq, diffres, language,
                 genCode = ["%s = %s-state['%s']%s %s %s" % (
                     resvar, iv, iv, CodeEOL(language),
                     CodeComment(language), np.array(model.e)[resEq])]
+            elif language == "C":
+                genCode = ['%s = %s-state->%s%s %s %s' % (
+                    resvar, iv, iv, CodeEOL(language),
+                    CodeComment(language), np.array(model.e)[resEq])]
             else:
                 genCode = ['%s = %s-state.%s%s %s %s' % (
                     resvar, iv, iv, CodeEOL(language),
