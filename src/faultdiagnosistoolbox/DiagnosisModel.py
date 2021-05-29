@@ -471,7 +471,7 @@ class DiagnosisModel(object):
                     res.append(Gamma.matchType)
                 elif Gamma.matchType == 'algebraic':
                     res.append('der')
-        if len(causality) > 0:
+        if causality is not None:
             res = np.array(list(map(lambda c: c == causality or c == 'algebraic', res)))
         return res
 
