@@ -14,7 +14,9 @@ import platform
 
 if not('Engine' in sys.path):
     sys.path.append(os.getcwd() + '/Engine')
-os.chdir('Engine')
+
+if not os.getcwd().endswith("Engine"):
+    os.chdir('Engine')
 
 import batchfaultisolation as bfi
 from diagutil import loadmat, RunResgenOnDataSets, Timer, PlotConfusionMatrix
