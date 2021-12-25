@@ -27,8 +27,10 @@ def dmperm(A):
 
 def srank(A):
     """Compute structural rank of matrix."""
-    _, _, _, _, rr, _ = dmperm(A)
-    return rr[3]
+    # _, _, _, _, rr, _ = dmperm(A)
+    #    return rr[3]
+    _, _, _, _, _, rr = dmperm(A)
+    return np.sum(np.diff(rr[:-1]))
 
 
 @dataclass

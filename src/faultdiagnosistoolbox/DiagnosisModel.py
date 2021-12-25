@@ -574,7 +574,7 @@ class DiagnosisModel(object):
         return self.Redundancy(eqs) + 1
 
 #    def PlotDM(self, **options):
-    def PlotDM(self, eqclass=False, fault=False, verbose=False):
+    def PlotDM(self, ax=None, eqclass=False, fault=False, verbose=False):
         """Plot Dulmage-Mendelsohn decomposition of model structure.
 
         Plots a Dulmage-Mendelsohn decomposition, originally described in
@@ -603,10 +603,13 @@ class DiagnosisModel(object):
         #     fault = options['fault']
         # else:
         #     fault = False
-        smplot.PlotDM(self, verbose=verbose, eqclass=eqclass, fault=fault)
+
+        if not ax:
+            ax = plt.gca()
+        smplot.PlotDM(self, ax=ax, verbose=verbose, eqclass=eqclass, fault=fault)
 
     # def PlotModel(self, **options):
-    def PlotModel(self, verbose=False):
+    def PlotModel(self, ax=None, verbose=False):
         """Plot the model structure."""
         # labelVars = False
         # if 'verbose' in options:
@@ -614,7 +617,10 @@ class DiagnosisModel(object):
         # elif (self.nx() + self.nf() + self.nz()) < 40:
         #     labelVars = True
 
-        smplot.PlotModel(self, verbose=verbose)
+        if not ax:
+            ax = plt.gca()
+
+        smplot.PlotModel(self, ax=ax, verbose=verbose)
 
 #    def PlotMatching(self, Gamma, **options):
     def PlotMatching(self, Gamma, verbose=False):
@@ -838,12 +844,12 @@ class DiagnosisModel(object):
                if np.argwhere(self.F[:, fidx])[:, 0] not in dm]
         return df, ndf
 
-    def IsolabilityAnalysis(self, plot=False, permute=True, causality='mixed'):
+    def IsolabilityAnalysis(self, ax=None, permute=True, causality='mixed'):
         """Perform structural single fault isolability analysis of model.
 
         Inputs
         ------
-          plot      : If True, plot the isolability matrix
+          ax        : If not None, plot the isolability matrix in the specified axis
           permute   : If True, permute the fault variables such that the
                       isolability matrix gets a block structure for easier
                       interpretation when plotted. Does not affect the output
@@ -889,40 +895,43 @@ class DiagnosisModel(object):
             # Decouple fi
             fieqs = [x[0] for x in np.argwhere(self.F[:, fi] == 0)]
             X = self.X[fieqs, :]
-            plusRow = MplusCausal(X)
-            fisolrows = [fieqs[ei] for ei in plusRow]
+            plus_row = MplusCausal(X)
+            fisolrows = [fieqs[ei] for ei in plus_row]
             idx = [fj for fj in np.arange(0, nf) if np.any(self.F[fisolrows, :],
                                                            axis=0)[fj]]
             im[idx, fi] = 0
 
-        if plot:
+        if ax:
             if permute:
                 p, q, _, _, _, _ = dmperm.dmperm(im)
             else:
                 p = np.arange(0, nf)
                 q = p
-            plt.spy(im[p, :][:, q], markersize=8, marker="o", color="b")
-            plt.xticks(np.arange(0, nf), [self.f[fi] for fi in p])
-            plt.yticks(np.arange(0, nf), [self.f[fi] for fi in p])
+            ax.spy(im[p, :][:, q], markersize=8, marker="o", color="b")
+            ax.set_xticks(np.arange(0, nf))
+            ax.set_xticklabels([self.f[fi] for fi in p])
+            ax.set_yticks(np.arange(0, nf))
+            ax.set_yticklabels([self.f[fi] for fi in p])
+
             if len(self.name) > 0:
-                titleString = "Isolability matrix for '%s'" % self.name
+                title_string = f"Isolability matrix for '{self.name}'"
             else:
-                titleString = "Isolability matrix"
+                title_string = "Isolability matrix"
             if causality == 'der':
-                titleString = "%s (derivative causality)" % titleString
+                title_string = f"{title_string} (derivative causality)"
             elif causality == 'int':
-                titleString = "%s (integral causality)" % titleString
-            plt.title(titleString)
-            plt.gca().xaxis.tick_bottom()
+                title_string = f"{title_string} (integral causality)"
+            ax.set_title(title_string)
+            ax.xaxis.tick_bottom()
         return im
 
-    def IsolabilityAnalysisArrs(self, arrs, permute=True, plot=False):
+    def IsolabilityAnalysisArrs(self, arrs, permute=True, ax=None):
         """Perform structural single fault isolability analysis of a set of ARRs.
 
         Inputs
         ------
           arrs      : List of ARRs, e.g., list of MSO sets
-          plot      : If True, plot the isolability matrix
+          ax        : If not None, plot the isolability matrix in the specified axis
           permute   : If True, permute the fault variables such that the
                       isolability matrix gets a block structure for easier
                       interpretation when plotted. Does not affect the output
@@ -934,15 +943,15 @@ class DiagnosisModel(object):
                       from fault j, 0 otherwise
         """
         FSM = self.FSM(arrs)
-        return self.IsolabilityAnalysisFSM(FSM, permute=permute, plot=plot)
+        return self.IsolabilityAnalysisFSM(FSM, permute=permute, ax=ax)
 
-    def IsolabilityAnalysisFSM(self, FSM, permute=True, plot=False):
+    def IsolabilityAnalysisFSM(self, FSM, permute=True, ax=None):
         """Perform structural single fault isolability analysis of a fault sensitivity matrix (FSM).
 
         Inputs
         ------
           FSM       : Fault sensitivity matrix
-          plot      : If True, plot the isolability matrix
+          ax        : If not None, plot the isolability matrix in the specified axis
           permute   : If True, permute the fault variables such that the
                       isolability matrix gets a block structure for easier
                       interpretation when plotted. Does not affect the output
@@ -961,21 +970,22 @@ class DiagnosisModel(object):
             if len(zIdx) > 0:
                 im[zIdx[:, 0], zIdx[:, 1]] = 0
 
-        if plot:
+        if ax:
             if permute:
                 p, q, _, _, _, _ = dmperm.dmperm(im)
             else:
                 p = np.arange(0, nf)
                 q = p
-            plt.spy(im[p, :][:, q], markersize=10, marker='o')
-            plt.xticks(np.arange(0, self.nf()), self.f)
-            plt.yticks(np.arange(0, self.nf()), self.f)
-            plt.gca().xaxis.tick_bottom()
+            ax.spy(im[p, :][:, q], markersize=10, marker='o')
+            ax.set_xticks(np.arange(0, self.nf()))
+            ax.set_xticklabels(self.f)
+            ax.set_yticks(np.arange(0, self.nf()))
+            ax.set_yticklabels(self.f)
+            ax.xaxis.tick_bottom()
             if len(self.name) > 0:
-                plt.title("Isolability matrix for a given FSM in '" +
-                          self.name + "'")
+                ax.set_title("Isolability matrix for a given FSM in '" + self.name + "'")
             else:
-                plt.title('Isolability matrix for a given FSM')
+                ax.set_title('Isolability matrix for a given FSM')
         return im
 
     def SeqResGen(self, Gamma, resEq, name, diffres='int', language='Python',

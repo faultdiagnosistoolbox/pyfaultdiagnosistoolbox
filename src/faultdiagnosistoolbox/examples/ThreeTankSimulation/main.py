@@ -20,21 +20,21 @@ model_params = {'Rv1': 1, 'Rv2': 1, 'Rv3': 1, 'CT1': 1, 'CT2': 1, 'CT3': 1}
 model.Lint()
 
 # Plot model
-plt.figure(10)
+_, ax = plt.subplots(num=10, clear=True)
 model.PlotModel()
 
 # Isolability analysis
-plt.figure(20)
-model.IsolabilityAnalysis(plot=True)
+_, ax = plt.subplots(num=20, clear=True)
+model.IsolabilityAnalysis(ax=ax)
 
-plt.figure(21)
-model.IsolabilityAnalysis(plot=True, causality='int')
+_, ax = plt.subplots(num=21, clear=True)
+model.IsolabilityAnalysis(ax=ax, causality='int')
 
-plt.figure(22)
-model.IsolabilityAnalysis(plot=True, causality='der')
+_, ax = plt.subplots(num=22, clear=True)
+model.IsolabilityAnalysis(ax=ax, causality='der')
 
-plt.figure(23)
-model.PlotDM(fault=True, eqclass=True)
+_, ax = plt.subplots(num=23, clear=True)
+model.PlotDM(ax=ax, fault=True, eqclass=True)
 
 # Compute MSO amd MTES sets
 msos = model.MSO()
@@ -86,48 +86,42 @@ for k in range(len(sim)):
 
 
 # Plot fault free and Rv1 scenarios
-plt.figure(40, clear=True)
-plt.subplot(3, 1, 1)
-plt.plot(sim[0].t, sim[0].z0[:, 0], 'b', label='p1')
-plt.plot(sim[0].t, ref(sim[0].t), 'b--', label='p1ref')
-plt.plot(sim[0].t, sim[0].z0[:, 1], 'r', label='p2')
-plt.plot(sim[0].t, sim[0].z0[:, 2], 'g', label='p3')
-plt.ylabel('Tank water pressure')
-plt.title('Fault free simulation (no noise)')
-plt.legend()
+_, ax = plt.subplots(3, 1, num=40, clear=True)
+ax[0].plot(sim[0].t, sim[0].z0[:, 0], 'b', label='p1')
+ax[0].plot(sim[0].t, ref(sim[0].t), 'b--', label='p1ref')
+ax[0].plot(sim[0].t, sim[0].z0[:, 1], 'r', label='p2')
+ax[0].plot(sim[0].t, sim[0].z0[:, 2], 'g', label='p3')
+ax[0].set_ylabel('Tank water pressure')
+ax[0].set_title('Fault free simulation (no noise)')
+ax[0].legend()
 sns.despine()
 
-plt.subplot(3, 1, 2)
-plt.plot(sim[0].t, sim[0].z0[:, 3])
-plt.ylabel('q0')
+ax[1].plot(sim[0].t, sim[0].z0[:, 3])
+ax[1].set_ylabel('q0')
 sns.despine()
 
-plt.subplot(3, 1, 3)
-plt.plot(sim[0].t, sim[0].f)
-plt.ylabel('Fault signal')
-plt.xlabel('t [s]')
+ax[2].plot(sim[0].t, sim[0].f)
+ax[2].set_ylabel('Fault signal')
+ax[2].set_xlabel('t [s]')
 sns.despine()
 
-plt.figure(41, clear=True)
-plt.subplot(3, 1, 1)
-plt.plot(sim[1].t, sim[1].z0[:, 0], 'b', label='p1')
-plt.plot(sim[1].t, ref(sim[1].t), 'b--', label='p1ref')
-plt.plot(sim[1].t, sim[1].z0[:, 1], 'r', label='p2')
-plt.plot(sim[1].t, sim[1].z0[:, 2], 'g', label='p3')
-plt.ylabel('Tank water pressure')
-plt.legend()
-plt.title('Fault scenario Rv1  (without noise)')
+_, ax = plt.subplots(3, 1, num=41, clear=True)
+ax[0].plot(sim[1].t, sim[1].z0[:, 0], 'b', label='p1')
+ax[0].plot(sim[1].t, ref(sim[1].t), 'b--', label='p1ref')
+ax[0].plot(sim[1].t, sim[1].z0[:, 1], 'r', label='p2')
+ax[0].plot(sim[1].t, sim[1].z0[:, 2], 'g', label='p3')
+ax[0].set_ylabel('Tank water pressure')
+ax[0].legend()
+ax[0].set_title('Fault scenario Rv1  (without noise)')
 sns.despine()
 
-plt.subplot(3, 1, 2)
-plt.plot(sim[1].t, sim[1].z0[:, 3])
-plt.ylabel('q0')
+ax[1].plot(sim[1].t, sim[1].z0[:, 3])
+ax[1].set_ylabel('q0')
 sns.despine()
 
-plt.subplot(3, 1, 3)
-plt.plot(sim[1].t, sim[1].f)
-plt.ylabel('Fault signal')
-plt.xlabel('t [s]')
+ax[2].plot(sim[1].t, sim[1].f)
+ax[2].set_ylabel('Fault signal')
+ax[2].set_xlabel('t [s]')
 sns.despine()
 
 
@@ -165,15 +159,15 @@ for resName in ['ResGen1', 'ResGen2', 'ResGen3']:
         print('Failure!')
 
 # Plot diagnosis system properties
-plt.figure(50, clear=True)
-ax = plt.subplot(1, 2, 1)
-FSM = model.FSM([mso2, mso2, mso1], plot=True)
-ax.set_yticklabels([f"r{k + 1}" for k in range(3)])
-plt.title('Fault Signature Matrix')
+_, ax = plt.subplots(1, 2, num=50, clear=True)
+FSM = model.FSM([mso2, mso2, mso1])
+ax[0].spy(FSM, markersize=10, marker="o")
+ax[0].set_yticks(range(3))
+ax[0].set_yticklabels([f"r{k + 1}" for k in range(3)])
+ax[0].set_title('Fault Signature Matrix')
 
-plt.subplot(1, 2, 2)
-model.IsolabilityAnalysisFSM(FSM, plot=True)
-plt.title('Isolability matrix')
+model.IsolabilityAnalysisFSM(FSM, ax=ax[1])
+ax[1].set_title('Isolability matrix')
 
 # %% Simulate residual generators for all test cases and plot results
 import ResGen1
@@ -202,22 +196,19 @@ for fi in range(m):
     r3[fi, 0] = 0.0
 
 # Plot some results
-plt.figure(60)
-plt.subplot(3, 1, 1)
+fig, ax = plt.subplots(3, 1, num=60, clear=True)
 for ri in range(m):
-    plt.plot(sim[0].t, r1[ri, :])
+    ax[0].plot(sim[0].t, r1[ri, :])
 sns.despine()
-plt.title('r1 (seq/derivative/discrete)')
+ax[0].set_title('r1 (seq/derivative/discrete)')
 
-plt.subplot(3, 1, 2)
 for ri in range(m):
-    plt.plot(sim[0].t, r2[ri, :])
+    ax[1].plot(sim[0].t, r2[ri, :])
 sns.despine()
-plt.title('r2 (seq/integral/discrete)')
+ax[1].set_title('r2 (seq/integral/discrete)')
 
-plt.subplot(3, 1, 3)
 for ri in range(m):
-    plt.plot(sim[0].t, r3[ri, :])
+    ax[2].plot(sim[0].t, r3[ri, :])
 sns.despine()
-plt.title('r3 (seq/mixed/discrete)')
-plt.tight_layout()
+ax[2].set_title('r3 (seq/mixed/discrete)')
+fig.tight_layout()

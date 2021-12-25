@@ -47,15 +47,18 @@ def SingleFaultIsolability(res, fsm):
     return dx
 
 
-def PlotConfusionMatrix(C):
+def PlotConfusionMatrix(C, ax=None):
     """Plot a confusion matrix in a suitable colormap."""
+
+    if not ax:
+        ax = plt.gca()
+
     nf = C.shape[0]
-    plt.imshow(C, cmap=summer_cmap)
+    ax.imshow(C, cmap=summer_cmap)
     for fi in range(nf):
         for fj in range(nf):
-            plt.text(fi, fj, '%.1f' % (C[fj, fi]*100),
+            ax.text(fi, fj, '%.1f' % (C[fj, fi]*100),
                      ha='center', va='center', color='k')
-    ax = plt.gca()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 

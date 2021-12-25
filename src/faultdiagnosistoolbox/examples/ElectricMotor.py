@@ -3,11 +3,11 @@ import faultdiagnosistoolbox as fdt
 import sympy as sym
 
 # %% Define model object
-model_def= {'type': 'Symbolic',
-           'x': ['dIc', 'dw', 'dth', 'Ic', 'w', 'th', 'alpha', 'DT', 'Tm', 'Tl'],
-           'f': ['fR', 'fi', 'fw', 'fD'],
-           'z': ['V', 'yi', 'yw', 'yd'],
-           'parameters': ['Ka', 'b', 'R', 'J', 'L']}
+model_def = {'type': 'Symbolic',
+             'x': ['dIc', 'dw', 'dth', 'Ic', 'w', 'th', 'alpha', 'DT', 'Tm', 'Tl'],
+             'f': ['fR', 'fi', 'fw', 'fD'],
+             'z': ['V', 'yi', 'yw', 'yd'],
+             'parameters': ['Ka', 'b', 'R', 'J', 'L']}
 
 sym.var(model_def['x'])
 sym.var(model_def['f'])
@@ -33,25 +33,25 @@ model = fdt.DiagnosisModel(model_def, name='Electric Motor')
 model.Lint()
 
 # Plot model structure
-plt.figure(10)
-model.PlotModel()
+_, ax = plt.subplots(num=10)
+model.PlotModel(ax=ax)
 
 # Plot isolability properties and the Dulmage-Mendelsoh decomposition,
 # including a canonical form of the over determined part
-plt.figure(20)
-model.IsolabilityAnalysis(plot=True, causality='der')
-plt.title('Isolability with derivative causality')
+_, ax = plt.subplots(num=20)
+model.IsolabilityAnalysis(ax=ax, causality='der')
+ax.set_title('Isolability with derivative causality')
 
-plt.figure(21)
-model.IsolabilityAnalysis(plot=True, causality='int')
-plt.title('Isolability with integral causality')
+_, ax = plt.subplots(num=21)
+model.IsolabilityAnalysis(ax=ax, causality='int')
+ax.set_title('Isolability with integral causality')
 
-plt.figure(22)
-model.IsolabilityAnalysis(plot=True)
-plt.title('Isolability with mixed causality')
+_, ax = plt.subplots(num=22)
+model.IsolabilityAnalysis(ax=ax)
+ax.set_title('Isolability with mixed causality')
 
-plt.figure(24)
-model.PlotDM(fault=True, eqclass=True)
+_, ax = plt.subplots(num=23)
+model.PlotDM(fault=True, eqclass=True, ax=ax, verbose=True)
 
 # Residual generator design
 # Compute set of MSO sets

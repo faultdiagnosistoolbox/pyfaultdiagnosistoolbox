@@ -13,48 +13,48 @@ import faultdiagnosistoolbox as fdt
 
 # %% Define the model structure
 model_def = {'type': 'MatrixStruc',
-            'X': [[0, 0, 0, 0, 1, 0, 0],
-                  [0, 0, 0, 0, 0, 0, 1],
-                  [0, 0, 0, 0, 0, 1, 0],
-                  [1, 0, 0, 0, 1, 0, 1],
-                  [0, 1, 0, 0, 0, 1, 0],
-                  [1, 1, 1, 0, 0, 0, 0],
-                  [1, 1, 0, 1, 0, 0, 0],
-                  [0, 0, 1, 0, 0, 0, 0],
-                  [0, 0, 1, 1, 0, 0, 0],
-                  [0, 0, 0, 1, 0, 0, 0]],
-            'F': [[1, 0, 0, 0],
-                  [0, 1, 0, 0],
-                  [0, 0, 0, 1],
-                  [0, 0, 0, 0],
-                  [0, 0, 1, 0],
-                  [0, 0, 0, 0],
-                  [0, 0, 0, 0],
-                  [0, 0, 0, 0],
-                  [0, 0, 0, 0],
-                  [0, 0, 0, 0]],
-            'Z': [[0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0],
-                  [1, 0, 0],
-                  [0, 1, 0],
-                  [0, 0, 1]]}
+             'X': [[0, 0, 0, 0, 1, 0, 0],
+                   [0, 0, 0, 0, 0, 0, 1],
+                   [0, 0, 0, 0, 0, 1, 0],
+                   [1, 0, 0, 0, 1, 0, 1],
+                   [0, 1, 0, 0, 0, 1, 0],
+                   [1, 1, 1, 0, 0, 0, 0],
+                   [1, 1, 0, 1, 0, 0, 0],
+                   [0, 0, 1, 0, 0, 0, 0],
+                   [0, 0, 1, 1, 0, 0, 0],
+                   [0, 0, 0, 1, 0, 0, 0]],
+             'F': [[1, 0, 0, 0],
+                   [0, 1, 0, 0],
+                   [0, 0, 0, 1],
+                   [0, 0, 0, 0],
+                   [0, 0, 1, 0],
+                   [0, 0, 0, 0],
+                   [0, 0, 0, 0],
+                   [0, 0, 0, 0],
+                   [0, 0, 0, 0],
+                   [0, 0, 0, 0]],
+             'Z': [[0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0],
+                   [1, 0, 0],
+                   [0, 1, 0],
+                   [0, 0, 1]]}
 
 model = fdt.DiagnosisModel(model_def, name='Example from Commault et.al')
 
 model.Lint()
 
 # Plot model structure
-plt.figure(10)
-model.PlotModel()
+_, ax = plt.subplots(num=10)
+model.PlotModel(ax=ax, verbose=True)
 
 # Perform isolability analysis
-plt.figure(20)
-model.IsolabilityAnalysis(plot=True);
+_, ax = plt.subplots(num=20)
+model.IsolabilityAnalysis(ax=ax)
 
 # Perform sensor placement analysis
 sensSets, _ = model.SensorPlacementIsolability()
@@ -64,7 +64,7 @@ print(f"Found {len(sensSets)} sensor sets")
 # Add first sensor set and redo isolability analysis
 model2 = model.copy()
 model2.AddSensors(sensSets[0])
-plt.figure(30)
-_ = model2.IsolabilityAnalysis(plot=True)
+_, ax = plt.subplots(num=30)
+_ = model2.IsolabilityAnalysis(ax=ax)
 
 plt.show()

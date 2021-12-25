@@ -30,22 +30,22 @@ model = VEP4Engine.model
 model.Lint()
 
 # Plot the structural model
-plt.figure(10, clear=True)
-model.PlotModel(verbose=False)
+_, ax = plt.subplots(num=10, clear=True)
+model.PlotModel(ax=ax, verbose=False)
 
 # Plot isolability properties and the extended Dulmage-Mendelsohn
 # decomposition with equivalence classes for the over-determined part
-plt.figure(20, clear=True)
-_ = model.IsolabilityAnalysis(plot=True)
+_, ax = plt.subplots(num=20, clear=True)
+_ = model.IsolabilityAnalysis(ax=ax)
 
-plt.figure(21, clear=True)
-_ = model.IsolabilityAnalysis(plot=True, causality='int')
+_, ax = plt.subplots(num=21, clear=True)
+_ = model.IsolabilityAnalysis(ax=ax, causality='int')
 
-plt.figure(22, clear=True)
-_ = model.IsolabilityAnalysis(plot=True, causality='der')
+_, ax = plt.subplots(num=22, clear=True)
+_ = model.IsolabilityAnalysis(ax=ax, causality='der')
 
-plt.figure(23)
-_ = model.PlotDM(fault=True, eqclass=True)
+_, ax = plt.subplots(num=23, clear=True)
+_ = model.PlotDM(ax=ax, fault=True, eqclass=True)
 
 # MSO sets and test selection
 print("Searching for MSO sets ...")
@@ -83,7 +83,6 @@ ax[0].set_yticklabels([f"MSO {k}" for k in ts])
 ax[0].get_xaxis().set_ticks_position('bottom')
 ax[0].set_title('Fault Signature Matrix')
 
-plt.sca(ax[1])
 IM = model.IsolabilityAnalysisArrs([msos[ti] for ti in ts])
 ax[1].spy(IM[fIdx, :][:, fIdx], markersize=6, marker="o", color="b")
 ax[1].set_xticks(range(len(fIdx)))

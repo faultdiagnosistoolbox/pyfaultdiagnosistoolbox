@@ -6,65 +6,64 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 
-def PlotModel(model, **options):
+def PlotModel(model, ax, **options):
     """Plot model structure."""
-    labelVars = False
+    label_vars = False
     if 'verbose' in options:
-        labelVars = options['verbose']
+        label_vars = options['verbose']
     elif (model.nx() + model.nf() + model.nz()) < 40:
-        labelVars = True
+        label_vars = True
 
     X = model.X
     F = model.F
     Z = model.Z
 
-    plt.spy(np.concatenate((X == 1, np.zeros(F.shape), np.zeros(Z.shape)),
-                           axis=1),
-            markersize=4, marker="o", color="b")
-    plt.spy(np.concatenate((np.zeros(X.shape), F, np.zeros(Z.shape)),
-                           axis=1),
-            markersize=4, marker="o", color="r")
-    plt.spy(np.concatenate((np.zeros(X.shape), np.zeros(F.shape), Z),
-                           axis=1),
-            markersize=4, marker="o", color="k")
+    ax.spy(np.concatenate((X == 1, np.zeros(F.shape), np.zeros(Z.shape)), axis=1),
+           markersize=4, marker="o", color="b")
+    ax.spy(np.concatenate((np.zeros(X.shape), F, np.zeros(Z.shape)), axis=1),
+           markersize=4, marker="o", color="r")
+    ax.spy(np.concatenate((np.zeros(X.shape), np.zeros(F.shape), Z), axis=1),
+           markersize=4, marker="o", color="k")
 
     if model.nx() < 50:
-        fSize = 12
+        font_size = 12
     elif model.nx() < 75:
-        fSize = 10
+        font_size = 10
     else:
-        fSize = 8
+        font_size = 8
 
     for idx, val in enumerate(np.argwhere(X == 2)):
-        plt.text(val[1], val[0], 'I', color="b", fontsize=fSize,
-                 horizontalalignment="center", verticalalignment="center")
+        ax.text(val[1], val[0], 'I', color="b", fontsize=font_size,
+                horizontalalignment="center", verticalalignment="center")
     for idx, val in enumerate(np.argwhere(X == 3)):
-        plt.text(val[1], val[0], 'D', color="b", fontsize=fSize,
-                 horizontalalignment="center", verticalalignment="center")
+        ax.text(val[1], val[0], 'D', color="b", fontsize=font_size,
+                horizontalalignment="center", verticalalignment="center")
 
     # Plot axis ticks
-    if labelVars:
-        plt.xticks(np.arange(0, model.nx() + model.nf() + model.nz()),
-                   model.x + model.f + model.z, rotation='vertical')
+    if label_vars:
+        ax.set_xticks(np.arange(0, model.nx() + model.nf() + model.nz()))
+        ax.set_xticklabels(model.x + model.f + model.z, rotation='vertical')
         bottomMargin = 0.1 + (np.max(list(map(lambda v: len(v), model.x))) - 3) * 0.1 / 6  # ad-hoc expression
-        plt.subplots_adjust(bottom=np.max([0.1, bottomMargin]))
-        plt.yticks(np.arange(0, model.X.shape[0]), model.e)
+        # plt.subplots_adjust(bottom=np.max([0.1, bottomMargin]))
+        ax.set_yticks(np.arange(0, model.X.shape[0]))
+        ax.set_yticklabels(model.e)
 
     # Plot variable set divisors
-    plt.plot([model.nx() - 1 + 0.5, model.nx() - 1 + .5], [0, model.ne() - 1],
-             color="k", linestyle="dashed")
-    plt.plot([model.nx() + model.nf() - 1 + 0.5, model.nx() + model.nf() - 1 + .5],
-             [0, model.ne() - 1], color="k", linestyle="dashed")
+    ax.plot([model.nx() - 1 + 0.5, model.nx() - 1 + .5], [0, model.ne() - 1],
+            color="k", linestyle="dashed")
+    ax.plot([model.nx() + model.nf() - 1 + 0.5, model.nx() + model.nf() - 1 + .5],
+            [0, model.ne() - 1], color="k", linestyle="dashed")
 
     # Change plot range
     # plt.axis([-0.7,model.X.shape[1]-0.3,model.X.shape[0]-0.3, -0.7])
 
     if len(model.name) > 0:
-        plt.title(model.name)
+        ax.set_title(model.name)
 
-    plt.gca().xaxis.tick_bottom()
-    plt.xlabel('Variables')
-    plt.ylabel('Equations')
+    # plt.gca().xaxis.tick_bottom()
+    ax.xaxis.tick_bottom()
+    ax.set_xlabel('Variables')
+    ax.set_ylabel('Equations')
 
 
 def PlotMatching(model, Gamma, **options):
@@ -134,14 +133,14 @@ def PlotMatching(model, Gamma, **options):
     plt.ylabel('Equations')
 
 
-def PlotDM(model, **options):
+def PlotDM(model, ax, **options):
     """Plot Dulmage-Mendelsohn decomposition."""
     X = model.X
-    labelVars = False
+    label_vars = False
     if 'verbose' in options:
-        labelVars = options['verbose']
+        label_vars = options['verbose']
     elif X.shape[0] < 40:
-        labelVars = True
+        label_vars = True
     if 'eqclass' in options:
         eqclass = options['eqclass']
     else:
@@ -181,24 +180,26 @@ def PlotDM(model, **options):
         dm.colp[pcolstart:] = colp
 
     if model.nx() < 50:
-        fSize = 12
+        font_size = 12
     elif model.nx() < 75:
-        fSize = 10
+        font_size = 10
     else:
-        fSize = 8
-    plt.spy(X[dm.rowp, :][:, dm.colp] == 1,
+        font_size = 8
+    ax.spy(X[dm.rowp, :][:, dm.colp] == 1,
             markersize=4, marker="o")
     for idx, val in enumerate(np.argwhere(X[dm.rowp, :][:, dm.colp] == 3)):
-        plt.text(val[1], val[0] + 0.15, 'D', color="b", fontsize=fSize,
+        ax.text(val[1], val[0] + 0.15, 'D', color="b", fontsize=font_size,
                  horizontalalignment="center", verticalalignment="center")
 
     for idx, val in enumerate(np.argwhere(X[dm.rowp, :][:, dm.colp] == 2)):
-        plt.text(val[1], val[0] + 0.15, 'I', color="b", fontsize=fSize,
+        ax.text(val[1], val[0] + 0.15, 'I', color="b", fontsize=font_size,
                  horizontalalignment="center", verticalalignment="center")
 
-    if labelVars:
-        plt.xticks(np.arange(0, X.shape[1]), dm.colp)
-        plt.yticks(np.arange(0, X.shape[0]), dm.rowp)
+    if label_vars:
+        ax.set_xticks(np.arange(0, X.shape[1]))
+        ax.set_xticklabels(dm.colp)
+        ax.set_yticks(np.arange(0, X.shape[0]))
+        ax.set_yticklabels(dm.rowp)
 
     if len(dm.Mm.row) > 0:
         r = len(dm.Mm.row)
@@ -207,7 +208,7 @@ def PlotDM(model, **options):
         x2 = x1 + c
         y1 = -0.5
         y2 = y1 + r
-        plt.plot([x1, x1, x2, x2, x1], [y1, y2, y2, y1, y1], 'b')
+        ax.plot([x1, x1, x2, x2, x1], [y1, y2, y2, y1, y1], 'b')
 
     # Plot exactly determined part
     r = len(dm.Mm.row)
@@ -218,7 +219,7 @@ def PlotDM(model, **options):
         x2 = x1 + n
         y1 = r - 0.5
         y2 = y1 + n
-        plt.plot([x1, x1, x2, x2, x1], [y1, y2, y2, y1, y1], 'b')
+        ax.plot([x1, x1, x2, x2, x1], [y1, y2, y2, y1, y1], 'b')
         r = r + n
         c = c + n
 
@@ -230,7 +231,7 @@ def PlotDM(model, **options):
         x2 = x1 + nc
         y1 = r - 0.5
         y2 = y1 + nr
-        plt.plot([x1, x1, x2, x2, x1], [y1, y2, y2, y1, y1], 'b')
+        ax.plot([x1, x1, x2, x2, x1], [y1, y2, y2, y1, y1], 'b')
 
     # Plot equivalence classes in over determined part
     if eqclass and len(dm.Mp.row) > 0:
@@ -243,13 +244,12 @@ def PlotDM(model, **options):
             x2 = x1 + nc
             y1 = r - 0.5
             y2 = y1 + nr
-            plt.gca().add_patch(mpatches.Rectangle((x1, y1), x2 - x1, y2 - y1,
-                                                   facecolor='0.7'))
+            ax.add_patch(mpatches.Rectangle((x1, y1), x2 - x1, y2 - y1, facecolor='0.7'))
             r = r + nr
             c = c + nc
 
-        plt.plot([c1 - 0.5, len(dm.colp) + 0.5], [r - 0.5, r - 0.5], 'k--')
-        plt.plot([c - 0.5, c - 0.5], [r1 - 0.5, len(dm.rowp) + 0.5], 'k--')
+        ax.plot([c1 - 0.5, len(dm.colp) + 0.5], [r - 0.5, r - 0.5], 'k--')
+        ax.plot([c - 0.5, c - 0.5], [r1 - 0.5, len(dm.rowp) + 0.5], 'k--')
 
     if fault:
         fPlotRowIdx = list(map(lambda f: np.argwhere(dm.rowp == f[0])[0][0],
@@ -263,23 +263,23 @@ def PlotDM(model, **options):
                     fstr = fv
                 else:
                     fstr = "%s, %s" % (fstr, fv)
-                plt.plot([-1, nVars], [ff, ff], 'r--')
-                plt.text(nVars - 0.1, ff + 0.17, fstr, color='r')
+                ax.plot([-1, nVars], [ff, ff], 'r--')
+                ax.text(nVars - 0.1, ff + 0.17, fstr, color='r')
 
     # Plot axis ticks
-    if labelVars:
-        plt.xticks(np.arange(0, X.shape[1]), [model.x[xidx] for xidx in dm.colp],
-                   rotation='vertical')
+    if label_vars:
+        ax.set_xticks(np.arange(0, X.shape[1]))
+        ax.set_xticklabels([model.x[xidx] for xidx in dm.colp], rotation='vertical')
 
         bottomMargin = 0.1 + (np.max(list(map(lambda v: len(v), [model.x[xidx] for xidx in dm.colp]))) - 3)*0.1/6  # ad-hoc expression
-        plt.subplots_adjust(bottom=np.max([0.1, bottomMargin]))
-        plt.yticks(np.arange(0, model.X.shape[0]), model.e)
-
-        plt.yticks(np.arange(0, X.shape[0]), [model.e[eidx] for eidx in dm.rowp])
+        # plt.subplots_adjust(bottom=np.max([0.1, bottomMargin]))
+        # plt.yticks(np.arange(0, model.X.shape[0]), model.e)
+        ax.set_yticks(np.arange(0, X.shape[0]))
+        ax.set_yticklabels([model.e[eidx] for eidx in dm.rowp])
 
     # Change plot range
-    plt.axis([-0.7, X.shape[1] - 0.3, X.shape[0] - 0.3, -0.7])
+    ax.axis([-0.7, X.shape[1] - 0.3, X.shape[0] - 0.3, -0.7])
 
-    plt.gca().xaxis.tick_bottom()
-    plt.xlabel('Variables')
-    plt.ylabel('Equations')
+    ax.xaxis.tick_bottom()
+    ax.set_xlabel('Variables')
+    ax.set_ylabel('Equations')

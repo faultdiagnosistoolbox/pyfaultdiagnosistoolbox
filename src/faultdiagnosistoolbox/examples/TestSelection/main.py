@@ -42,44 +42,43 @@ thdata['res'] = thdata['res'] >= 1
 # Plot the 7 first residuals in all fault modes. The residuals plotted in red are supposed to alarm for the fault
 # according to the fault sensitivity matrix. (Fig. 4 in the paper)
 
-plt.figure(10, clear=True, figsize=(10, 10))
+fig, ax = plt.subplots(7, 8, num=10, clear=True, figsize=(10, 10))
 for ri in range(7):
     for fm in range(nf):
-        plt.subplot(7, 8, ri*nf + fm + 1)
+        # plt.subplot(7, 8, ri*nf + fm + 1)
         if data['fsm'][ri, fm]==0:
-            plt.plot(data['res'][data['mode']==fm, ri], 'b', lw=0.3)
+            ax[ri, fm].plot(data['res'][data['mode'] == fm, ri], 'b', lw=0.3)
         else:
-            plt.plot(data['res'][data['mode']==fm, ri], 'r', lw=0.3)
-        plt.gca().tick_params(labelsize=6)
-        plt.ylim(0, 3)
+            ax[ri, fm].plot(data['res'][data['mode'] == fm, ri], 'r', lw=0.3)
+        ax[ri, fm].tick_params(labelsize=6)
+        ax[ri, fm].set_ylim(0, 3)
         sns.despine()
         if fm == 0:
-            plt.ylabel(f'res-{ri + 1}', fontsize=8)
+            ax[ri, fm].set_ylabel(f'res-{ri + 1}', fontsize=8)
         if ri == 0:
-            plt.title(data['modes'][fm], fontsize=8)
-plt.tight_layout(w_pad=-0.75, h_pad=0)
-
+            ax[ri, fm].set_title(data['modes'][fm], fontsize=8)
+fig.tight_layout(w_pad=-0.75, h_pad=0)
 
 # Basic analysis - performance of all 42 residuals
 fsm = data['fsm']
 fm = data['modes'][1:]
 
 im = IsolabilityMatrix(fsm)
-plt.figure(20, clear=True, figsize=(6, 6))
-plt.spy(im[1:, 1:], marker='o', color='b')
-plt.xticks(np.arange(len(fm)), fm)
-plt.yticks(np.arange(len(fm)), fm)
-plt.title('Isolability matrix')
-plt.gca().xaxis.tick_bottom()
+_, ax = plt.subplots(num=20, clear=True, figsize=(6, 6))
+ax.spy(im[1:, 1:], marker='o', color='b')
+ax.set_xticks(np.arange(len(fm)), fm)
+ax.set_yticks(np.arange(len(fm)), fm)
+ax.set_title('Isolability matrix')
+ax.xaxis.tick_bottom()
 
 
 _, C = DiagnosesAndConfusionMatrix(thdata)
-plt.figure(30, clear=True, figsize=(6, 6))
-PlotConfusionMatrix(C)
-plt.xticks(np.arange(nf), data['modes'])
-plt.yticks(np.arange(nf), data['modes'])
-plt.title('Fault Isolation Performance matrix, all 42 residuals')
-plt.tight_layout()
+fig, ax = plt.subplots(num=30, clear=True, figsize=(6, 6))
+PlotConfusionMatrix(C, ax=ax)
+ax.set_xticks(np.arange(nf), data['modes'])
+ax.set_yticks(np.arange(nf), data['modes'])
+ax.set_title('Fault Isolation Performance matrix, all 42 residuals')
+fig.tight_layout()
 
 
 # Test selection using Random Forest Classifiers
@@ -87,26 +86,26 @@ plt.tight_layout()
 # First, build a random forest classifier based on the thresholded data.
 # Here, 300 trees are trained in the tree ensemble.
 
-res, C, rf, Crf = RandomForestTestSelection(thdata, n_estimators=100)
+res, C, rf, Crf = RandomForestTestSelection(thdata, n_estimators=300)
 
-plt.figure(31, clear=True, figsize=(6, 6))
-PlotConfusionMatrix(Crf)
-plt.xticks(np.arange(nf), data['modes'])
-plt.yticks(np.arange(nf), data['modes'])
-plt.title('Fault Isolation Performance matrix')
-plt.tight_layout()
+fig, ax = plt.subplots(num=31, clear=True, figsize=(6, 6))
+PlotConfusionMatrix(Crf, ax=ax)
+ax.set_xticks(np.arange(nf), data['modes'])
+ax.set_yticks(np.arange(nf), data['modes'])
+ax.set_title('Fault Isolation Performance matrix')
+fig.tight_layout()
 
 
 # Plot the variable importance, sorted, to get a ranking of predictor/residual usefullness in the classifier.
 # Note that this classifier is not meant to be used in the diagnosis system. (Fig. 10 in the paper)
 
-plt.figure(40, clear=True, figsize=(9, 6))
-plt.plot(res['residualimportance'][res['sortidx']])
-plt.yticks(fontsize=8)
-plt.xticks(range(nr), res['sortidx'] + 1, fontsize=8, rotation=90)
-plt.xlabel('Predictors')
-plt.ylabel('Importance')
-plt.title('Predictor importance')
+_, ax = plt.subplots(num=40, clear=True, figsize=(9, 6))
+ax.plot(res['residualimportance'][res['sortidx']])
+ax.set_yticks(fontsize=8)
+ax.set_xticks(range(nr), res['sortidx'] + 1, fontsize=8, rotation=90)
+ax.set_xlabel('Predictors')
+ax.set_ylabel('Importance')
+ax.set_title('Predictor importance')
 sns.despine()
 
 
@@ -116,25 +115,25 @@ sns.despine()
 # (Fig. 11 in the paper)
 
 num_res = [10, 12, 26, 27]
-plt.figure(50, clear=True, figsize=(9, 7))
-plt.plot(range(1, nr), res['pfa'], 'r', label='False alarm probability')
-plt.plot(range(1, nr), res['pmd'], 'b', label='Missed detection probability')
-plt.plot(range(1, nr), res['pfi'], 'y', label='False isolation probability')
+_, ax = plt.subplots(num=50, clear=True, figsize=(9, 7))
+ax.plot(range(1, nr), res['pfa'], 'r', label='False alarm probability')
+ax.plot(range(1, nr), res['pmd'], 'b', label='Missed detection probability')
+ax.plot(range(1, nr), res['pfi'], 'y', label='False isolation probability')
 for ni in num_res:
-    plt.plot(ni+1, res['pfi'][ni], 'kx')
+    ax.plot(ni+1, res['pfi'][ni], 'kx')
 
-plt.legend()
-plt.xlabel('Number of selected residuals')
-plt.ylabel('Probability')
+ax.legend()
+ax.set_xlabel('Number of selected residuals')
+ax.set_ylabel('Probability')
 sns.despine()
 
 
 # Plot the probability of maximum fault isolation performance for each fault. (Fig. 12 in the paper)
 
-plt.figure(figsize=(10, 10))
+_, ax = plt.subplots(num=51, figsize=(10, 10))
 for k in range(nf):
-    plt.plot(res['pmfi'][:, k], label=thdata['modes'][k])
-plt.legend(loc='upper right')
+    ax.plot(res['pmfi'][:, k], label=thdata['modes'][k])
+ax.legend(loc='upper right')
 sns.despine()
 
 
@@ -145,23 +144,25 @@ sns.despine()
 # Compare performance of 12 with 42 residuals.
 
 ntests = 12
-plt.figure(90, clear=True, figsize=(12, 12))
-
-plt.subplot(1, 2, 1)
 _, C = DiagnosesAndConfusionMatrix(thdata, residx=res['sortidx'][0:ntests])
-PlotConfusionMatrix(C)
-plt.title('No of tests: %d' % ntests)
-plt.xticks(np.arange(nf), data['modes'])
-plt.yticks(np.arange(nf), data['modes'])
 
-plt.subplot(1, 2, 2)
+fig, ax = plt.subplots(1, 2, num=90, clear=True, figsize=(12, 12))
+PlotConfusionMatrix(C, ax=ax[0])
+ax[0].set_title('No of tests: %d' % ntests)
+ax[0].set_xticks(np.arange(nf))
+ax[0].set_xticklabels(data['modes'])
+ax[0].set_yticks(np.arange(nf))
+ax[0].set_yticklabels(data['modes'])
+
 _, C = DiagnosesAndConfusionMatrix(thdata)
-PlotConfusionMatrix(C)
-plt.title('No of tests: 42')
-plt.xticks(np.arange(nf), data['modes'])
-plt.yticks(np.arange(nf), data['modes'])
+PlotConfusionMatrix(C, ax[1])
+ax[1].set_title('No of tests: 42')
+ax[1].set_xticks(np.arange(nf))
+ax[1].set_xticklabels(data['modes'])
+ax[1].set_yticks(np.arange(nf))
+ax[1].set_yticklabels(data['modes'])
 
-plt.tight_layout()    
+fig.tight_layout()
 
 
 
