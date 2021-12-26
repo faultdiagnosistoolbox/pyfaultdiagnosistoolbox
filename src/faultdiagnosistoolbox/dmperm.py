@@ -29,8 +29,18 @@ def srank(A):
     """Compute structural rank of matrix."""
     # _, _, _, _, rr, _ = dmperm(A)
     #    return rr[3]
-    _, _, _, _, _, rr = dmperm(A)
-    return np.sum(np.diff(rr[:-1]))
+
+    # Extract matching vector m(i) = j
+    # if column j is matched to row i, or -1 if column j is unmatched.
+    #
+    # m = np.full(hod.shape[1], -1)
+    # m[p[rr[0]:rr[1]]] = q[cc[1]:cc[2]]
+    # m[p[rr[1]:rr[2]]] = q[cc[2]:cc[3]]
+    # m[p[rr[2]:rr[3]]] = q[cc[3]:cc[4]]
+    # return sum(m >= 0)
+
+    _, _, _, _, cc, __ = dmperm(A)
+    return sum(np.diff(cc[1:]))
 
 
 @dataclass
