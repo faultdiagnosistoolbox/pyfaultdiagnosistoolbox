@@ -6,8 +6,8 @@ OPT=-DNDEBUG -O3
 CPPFLAGS=-Wall $(OPT)
 TARGET_VERSION=`sw_vers -productVersion` # 11.10
 
-all:
-	@echo make clean/cleanall to clear all generated files
+batchfaultisolation:
+	python setup.py build_ext --inplace
 
 #$(BUILD_DIR)/ResGen_1649_1c_b.so: ResGen_1649_1c_b.cc
 #	CC=g++ MACOSX_DEPLOYMENT_TARGET=$(TARGET_VERSION) python $(patsubst %.cc, %_setup.py, $<) build
