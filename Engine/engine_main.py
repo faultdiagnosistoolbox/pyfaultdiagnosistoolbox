@@ -1,5 +1,6 @@
+# %%
 # %load_ext autoreload
-# %autoreload 2
+# % %autoreload 2
 
 from matplotlib.ticker import MaxNLocator
 import matplotlib.pyplot as plt
@@ -12,6 +13,7 @@ from scipy.stats import gaussian_kde
 import seaborn as sns
 import platform
 
+# %% Set up paths
 if not('Engine' in sys.path):
     sys.path.append(os.getcwd() + '/Engine')
 
@@ -24,7 +26,7 @@ import GetMeasurementData as gm
 
 sns.set(style='white', rc={'lines.linewidth': 0.75, 'axes.linewidth': 0.5})
 
-# # Model
+# %% Model
 import VEP4Engine
 model = VEP4Engine.model
 model.Lint()
@@ -47,7 +49,7 @@ _ = model.IsolabilityAnalysis(ax=ax, causality='der')
 _, ax = plt.subplots(num=23, clear=True)
 _ = model.PlotDM(ax=ax, fault=True, eqclass=True)
 
-# MSO sets and test selection
+# %% MSO sets and test selection
 print("Searching for MSO sets ...")
 msos = model.MSO()
 mtes = model.MTES()
@@ -60,7 +62,7 @@ oi = [model.IsObservable(m) for m in msos]
 print(f'  {sum(oi)} observable, {sum(li)} low (structural) differential index')
 
 
-# Use tests selected from simple Kullback-Leibler selection strategy
+# %% Use tests selected from simple Kullback-Leibler selection strategy
 ts = [1649, 4011, 4016, 4017, 4066, 4074, 4477]
 re = [73, 75, 75, 3, 76, 3, 2]
 for msoIdx, redIdx in zip(ts, re):
@@ -71,7 +73,7 @@ for msoIdx, redIdx in zip(ts, re):
     print(f"MSO {msoIdx} with redundant equation {red}, causality: {Gamma.matchType}")
 FSM = model.FSM([msos[ti] for ti in ts])
 
-# Plot fault signature matrix and fault isolation matrix for selected set of tests
+# %% Plot fault signature matrix and fault isolation matrix for selected set of tests
 fIdx = [model.f.index(fi) for fi in ['fyw_af', 'fyp_im', 'fyp_ic', 'fyT_ic']]
 
 fig, ax = plt.subplots(1, 2, num=30, clear=True)
@@ -93,7 +95,7 @@ ax[1].get_xaxis().set_ticks_position('bottom')
 ax[1].set_title('Fault isolation matrix')
 fig.tight_layout()
 
-# Code generation
+# %% Code generation
 for test, redIdx in zip(ts, re):
     mso = msos[test]
     red = mso[redIdx]
@@ -104,7 +106,7 @@ for test, redIdx in zip(ts, re):
                     external_headers=['extmodelfuns.h'], external_src=['extmodelfuns.cc'])
     print("")
 
-# Compile sources
+# %% Compile sources
 for test, redIdx in zip(ts, re):
     red = msos[test][redIdx]
     resName = f"ResGen_{test}_{red}"
@@ -119,7 +121,7 @@ for test, redIdx in zip(ts, re):
     else:
         print('Failure!')
 
-# Import generated residual generator modules
+# %% Import generated residual generator modules
 import ResGen_1649_1
 import ResGen_4011_1
 import ResGen_4016_1
@@ -132,7 +134,7 @@ res_gens = [ResGen_1649_1.ResGen_1649_1, ResGen_4011_1.ResGen_4011_1, ResGen_401
             ResGen_4017_84.ResGen_4017_84, ResGen_4066_1.ResGen_4066_1, ResGen_4074_84.ResGen_4074_84,
             ResGen_4477_86.ResGen_4477_86]
 
-# # Import measurement data
+# %% Import measurement data
 dataDir = f'{pathlib.Path.home()}/Research/Diagnosis/Data/EngineData/2016_EngineData/'
 dataSets = {'NF': 'driving_cycle_FTP75_highway_no_fault_dataset1_16-01-20.mat',
             'fyp_im': 'driving_cycle_FTP75Highway_fault_y_pim_dataset_7_26-01-2016.mat',
@@ -238,7 +240,7 @@ fig.tight_layout()
 fig.subplots_adjust(top=0.9)
 _ = fig.suptitle('Measurement data, no-fault dataset', fontsize=14, weight='bold')
 
-# Run residual generators on measurement data
+# %% Run residual generators on measurement data
 r = []
 for k, ri in enumerate(res_gens):
     print(f"r{k + 1}: MSO {ri.__name__.split('_')[1]}")
@@ -260,7 +262,7 @@ for rIdx, ri in enumerate(r):
     foo = np.sort(np.abs(ri['NF']))
     J[rIdx] = foo[np.ceil(N * (1 - alpha)).astype(np.int64)]
 
-# Plot residuals
+# %% Plot residuals
 ds = 500
 # dc = ['NF','fyp_im','fyw_af','fyp_ic','fyT_ic']
 dc = ['NF', 'fyw_af']
@@ -300,7 +302,7 @@ for idx, fm in enumerate(dc):
         fig.subplots_adjust(top=0.9)
         _ = fig.suptitle('Dataset: ' + fm, fontsize=12, weight='bold')
 
-# Plot residual distributions
+# %% Plot residual distributions
 ds = 200
 M = 50  # Number of data points in KDE plots
 # dc = ['NF','fyp_im','fyw_af','fyp_ic','fyT_ic']
@@ -336,7 +338,7 @@ for idx, fm in enumerate(dc):
         fig.subplots_adjust(top=0.9)
         fig.suptitle('Dataset: ' + fm, fontsize=12, weight='bold')
 
-
+# %% Fault isolation and confusion matrix
 dc = ['NF', 'fyp_im', 'fyw_af', 'fyp_ic', 'fyT_ic']
 # Compile with: python setup.py build_ext --inplace
 
