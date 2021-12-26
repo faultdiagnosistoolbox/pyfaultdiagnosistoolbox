@@ -109,7 +109,7 @@ setup(
     # your project is installed. For an analysis of "install_requires" vs pip's
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    setup_requires=['cython', 'numpy', 'wheel'],
+    setup_requires=['numpy', 'wheel'],
     install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'sklearn', 'wheel'],
     python_requires='>=3.7'
     # List additional groups of dependencies here (e.g. development
