@@ -225,5 +225,26 @@ CreateDMpermOutput( csd* dm, cs* sm )
   PyObject* rr=PyArray_SimpleNewFromData(1, &numBlocks, NPY_INT64, (void *)dm->rr);
   PyObject* cc=PyArray_SimpleNewFromData(1, &numBlocks, NPY_INT64, (void *)dm->cc);
 
-  return Py_BuildValue("(O,O,O,O,O,O)", p, q, r, s, cc, rr);
+  // Create matching vector m[j] = i if variable j is matched in equation i, -1 otherwise
+  npy_intp *data_m = (npy_intp *)cs_malloc (sm->m, sizeof(npy_intp));
+  for(auto it=data_m; it < data_m + sm->m; it++) {
+    *it = -1;
+  }
+
+  // m[p[rr[0]:rr[1]]] = q[cc[1]:cc[2]]
+  for(auto i=0; i < dm->rr[1] - dm->rr[0]; i++) {
+    data_m[dm->p[i + dm->rr[0]]] = dm->q[dm->cc[1] + i];
+  }
+  // m[p[rr[1]:rr[2]]] = q[cc[2]:cc[3]]
+  for(auto i=0; i < dm->rr[2] - dm->rr[1]; i++) {
+    data_m[dm->p[i + dm->rr[1]]] = dm->q[dm->cc[2] + i];
+  }
+  // m[p[rr[2]:rr[3]]] = q[cc[3]:cc[4]]
+  for(auto i=0; i < dm->rr[3] - dm->rr[2]; i++) {
+    data_m[dm->p[i + dm->rr[2]]] = dm->q[dm->cc[3] + i];
+  }
+
+  PyObject* m=PyArray_SimpleNewFromData(1, (npy_intp *)&(sm->m), NPY_INT64, (void *)data_m);
+
+  return Py_BuildValue("(O,O,O,O,O,O,O)", p, q, r, s, cc, rr, m);
 }

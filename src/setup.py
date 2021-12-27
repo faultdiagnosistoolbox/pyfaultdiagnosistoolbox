@@ -28,7 +28,7 @@ class get_numpy_include(object):
 if platform.system() == "Windows":
     extra_compile = []
 else:
-    extra_compile = ['-Wno-unused-function', '-Wno-unknown-pragmas']
+    extra_compile = ['-Wno-unused-function', '-Wno-unknown-pragmas', '--std=c++11']
 
 strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
                               sources=['faultdiagnosistoolbox/structuralanalysismodule.cc',

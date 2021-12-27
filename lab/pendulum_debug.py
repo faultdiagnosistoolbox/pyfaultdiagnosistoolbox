@@ -27,8 +27,8 @@ pendulum = fdt.DiagnosisModel(pendulum_def, name='Pendulum')
 sidx, nu = pendulum.Pantelides()
 print(sidx)
 
-_, ax = plt.subplots(num=10, clear=True)
-pendulum.PlotModel(verbose=True)
+# _, ax = plt.subplots(num=10, clear=True)
+# pendulum.PlotModel(verbose=True)
 
 # %%
 X = pendulum.X.copy()
@@ -41,11 +41,13 @@ Xder[X < 0] = -1
 hd = np.max(Xder, axis=0)
 hod = (Xder == (np.ones((ne, 1)) @ hd.reshape((1, -1)))).astype(int)
 
-p, q, r, s, cc, rr = fdt.dmperm.dmperm(hod)
+p, q, r, s, cc, rr, m2 = fdt.dmperm.dmperm(hod)
+print(m2)
 
 # %% Extract matching
 m = np.full(hod.shape[1], -1)
 m[p[rr[0]:rr[1]]] = q[cc[1]:cc[2]]
 m[p[rr[1]:rr[2]]] = q[cc[2]:cc[3]]
 m[p[rr[2]:rr[3]]] = q[cc[3]:cc[4]]
-sum(m >= 0)
+print(m)
+# sum(m >= 0)

@@ -903,7 +903,7 @@ class DiagnosisModel(object):
 
         if ax:
             if permute:
-                p, q, _, _, _, _ = dmperm.dmperm(im)
+                p, q, _, _, _, _, _ = dmperm.dmperm(im)
             else:
                 p = np.arange(0, nf)
                 q = p
@@ -972,7 +972,7 @@ class DiagnosisModel(object):
 
         if ax:
             if permute:
-                p, q, _, _, _, _ = dmperm.dmperm(im)
+                p, q, _, _, _, _, _ = dmperm.dmperm(im)
             else:
                 p = np.arange(0, nf)
                 q = p

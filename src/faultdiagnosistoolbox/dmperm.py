@@ -18,7 +18,17 @@ def CSCDict(A):
 
 
 def dmperm(A):
-    """Dulmage-Mendelsohn decomposition of matrix."""
+    """Dulmage-Mendelsohn decomposition of matrix.
+
+    p, q, r, s, cc, rr, m = dmperm(A) finds the Dulmage-Mendelsohn decomposition
+    of A.  p and q are row and column permutation vectors, respectively
+    such that A[p][:, q] has block upper triangular form.  r and s are vectors
+    indicating the block boundaries for the fine decomposition.  cc and rr
+    are vectors of length five indicating the block boundaries of the
+    coarse decomposition. m is a maximum matching such that m[j] = i if column j
+    is matched to row i, or -1 if column j is unmatched.
+    """
+
     if sp.issparse(A):
         return sa.dmperm_internal(CSCDict(A))
     else:
@@ -39,8 +49,10 @@ def srank(A):
     # m[p[rr[2]:rr[3]]] = q[cc[3]:cc[4]]
     # return sum(m >= 0)
 
-    _, _, _, _, cc, _ = dmperm(A)
-    return sum(np.diff(cc[1:]))
+    # _, _, _, _, cc, _, _ = dmperm(A)
+    # return sum(np.diff(cc[1:]))
+    _, _, _, _, _, _, m = dmperm(A)
+    return sum(m >= 0)
 
 
 @dataclass
@@ -75,9 +87,9 @@ def MSO(X):
 def GetDMParts(X):
     """Compute Dulmage-Mendelsohn decomposition."""
     if sp.issparse(X):
-        p, q, r, s, _, _ = dmperm(X)
+        p, q, r, s, _, _, _ = dmperm(X)
     else:
-        p, q, r, s, _, _ = dmperm(sp.csc_matrix(X))
+        p, q, r, s, _, _, _ = dmperm(sp.csc_matrix(X))
 
     m = X.shape[0]
     n = X.shape[1]
