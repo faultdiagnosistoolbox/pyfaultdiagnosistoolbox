@@ -39,7 +39,7 @@ def srank(A):
     # m[p[rr[2]:rr[3]]] = q[cc[3]:cc[4]]
     # return sum(m >= 0)
 
-    _, _, _, _, cc, __ = dmperm(A)
+    _, _, _, _, cc, _ = dmperm(A)
     return sum(np.diff(cc[1:]))
 
 
