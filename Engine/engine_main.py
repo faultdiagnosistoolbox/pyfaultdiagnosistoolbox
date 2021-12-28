@@ -160,7 +160,7 @@ _ = ax.set_title('EPA Highway Fuel Economy Test Cycle (HWFET)')
 DS = 500  # Down sampling rate in plots
 t_lim = [data['NF']['time'][0], data['NF']['time'][-1] / 60]
 
-_, ax = plt.subplots(3, 3, num=80, clear=True)
+fig, ax = plt.subplots(3, 3, num=80, clear=True)
 yIdx = model.z.index('y_omega_e')
 ax[0, 0].plot(data['NF']['time'][::DS] / 60.0, data['NF']['z'][::DS, yIdx] / (2 * np.pi) * 60)
 ax[0, 0].set_ylabel('rpm')
