@@ -17,6 +17,7 @@
 LIBRARY = libcsparse
 
 CF = $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -O2 -fPIC
+# CF = -mmacosx-version-min=11 $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -O2 -fPIC
 I = -I../Include
 RANLIB = ranlib
 ARCHIVE = $(AR) $(ARFLAGS)

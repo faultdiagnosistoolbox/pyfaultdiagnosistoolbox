@@ -1,5 +1,7 @@
 env
 fdt_39
+fdt_38
+fdt_310
 build
 
 *.a

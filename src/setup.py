@@ -43,9 +43,12 @@ strucanalysis_ext = Extension('faultdiagnosistoolbox.structuralanalysis',
 if platform.system() == "Windows":
     if not path.isfile('CSparse/Lib/libcsparse.lib'):
         system('cd CSparse/Lib & nmake -f Makefile.win')
-else:
+elif platform.system() == "Darwin":
     if not path.isfile('CSparse/Lib/libcsparse.a'):
-        system('(cd CSparse; MACOSX_DEPLOYMENT_TARGET=10.6 make)')
+        system('(cd CSparse/Lib; CFLAGS=-mmacosx-version-min=11 make)')    
+else:  # Linux
+    if not path.isfile('CSparse/Lib/libcsparse.a'):
+        system('(cd CSparse/Lib; make)')
 
 readme = open('README.md', 'r')
 README_TEXT = readme.read()
@@ -89,9 +92,9 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 
     # What does your project relate to?
@@ -111,7 +114,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     setup_requires=['numpy', 'wheel'],
     install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'sklearn', 'wheel'],
-    python_requires='>=3.7'
+    python_requires='>=3.8'
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,
     # for example:
