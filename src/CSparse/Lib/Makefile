@@ -14,9 +14,18 @@
 # install' in this Makefile only installs a static compiled library in
 # CSparse/Lib.  It does not install it for system-wide usage.
 
+# Added these lines for compilation of universal library on Mac M1
+ARCH_CFLAGS = ""
+ifeq (${shell uname}, Darwin)
+    ifeq (${shell uname -m}, arm64)
+        ARCH_CFLAGS = -arch arm64 -arch x86_64
+    endif
+endif
+
+
 LIBRARY = libcsparse
 
-CF = $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -O2 -fPIC
+CF = $(CFLAGS) $(ARCH_CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -O2 -fPIC 
 # CF = -mmacosx-version-min=11 $(CFLAGS) $(CPPFLAGS) $(TARGET_ARCH) -O2 -fPIC
 I = -I../Include
 RANLIB = ranlib
