@@ -62,6 +62,7 @@ setup(
     version=ver_str,
 
     description='A toolbox for Model Based Fault Diagnosis of dynamic systems based on structural analysis',
+    long_description_content_type="text/x-rst",
     long_description=README_TEXT,
 
     url='https://faultdiagnosistoolbox.github.io',
