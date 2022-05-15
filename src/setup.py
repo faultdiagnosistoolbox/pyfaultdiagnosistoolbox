@@ -45,7 +45,10 @@ if platform.system() == "Windows":
         system('cd CSparse/Lib & nmake -f Makefile.win')
 elif platform.system() == "Darwin":
     if not path.isfile('CSparse/Lib/libcsparse.a'):
-        system('(cd CSparse/Lib; CFLAGS=-mmacosx-version-min=11 make)')    
+        if platform.processor() == "arm":
+            system('(cd CSparse/Lib; TARGET_ARCH="-arch arm64 -arch x86_64" CFLAGS=-mmacosx-version-min=11 make)')
+        else:
+            system('(cd CSparse/Lib; CFLAGS=-mmacosx-version-min=11 make)')
 else:  # Linux
     if not path.isfile('CSparse/Lib/libcsparse.a'):
         system('(cd CSparse/Lib; make)')
