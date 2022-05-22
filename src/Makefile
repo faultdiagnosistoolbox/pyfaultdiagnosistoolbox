@@ -18,6 +18,9 @@ cleanall:
 test:
 	python -m pytest -v
 
+upload:
+	python -m twine upload dist/*
+
 # Below not really needed
 alldist: build wheel sdist
 
