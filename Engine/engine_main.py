@@ -311,7 +311,7 @@ for idx, fm in enumerate(dc):
     if fm in r[0]:  # Data set exists in first residual
         fig, ax = plt.subplots(3, 3, num=60 + idx, clear=True)
         for ridx, ri in enumerate(r):
-            ax_idx = (ridx //3, ridx % 3)
+            ax_idx = (ridx // 3, ridx % 3)
             pNF = gaussian_kde(ri[fm][data[fm]['fault_vector'] == 0][::ds])
 
             rmin = np.min([np.min(ri['NF']), np.min(ri[fm]), -1])
@@ -396,3 +396,5 @@ ax.set_ylabel('Diagnosed fault')
 _ = ax.set_title('Fault Isolation Performance Matrix')
 
 plt.show()
+
+# %%
