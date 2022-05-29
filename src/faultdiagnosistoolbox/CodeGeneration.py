@@ -1074,4 +1074,3 @@ def WriteSetupBuild(name, external_src):
     f.write("      version='0.1',\n")
     f.write("      description='Module for residual generator " + name + "',\n")
     f.write('      ext_modules=[module1])\n')
-

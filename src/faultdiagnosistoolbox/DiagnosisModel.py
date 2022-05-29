@@ -333,11 +333,11 @@ class DiagnosisModel(object):
         cmatching = False
         hd = None
         while not cmatching:
-            Xder = X + der@np.ones((1, nx))
+            Xder = X + der @ np.ones((1, nx))
             Xder[X < 0] = -1
 
             hd = np.max(Xder, axis=0)
-            hod = (Xder == (np.ones((ne, 1))@hd.reshape((1, -1))))
+            hod = (Xder == (np.ones((ne, 1)) @ hd.reshape((1, -1))))
             if dmperm.srank(hod) == nx:
                 cmatching = True
             else:

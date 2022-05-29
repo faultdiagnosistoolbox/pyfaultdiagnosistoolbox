@@ -90,13 +90,13 @@ def RandomForestTestSelection(data, n_estimators=100):
     residualImportance = rf.feature_importances_
 
     # Compute classifiers confusion matrix (needed?)
-    s = np.diag([1/sum(data['mode'] == mi) for mi in range(nf)])
-    Crf = s@confusion_matrix(data['mode'], rf.predict(data['res']))
+    s = np.diag([1 / sum(data['mode'] == mi) for mi in range(nf)])
+    Crf = s @ confusion_matrix(data['mode'], rf.predict(data['res']))
 
-    pfa = np.zeros(nr-1)
-    pmd = np.zeros(nr-1)
-    pfi = np.zeros(nr-1)
-    pmfi = np.zeros((nr-1, nf))
+    pfa = np.zeros(nr - 1)
+    pmd = np.zeros(nr - 1)
+    pfi = np.zeros(nr - 1)
+    pmfi = np.zeros((nr - 1, nf))
 
     # Make sure isolability matrix for NF corresponds to diagnosis
     # statement computed by DiagnosesAndConfusionMatrix
@@ -106,12 +106,12 @@ def RandomForestTestSelection(data, n_estimators=100):
     C = None
     for k in range(1, nr):
         dx, C = DiagnosesAndConfusionMatrix(data, residx=sortIdx[0:k])
-        pfa[k-1] = 1-C[0, 0]
-        pmd[k-1] = np.mean(C[1:, 0])
-        pfi[k-1] = np.mean(np.diag(1-C[1:, 0])@np.abs(C[1:, 1:]-im[1:, 1:]))
+        pfa[k - 1] = 1 - C[0, 0]
+        pmd[k - 1] = np.mean(C[1:, 0])
+        pfi[k - 1] = np.mean(np.diag(1 - C[1:, 0]) @ np.abs(C[1:, 1:] - im[1:, 1:]))
 
         for fi in range(nf):
-            pmfi[k-1, fi] = np.mean(
+            pmfi[k - 1, fi] = np.mean(
                 np.all(dx[data['mode'] == fi] == imk[fi, :], axis=1))
     return ({'sortidx': sortIdx, 'pfa': pfa, 'pmd': pmd, 'pfi': pfi,
              'pmfi': pmfi, 'residualimportance': residualImportance},

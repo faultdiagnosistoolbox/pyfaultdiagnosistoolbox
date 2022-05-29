@@ -216,7 +216,7 @@ def SensorPlacementIsolability(model, Ispec):
     # Remove duplicates and supersets from solution
 
     sIdx = [np.sort(si) for si in sIdx]
-    keepIdx = np.full(len(sIdx),  True)
+    keepIdx = np.full(len(sIdx), True)
     for k in np.arange(0, len(sIdx)):
         for l in np.arange(k + 1, len(sIdx)):
             if np.array_equal(sIdx[k], sIdx[l]):

@@ -43,7 +43,7 @@ def PlotModel(model, ax, **options):
     if label_vars:
         ax.set_xticks(np.arange(0, model.nx() + model.nf() + model.nz()))
         ax.set_xticklabels(model.x + model.f + model.z, rotation='vertical')
-        bottomMargin = 0.1 + (np.max(list(map(lambda v: len(v), model.x))) - 3) * 0.1 / 6  # ad-hoc expression
+        # bottomMargin = 0.1 + (np.max(list(map(lambda v: len(v), model.x))) - 3) * 0.1 / 6  # ad-hoc expression
         # plt.subplots_adjust(bottom=np.max([0.1, bottomMargin]))
         ax.set_yticks(np.arange(0, model.X.shape[0]))
         ax.set_yticklabels(model.e)
@@ -108,7 +108,7 @@ def PlotMatching(model, Gamma, **options):
 
     # Plot axis ticks
     if labelVars:
-        bottomMargin = 0.1 + (np.max(list(map(lambda v: len(v), [model.x[xi] for xi in q]))) - 3)*0.1/6  # ad-hoc expression
+        bottomMargin = 0.1 + (np.max(list(map(lambda v: len(v), [model.x[xi] for xi in q]))) - 3) * 0.1 / 6  # ad-hoc expression
         plt.xticks(np.arange(0, len(q)), [model.x[xi] for xi in q], rotation='vertical')
         plt.subplots_adjust(bottom=np.max([0.1, bottomMargin]))
         plt.yticks(np.arange(0, len(p)), [model.e[ei] for ei in p])
@@ -186,14 +186,14 @@ def PlotDM(model, ax, **options):
     else:
         font_size = 8
     ax.spy(X[dm.rowp, :][:, dm.colp] == 1,
-            markersize=4, marker="o")
+           markersize=4, marker="o")
     for idx, val in enumerate(np.argwhere(X[dm.rowp, :][:, dm.colp] == 3)):
         ax.text(val[1], val[0] + 0.15, 'D', color="b", fontsize=font_size,
-                 horizontalalignment="center", verticalalignment="center")
+                horizontalalignment="center", verticalalignment="center")
 
     for idx, val in enumerate(np.argwhere(X[dm.rowp, :][:, dm.colp] == 2)):
         ax.text(val[1], val[0] + 0.15, 'I', color="b", fontsize=font_size,
-                 horizontalalignment="center", verticalalignment="center")
+                horizontalalignment="center", verticalalignment="center")
 
     if label_vars:
         ax.set_xticks(np.arange(0, X.shape[1]))
@@ -271,7 +271,7 @@ def PlotDM(model, ax, **options):
         ax.set_xticks(np.arange(0, X.shape[1]))
         ax.set_xticklabels([model.x[xidx] for xidx in dm.colp], rotation='vertical')
 
-        bottomMargin = 0.1 + (np.max(list(map(lambda v: len(v), [model.x[xidx] for xidx in dm.colp]))) - 3)*0.1/6  # ad-hoc expression
+        # bottomMargin = 0.1 + (np.max(list(map(lambda v: len(v), [model.x[xidx] for xidx in dm.colp]))) - 3) * 0.1 / 6  # ad-hoc expression
         # plt.subplots_adjust(bottom=np.max([0.1, bottomMargin]))
         # plt.yticks(np.arange(0, model.X.shape[0]), model.e)
         ax.set_yticks(np.arange(0, X.shape[0]))

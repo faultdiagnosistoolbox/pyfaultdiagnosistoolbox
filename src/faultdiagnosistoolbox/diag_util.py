@@ -28,7 +28,7 @@ def DiagnosesAndConfusionMatrix(data, residx=None):
     for fi in range(nf):
         for fj in range(nf):
             fjIdx = data['mode'] == fj
-            C[fj, fi] = np.sum(dx[fjIdx, fi])/np.sum(fjIdx)
+            C[fj, fi] = np.sum(dx[fjIdx, fi]) / np.sum(fjIdx)
 
     return dx, C
 
@@ -43,7 +43,7 @@ def SingleFaultIsolability(res, fsm):
         if np.any(alarm):
             dx[k] = np.all(fsm[alarm], axis=0)
         else:
-            dx[k] = np.hstack((True, np.zeros(nf-1)))
+            dx[k] = np.hstack((True, np.zeros(nf - 1)))
     return dx
 
 
@@ -57,13 +57,13 @@ def PlotConfusionMatrix(C, ax=None):
     ax.imshow(C, cmap=summer_cmap)
     for fi in range(nf):
         for fj in range(nf):
-            ax.text(fi, fj, '%.1f' % (C[fj, fi]*100),
-                     ha='center', va='center', color='k')
+            ax.text(fi, fj, '%.1f' % (C[fj, fi] * 100),
+                    ha='center', va='center', color='k')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    ax.set_xticks(np.arange(C.shape[1]+1)-.5, minor=True)
-    ax.set_yticks(np.arange(C.shape[0]+1)-.5, minor=True)
+    ax.set_xticks(np.arange(C.shape[1] + 1) - .5, minor=True)
+    ax.set_yticks(np.arange(C.shape[0] + 1) - .5, minor=True)
     ax.tick_params(which="minor", bottom=False, left=False)
     ax.grid(which="minor", color="w", linestyle='-', linewidth=3)
 
