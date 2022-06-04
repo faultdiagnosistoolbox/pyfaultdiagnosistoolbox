@@ -8,7 +8,7 @@ modelDef['f'] = ['fV1', 'fV2', 'fV3', 'fT1', 'fT2', 'fT3']
 modelDef['z'] = ['y1', 'y2', 'y3']
 modelDef['parameters'] = ['Rv1', 'Rv2', 'Rv3', 'CT1', 'CT2', 'CT3']
 
-p1, p2, p3, q0, q1, q2, q3, dp1, dp2, dp3 = sym.sym.symbols(modelDef['x'])
+p1, p2, p3, q0, q1, q2, q3, dp1, dp2, dp3 = sym.symbols(modelDef['x'])
 fV1, fV2, fV3, fT1, fT2, fT3 = sym.symbols(modelDef['f'])
 y1, y2, y3 = sym.symbols(modelDef['z'])
 Rv1, Rv2, Rv3, CT1, CT2, CT3 = sym.symbols(modelDef['parameters'])
