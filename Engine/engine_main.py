@@ -61,7 +61,6 @@ li = [model.IsLowIndex(m) for m in msos]
 oi = [model.IsObservable(m) for m in msos]
 print(f'  {sum(oi)} observable, {sum(li)} low (structural) differential index')
 
-
 # %% Use tests selected from simple Kullback-Leibler selection strategy
 ts = [1649, 4011, 4016, 4017, 4066, 4074, 4477]
 re = [73, 75, 75, 3, 76, 3, 2]
