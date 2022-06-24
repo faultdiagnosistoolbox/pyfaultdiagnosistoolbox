@@ -4,6 +4,7 @@ fdt_38
 fdt_310
 build
 
+.coverage
 *.a
 *.ipynb_checkpoints
 *__pycache__
