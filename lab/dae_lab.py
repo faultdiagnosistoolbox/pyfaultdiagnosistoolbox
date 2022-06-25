@@ -1,16 +1,19 @@
+# %%
+# %matplotlib
+# %load_ext autoreload
+# %autoreload 2
 # %% Initial imports
 from numpy.linalg import inv
 import matplotlib.pyplot as plt
 from controlpy.synthesis import controller_lqr
-import faultdiagnosistoolbox as fdt
 from seaborn import despine
 import os
 from faultdiagnosistoolbox.examples.ThreeTankSimulation import TankSimulation
 import numpy as np
 import sympy as sp
-from scikits.odes import dae
-from scipy.interpolate import interp1d
-import faultdiagnosistoolbox.CodeGeneration as cg
+from extended_fdt import ExtendedModel
+from faultdiagnosistoolbox.models._three_tank_model import modelDef as tt_model_def
+
 
 # %% Utility function
 def Jac(F, x):
@@ -18,7 +21,7 @@ def Jac(F, x):
 
 
 # %% Define model
-model = fdt.models.three_tank
+model = ExtendedModel(tt_model_def)
 model_params = {'Rv1': 1, 'Rv2': 1, 'Rv3': 1, 'CT1': 1, 'CT2': 1, 'CT3': 1}
 model.Lint()
 
@@ -34,10 +37,36 @@ mso2 = msos[1]
 print(model.MSOCausalitySweep(mso1))
 print(model.MSOCausalitySweep(mso2))
 
+mso = mso2
+redeq = mso[1]
+
+# %% Verify that MSO-DAE is low-index
+CT1, CT2, Rv1 = sp.symbols(["CT1", "CT2", "Rv1"])
+p1, p2, dp1, dp2, q0, q1, q2, r, y1, y2, y3 = sp.symbols(["p1", "p2", "dp1", "dp2", "q0", "q1", "q2",
+                                                          "r", "y1", "y2", "y3"])
+p1_dot, p2_dot = sp.symbols([r"\\dot{p}_1", r"\\dot{p}_2"])
+f = sp.symbols(['fV1', 'fV2', 'fV3', 'fT1', 'fT2', 'fT3'])
+
+w = sp.Matrix([p1, p2, dp1, dp2, q0, q1, q2, r])
+whod = sp.Matrix([p1_dot, p2_dot, dp1, dp2, q0, q1, q2, r])
+
+F = sp.Matrix([
+    q2 - y2,
+    p1 - y1 - r,
+    -dp2 + (q1 - q2) / CT2,
+    -p2_dot + dp2,
+    -dp1 + (q0 - q1) / CT1,
+    q0 - y3,
+    -p1_dot + dp1,
+    q1 - (p1 - p2) / Rv1])
+
+Fhod = Jac(F, whod)
+Fhod.det()
+
 # %% Simulate system and residual generators
 G = TankSimulation.ThreeTank_ss(model_params)
 Lx, _, _ = controller_lqr(G['A'], G['B'], np.eye(3, 3), np.eye(1) * 0.5)
-Lr = (1 / np.dot([1, 0, 0], -inv(G['A']-G['B'].dot(Lx)).dot(G['B'])))[0]
+Lr = (1 / np.dot([1, 0, 0], -inv(G['A'] - G['B'].dot(Lx)).dot(G['B'])))[0]
 
 
 def ref(t):
@@ -52,13 +81,13 @@ def controller(t, x):
 noise = 0
 t = np.linspace(0, 20, 201)
 x0 = [0, 0, 0]
-sim = [TankSimulation.SimScenario(0, lambda t: 0*t, controller, model_params, t, x0),
-       TankSimulation.SimScenario(1, lambda t: 0.3*TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
-       TankSimulation.SimScenario(2, lambda t: 0.3*TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
-       TankSimulation.SimScenario(3, lambda t: 0.3*TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
-       TankSimulation.SimScenario(4, lambda t: 0.3*TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
-       TankSimulation.SimScenario(5, lambda t: 0.3*TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
-       TankSimulation.SimScenario(6, lambda t: 0.3*TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0)]
+sim = [TankSimulation.SimScenario(0, lambda t: 0 * t, controller, model_params, t, x0),
+       TankSimulation.SimScenario(1, lambda t: 0.3 * TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
+       TankSimulation.SimScenario(2, lambda t: 0.3 * TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
+       TankSimulation.SimScenario(3, lambda t: 0.3 * TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
+       TankSimulation.SimScenario(4, lambda t: 0.3 * TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
+       TankSimulation.SimScenario(5, lambda t: 0.3 * TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0),
+       TankSimulation.SimScenario(6, lambda t: 0.3 * TankSimulation.ramp(t, 6, 10), controller, model_params, t, x0)]
 
 # Define measurements and add noise
 nstd = np.array([0.01, 0, 0, 0, 0, 0.01, 0]) * noise
@@ -111,13 +140,15 @@ ax[2].set_xlabel('t [s]')
 despine()
 
 
-# %% Sequential residual generator in integral causality (no loops) (Fig. 3 in paper)
-eqr2 = mso2
-redeq2 = 6
-m02 = [e for e in eqr2 if e != redeq2]
+# %% Generate code for DAE and sequential residual generator in integral causality (no loops) (Fig. 3 in paper)
+m02 = [e for e in mso if e != redeq]
+
+# DAE residual generator
+model.DAEResGen(mso, redeq, "ResGen2_dae")
+
+# Sequential residual generator
 Gamma2 = model.Matching(m02)
-model.SeqResGen(Gamma2, redeq2, 'ResGen2', batch=True, language='C')
-print("")
+model.SeqResGen(Gamma2, redeq, 'ResGen2', batch=True, language='C')
 
 # Compile generated source code
 for resName in ['ResGen2']:
@@ -128,143 +159,42 @@ for resName in ['ResGen2']:
     else:
         print('Failure!')
 
-# Simulate residual generators for all test cases and plot results
-import ResGen2
+# %% Simulate residual generators for all test cases
+from ResGen2_dae import ResGen2_dae
+from ResGen2 import ResGen2
 
 m = len(sim)
 N = len(sim[0].t)
 Ts = sim[0].t[1] - sim[0].t[0]
 
-r2 = np.zeros((m, N))
+r2_dae = ResGen2_dae(model_params)
 
+r2_seq_sol = np.zeros((m, N))
+r2_dae_sol = np.zeros((len(sim), len(t)))
 for fi in range(m):
     state2 = {'p1': sim[fi].z[0, 0], 'p2': sim[fi].z[0, 1]}
-    r2[fi, :] = ResGen2.ResGen2(sim[fi].z, state2, model_params, Ts)
+    r2_seq_sol[fi, :] = ResGen2(sim[fi].z, state2, model_params, Ts)
 
-# Plot some results
-_, ax = plt.subplots(num=10, clear=True)
-for ri in range(m):
-    ax.plot(sim[0].t, r2[ri, :])
-despine()
-ax.set_title('r2 (seq/integral/discrete)')
-
-# %% Test that MSO-DAE is low-index
-CT1, CT2, Rv1 = sp.symbols(["CT1", "CT2", "Rv1"])
-p1, p2, dp1, dp2, q0, q1, q2, r, y1, y2, y3 = sp.symbols(["p1", "p2", "dp1", "dp2", "q0", "q1", "q2", "r", "y1", "y2", "y3"])
-p1_dot, p2_dot = sp.symbols([r"\\dot{p}_1", r"\\dot{p}_2"])
-
-w = sp.Matrix([p1, p2, dp1, dp2, q0, q1, q2, r])
-whod = sp.Matrix([p1_dot, p2_dot, dp1, dp2, q0, q1, q2, r])
-
-F = sp.Matrix([
-    q2 - y2,
-    p1 - y1 - r,
-    -dp2 + (q1 - q2) / CT2,
-    -p2_dot + dp2,
-    -dp1 + (q0 - q1) / CT1,
-    q0 - y3,
-    -p1_dot + dp1,
-    q1 - (p1 - p2) / Rv1])
-
-Fhod = Jac(F, whod)
-Fhod.det()
-
-# %% Setup simulation code
-sim_params = [model_params[pi] for pi in model.parameters]
-def Resgen2_dae(_, w, wp, result, y, params):
-    p1, p2, dp1, dp2, q0, q1, q2, r  = w
-    p1_dot, p2_dot = wp[0:2]
-    y1, y2, y3 = y
-    Rv1, _, _, CT1, CT2, _ = params
-    result[0] = q2 - y2
-    result[1] = p1 - y1 - r
-    result[2] = -dp2 + (q1 - q2) / CT2
-    result[3] = -p2_dot + dp2
-    result[4] = -dp1 + (q0 - q1) / CT1
-    result[5] = q0 - y3
-    result[6] = -p1_dot + dp1
-    result[7] = q1 - (p1 - p2) / Rv1
-
-
-# NF simulation
-t = sim[0].t
-y = sim[0].z
-y_inter = interp1d(t, y.T, fill_value="extrapolate")
-r2_sim = dae("ida", lambda t, w, wp, res: Resgen2_dae(t, w, wp, res, y_inter(t), sim_params),
-             old_api=False, algebraic_vars_idx=np.arange(2, 8), compute_initcond='yp0',
-             rtol=1e-3, atol=1e-3)
-r2_init = np.hstack((y[0, 0:2], np.zeros(6)))
-r2_sol = r2_sim.solve(t, r2_init, 0 * r2_init)
-
-_, ax = plt.subplots(num=11, clear=True)
-ax.plot(r2_sol.values.t, r2_sol.values.y[:, 7], label='DAE')
-ax.plot(sim[0].t, r2[0, :], label='Sequential')
-ax.legend()
-despine()
-
-# %% Simulate all modes
-r2_dae = np.zeros((len(sim), len(t)))
-for fi in range(m):
-    y_inter = interp1d(t, sim[fi].z.T, fill_value="extrapolate", kind="linear")
-    r2_sim = dae("ida", lambda t, w, wp, res: Resgen2_dae(t, w, wp, res, y_inter(t), sim_params),
-                 old_api=False, algebraic_vars_idx=np.arange(2, 8), compute_initcond='yp0',
-                 rtol=1e-3, atol=1e-3)
+    y = sim[fi].z.T
+    r2_dae.init(t, y)
     r2_init = np.hstack((sim[fi].z[0, 0:2], np.zeros(6)))
-    r2_sol = r2_sim.solve(t, r2_init, 0 * r2_init)
-    r2_dae[fi, :] = r2_sol.values.y[:, 7]
+    r2_dae.solve(t, r2_init)
+    r2_dae_sol[fi] = r2_dae.res
 
+# %% Plot some results
 _, ax = plt.subplots(1, 2, num=20, clear=True)
 for ri in range(m):
-    ax[0].plot(sim[0].t, r2[ri, :])
+    ax[0].plot(sim[0].t, r2_seq_sol[ri])
 ax[0].set_xlabel("t [s]")
 ax[0].set_title('r2 (seq/integral/discrete)')
 despine()
 
 for ri in range(m):
-    ax[1].plot(sim[0].t, r2_dae[ri, :])
+    ax[1].plot(sim[0].t, r2_dae_sol[ri])
 ax[1].set_xlabel("t [s]")
 ax[1].set_title('r2 (dae)')
 despine()
 
 
-# %% Residual generator class
-class ResGen2DAE:
-    def __init__(self, params, t, y):
-        self._y_inter = interp1d(t, y, fill_value="extrapolate")
-        self._params = params
-        alg_idx = np.arange(2, 8)
-        self._integrator = dae("ida", lambda t, w, wp, res: self._sim_residual(t, w, wp, res),
-                               old_api=False, algebraic_vars_idx=alg_idx, compute_initcond='yp0',
-                               rtol=1e-3, atol=1e-3)
-
-    def _sim_residual(self, t, w, wp, result):
-        p1, p2, dp1, dp2, q0, q1, q2, r = w
-        p1_dot, p2_dot = wp[0:2]
-        y1, y2, y3 = self._y_inter(t)
-        Rv1, _, _, CT1, CT2, _ = self._params
-        result[0] = q2 - y2
-        result[1] = p1 - y1 - r
-        result[2] = -dp2 + (q1 - q2) / CT2
-        result[3] = -p2_dot + dp2
-        result[4] = -dp1 + (q0 - q1) / CT1
-        result[5] = q0 - y3
-        result[6] = -p1_dot + dp1
-        result[7] = q1 - (p1 - p2) / Rv1
-
-    def solve(self, t, w0):
-        r_sol = self._integrator.solve(t, w0, 0 * w0)
-        return r_sol.values.y[:, 7]
-
-resgen_2 = ResGen2DAE(sim_params, t, y.T)
-r2_class = resgen_2.solve(t, r2_init)
-
-# %% Generate code
-exprs = model.syme[mso2]
-for i, e_idx in enumerate(mso2):
-    ei = model.syme[e_idx]
-    res_append = " - r" if e_idx==redeq2 else ""
-    if type(ei) is sp.Equality:
-        code = f"result[{i}] = {str(ei.lhs)}{res_append}"
-    elif type(ei) is list and len(ei) == 3 and ei[2] == 'diff':
-        code = f"result[{i}] = {ei[1]}_dot - {ei[0]}{res_append}"
-    print(code)
+# %%
+plt.show()
