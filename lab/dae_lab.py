@@ -65,8 +65,8 @@ Fhod.det()
 
 # %% Simulate system and residual generators
 G = TankSimulation.ThreeTank_ss(model_params)
-Lx, _, _ = controller_lqr(G['A'], G['B'], np.eye(3, 3), np.eye(1) * 0.5)
-Lr = (1 / np.dot([1, 0, 0], -inv(G['A'] - G['B'].dot(Lx)).dot(G['B'])))[0]
+Lx, _, _ = controller_lqr(G.A, G.B, np.eye(3, 3), np.eye(1) * 0.5)
+Lr = (1 / np.dot([1, 0, 0], -inv(G.A - G.B.dot(Lx)).dot(G.B)))[0]
 
 
 def ref(t):
