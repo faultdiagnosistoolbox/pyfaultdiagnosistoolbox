@@ -8,7 +8,7 @@ class ExtendedModel(fdt.DiagnosisModel):
     def __init__(self, modeldef, name=''):
         super().__init__(modeldef, name="")
 
-    def DAEResGen(self, mso, residual_equation, name, language="python"):
+    def DAEResGen(self, mso, residual_equation, name, language="python", preamble=None):
         if self.IsHighIndex(mso):
             raise RuntimeError("Only low-index MSOs are permitted")
 
@@ -17,11 +17,11 @@ class ExtendedModel(fdt.DiagnosisModel):
 Choose more visely""")
 
         if language == "python":
-            self.generate_python_dae_resgen(mso, residual_equation, name)
+            self.generate_python_dae_resgen(mso, residual_equation, name, preamble)
         else:
             raise NotImplementedError(f"Generation for language {language} not yetr implemented")
 
-    def generate_python_dae_resgen(self, mso, residual_equation, name):
+    def generate_python_dae_resgen(self, mso, residual_equation, name, preamble):
         file_name = f"{name}.py"
 
         with open(file_name, "wt") as f:
@@ -40,6 +40,9 @@ Choose more visely""")
             f.write("import numpy as np\n")
             f.write("from scipy.interpolate import interp1d\n")
             f.write("from scikits.odes import dae\n")
+
+            if preamble:
+                f.write(preamble)
 
             f.write("\n\n")
             f.write(f"class {name}:\n")

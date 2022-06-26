@@ -1,11 +1,10 @@
-import csv
 import numpy as np
-import scipy.sparse as sp
 import scipy.io as sio
 import sys
 import matplotlib.pyplot as plt
 import time
 import matplotlib.colors as mcolors
+
 
 def loadmat(filename):
     '''
@@ -17,6 +16,7 @@ def loadmat(filename):
     data = sio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
 
+
 def _check_keys(dict):
     '''
     checks if entries in dictionary are mat-objects. If yes
@@ -25,7 +25,8 @@ def _check_keys(dict):
     for key in dict:
         if isinstance(dict[key], sio.matlab.mio5_params.mat_struct):
             dict[key] = _todict(dict[key])
-    return dict        
+    return dict
+
 
 def _todict(matobj):
     '''
@@ -40,14 +41,18 @@ def _todict(matobj):
             dict[strg] = elem
     return dict
 
+
 class Timer:
     t0 = 0.0
+
     def tic(self):
         self.t0 = time.time()
-    def toc(self):
-        return time.time()-self.t0
 
-def RunResgenOnDataSets( resgen, data, params ):
+    def toc(self):
+        return time.time() - self.t0
+
+
+def RunResgenOnDataSets(resgen, data, params):
     res = {}
     t = Timer()
     for ds in data.keys():
@@ -56,12 +61,13 @@ def RunResgenOnDataSets( resgen, data, params ):
         Ts = data[ds]['Ts']
         z = data[ds]['z']
         N = len(data[ds]['time'])
-        t.tic()        
-        res[ds] = resgen(z,state,params,Ts)
-        dt=t.toc()
-        sys.stdout.write(' (%.2f sec, %.1f x real time @ %d Hz)\n' % (dt, Ts*N/dt, 1/Ts))
+        t.tic()
+        res[ds] = resgen(z, state, params, Ts)
+        dt = t.toc()
+        sys.stdout.write(' (%.2f sec, %.1f x real time @ %d Hz)\n' % (dt, Ts * N / dt, 1 / Ts))
         sys.stdout.flush()
     return res
+
 
 def make_colormap(seq):
     """Return a LinearSegmentedColormap
@@ -78,6 +84,7 @@ def make_colormap(seq):
             cdict['green'].append([item, g1, g2])
             cdict['blue'].append([item, b1, b2])
     return mcolors.LinearSegmentedColormap('CustomMap', cdict)
+
 
 summer_cmap = make_colormap([
     (0.000, 0.500, 0.400),
@@ -145,18 +152,19 @@ summer_cmap = make_colormap([
     (0.984, 0.992, 0.400),
     (1.000, 1.000, 0.400)])
 
+
 def PlotConfusionMatrix(C):
     """Plot a confusion matrix in a suitable colormap."""
     nf = C.shape[0]
     plt.imshow(C, cmap=summer_cmap)
     for fi in range(nf):
         for fj in range(nf):
-            plt.text(fi, fj, '%.1f' % (C[fj, fi]*100), ha='center', va='center', color='k')
+            plt.text(fi, fj, '%.1f' % (C[fj, fi] * 100), ha='center', va='center', color='k')
     ax = plt.gca()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
-    ax.set_xticks(np.arange(C.shape[1]+1)-.5, minor=True)
-    ax.set_yticks(np.arange(C.shape[0]+1)-.5, minor=True)
+    ax.set_xticks(np.arange(C.shape[1] + 1) - .5, minor=True)
+    ax.set_yticks(np.arange(C.shape[0] + 1) - .5, minor=True)
     ax.tick_params(which="minor", bottom=False, left=False)
     ax.grid(which="minor", color="w", linestyle='-', linewidth=3)
