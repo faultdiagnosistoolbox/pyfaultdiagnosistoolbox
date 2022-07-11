@@ -17,7 +17,7 @@ def CSCDict(A):
             'nz': -1}
 
 
-def dmperm(A):
+def dmperm(A) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Dulmage-Mendelsohn decomposition of matrix.
 
     p, q, r, s, cc, rr, m = dmperm(A) finds the Dulmage-Mendelsohn decomposition
@@ -35,7 +35,7 @@ def dmperm(A):
         return sa.dmperm_internal(CSCDict(sp.csc_matrix(A)))
 
 
-def srank(A):
+def srank(A) -> int:
     """Compute structural rank of matrix."""
     # _, _, _, _, rr, _ = dmperm(A)
     #    return rr[3]
@@ -84,7 +84,7 @@ def MSO(X):
         return sa.findmso_internal(CSCDict(sp.csc_matrix(X)))
 
 
-def GetDMParts(X):
+def GetDMParts(X) -> DMResult:
     """Compute Dulmage-Mendelsohn decomposition."""
     if sp.issparse(X):
         p, q, r, s, _, _, _ = dmperm(X)
@@ -137,7 +137,7 @@ def GetDMParts(X):
     return res
 
 
-def PSODecomposition(X):
+def PSODecomposition(X) -> dict[list[EqBlock], np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Compute PSO decomposition."""
     if not IsPSO(X):
         print("PSO Decomposition for PSO structures only, exiting...")
@@ -186,7 +186,7 @@ def PSODecomposition(X):
     return res
 
 
-def IsPSO(X, eq=None):
+def IsPSO(X, eq=None) -> bool:
     """Return True if PSO."""
     if eq is None:
         eqs = np.arange(0, X.shape[0])
@@ -197,7 +197,7 @@ def IsPSO(X, eq=None):
     return (len(dm.Mm.row) == 0) and (len(dm.M0) == 0)
 
 
-def IsObservable(Xin, eq=None):
+def IsObservable(Xin, eq=None) -> bool:
     """Return True if observable."""
     def DiffConstraints(X):
         diffEqs = np.where(np.any(X == 2, axis=1))[0]
@@ -261,7 +261,7 @@ def IsObservable(Xin, eq=None):
     return obs
 
 
-def IsHighIndex(X, eq=None):
+def IsHighIndex(X, eq=None) -> bool:
     """Return True if high differential index."""
     if eq is None:
         eq = np.arange(0, X.shape[0])
@@ -276,7 +276,7 @@ def IsHighIndex(X, eq=None):
     return srank(Xhod) < Xhod.shape[1] - nz
 
 
-def IsLowIndex(X, eq=None):
+def IsLowIndex(X, eq=None) -> bool:
     """Return True if low differential index."""
     if eq is None:
         eq = np.arange(0, X.shape[0])
@@ -560,15 +560,18 @@ def MTES_LumpExt(m, row):
         e1 = [m['e'][idx] for idx in foo]
 #        e2 = list([np.hstack(np.array(m['e'], dtype=np.ndarray)[eqcls])])
         e2 = list([np.hstack([m['e'][idx] for idx in eqcls])])
-        foo = remRows[row_over[rowinsert:]].astype(np.int64) if len(row_over[rowinsert:]) > 0 else np.array([], dtype=np.int64)
+        foo = (remRows[row_over[rowinsert:]].astype(np.int64) if
+               len(row_over[rowinsert:]) > 0 else np.array([], dtype=np.int64))
 #        e3 = list(np.array(m['e'], dtype=np.ndarray)[foo])
         e3 = [m['e'][idx] for idx in foo]
         n['e'] = e1 + e2 + e3
 
-        foo = remRowsf[row_overf[0:rowinsert]].astype(np.int64) if len(row_overf[0:rowinsert]) > 0 else np.array([], dtype=np.int64)
+        foo = (remRowsf[row_overf[0:rowinsert]].astype(np.int64) if
+               len(row_overf[0:rowinsert]) > 0 else np.array([], dtype=np.int64))
         ef1 = list(np.array(m['f'], dtype=np.ndarray)[foo])
         ef2 = list([np.hstack(np.array(m['f'], dtype=np.ndarray)[eqclsf])])
-        foo = remRowsf[row_overf[rowinsert:]].astype(np.int64) if len(row_overf[rowinsert:]) > 0 else np.array([], dtype=np.int64)
+        foo = (remRowsf[row_overf[rowinsert:]].astype(np.int64) if
+               len(row_overf[rowinsert:]) > 0 else np.array([], dtype=np.int64))
         ef3 = list(np.array(m['f'], dtype=np.ndarray)[foo])
         n['f'] = ef1 + ef2 + ef3
 

@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def MHS(conflist):
+def MHS(conflist) -> list[np.ndarray]:
     """Return Minimal Hitting Set for a set of sets.
 
     Input

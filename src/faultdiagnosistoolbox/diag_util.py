@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
 
-def IsolabilityMatrix(fsm):
+def IsolabilityMatrix(fsm: np.ndarray) -> np.ndarray:
     """Compute isolability matrix based on a fault signature matrix"""
     nf = fsm.shape[1]
     im = np.ones((nf, nf), dtype=np.int)
@@ -14,7 +14,7 @@ def IsolabilityMatrix(fsm):
     return im
 
 
-def DiagnosesAndConfusionMatrix(data, residx=None):
+def DiagnosesAndConfusionMatrix(data, residx=None) -> tuple[np.ndarray, np.ndarray]:
     """Compute consistency based diagnoses and corresponding confusion matrix
        based on a dataset."""
     if isinstance(residx, type(None)):
@@ -33,7 +33,7 @@ def DiagnosesAndConfusionMatrix(data, residx=None):
     return dx, C
 
 
-def SingleFaultIsolability(res, fsm):
+def SingleFaultIsolability(res, fsm) -> np.ndarray:
     """Compute single fault consistency based diagnoses."""
     N = res.shape[0]
     nf = fsm.shape[1]

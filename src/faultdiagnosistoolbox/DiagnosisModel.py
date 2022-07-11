@@ -14,7 +14,7 @@ from faultdiagnosistoolbox.VarIdGen import VarIdGen
 import sys
 
 
-class DiagnosisModel(object):
+class DiagnosisModel:
     """Diagnosis model.
 
     DiagnosisModel(model_def)
@@ -158,27 +158,27 @@ class DiagnosisModel(object):
         """Return a new copy of the model object."""
         return copy.deepcopy(self)
 
-    def ne(self):
+    def ne(self) -> int:
         """Return number of equations in model."""
         return self.X.shape[0]
 
-    def nx(self):
+    def nx(self) -> int:
         """Return number of unknown variables in model."""
         return self.X.shape[1]
 
-    def nf(self):
+    def nf(self) -> int:
         """Return number of fault variables in model."""
         return self.F.shape[1]
 
-    def nz(self):
+    def nz(self) -> int:
         """Return number of known variables in model."""
         return self.Z.shape[1]
 
-    def GetDMParts(self):
+    def GetDMParts(self) -> dmperm.DMResult:
         """Return Dulmage-Mendelsohn decomposition of structure for unknown variables."""
         return dmperm.GetDMParts(self.X)
 
-    def MSO(self):
+    def MSO(self) -> list[np.ndarray]:
         """Return the set of MSO sets.
 
         For details of the algorithm see the journal publication
@@ -190,7 +190,7 @@ class DiagnosisModel(object):
         """
         return list(dmperm.MSO(self.X))
 
-    def MTES(self):
+    def MTES(self) -> list[np.ndarray]:
         """Return the set of MTES sets.
 
         For details of the algorithm see the paper
@@ -201,7 +201,7 @@ class DiagnosisModel(object):
         """
         return dmperm.MTES(self)
 
-    def TestSelection(self, arr, method='aminc', isolabilitymatrix=''):
+    def TestSelection(self, arr, method='aminc', isolabilitymatrix='') -> list[np.ndarray]:
         """A minimal hitting set based test selection.
 
         Find sets of tests, based on a set of equations or a fault sensitivity
@@ -244,11 +244,11 @@ class DiagnosisModel(object):
         """
         return testselection.TestSelection(self, arr, method, isolabilitymatrix)
 
-    def srank(self):
+    def srank(self) -> int:
         """Return the structural rank of the incidence matrix for the unknown variables."""
         return dmperm.srank(self.X)
 
-    def IsPSO(self, eq=None):
+    def IsPSO(self, eq=None) -> bool:
         """Return True if the model is a PSO set.
 
         Input
@@ -297,7 +297,7 @@ class DiagnosisModel(object):
         self.Pfault = []
         self.P = np.arange(0, len(self.x))
 
-    def IsObservable(self, eq=None):
+    def IsObservable(self, eq=None) -> bool:
         """Return true if the model is observable.
 
         Input
@@ -308,7 +308,7 @@ class DiagnosisModel(object):
             eq = []
         return dmperm.IsObservable(self.X, eq)
 
-    def Pantelides(self):
+    def Pantelides(self) -> tuple[int, np.ndarray]:
         """Compute structural index and differentiation vector for exactly determined models
 
         idx, nu = model.Pantelides()
@@ -346,7 +346,7 @@ class DiagnosisModel(object):
         idx = np.max(der) + np.any(hd == 0)
         return idx, der.reshape(-1)
 
-    def IsHighIndex(self, eq=None):
+    def IsHighIndex(self, eq=None) -> bool:
         """Return true if the model is high structural differential index.
 
         Input
@@ -359,7 +359,7 @@ class DiagnosisModel(object):
             eq = np.arange(0, self.X.shape[0])
         return dmperm.IsHighIndex(self.X, eq)
 
-    def IsLowIndex(self, eq=None):
+    def IsLowIndex(self, eq=None) -> bool:
         """Return true if the model is low structural differential index.
 
         Input
@@ -370,29 +370,29 @@ class DiagnosisModel(object):
             eq = np.arange(0, self.X.shape[0])
         return dmperm.IsLowIndex(self.X, eq)
 
-    def IsUnderdetermined(self):
+    def IsUnderdetermined(self) -> bool:
         """Return true if the model has underdetermined parts."""
         dm = dmperm.GetDMParts(self.X)
         return len(dm.Mm.row) > 0
 
-    def DifferentialConstraints(self):
+    def DifferentialConstraints(self) -> bool:
         """Return indices to the differential constraints."""
         return np.where(np.any(self.X == 2, axis=1))[0]
 
-    def DynamicVariables(self):
+    def DynamicVariables(self) -> tuple[list, list[int]]:
         """Return variables and index to dynamic variables in model."""
         idx = np.where(np.any(self.X == 2, axis=0))[0]
         c = list(np.array(self.x)[idx])
         return c, idx
 
-    def AlgebraicVariables(self):
+    def AlgebraicVariables(self) -> tuple[list, list[int]]:
         """Return variables and index to algebraic variables in model."""
         dyn_idx = np.where(np.any(self.X == 2, axis=0))[0]
         idx = [x for x in range(self.nx()) if not(x in dyn_idx)]
         c = list(np.array(self.x)[idx])
         return c, idx
 
-    def FSM(self, eqs_sets, plot=False):
+    def FSM(self, eqs_sets, plot=False) -> np.ndarray:
         """Return the fault signature matrix for a set of equation sets.
 
         Input
@@ -413,7 +413,7 @@ class DiagnosisModel(object):
 
         return r
 
-    def Matching(self, eqs):
+    def Matching(self, eqs) -> match.Matching:
         """Return a matching for a set of equations.
 
         Input
@@ -422,7 +422,7 @@ class DiagnosisModel(object):
         """
         return match.Matching(self.X, np.array(eqs))
 
-    def MSOCausalitySweep(self, mso, diffres='int', causality=None):
+    def MSOCausalitySweep(self, mso, diffres='int', causality=None) -> list[str]:
         """Determine casuality for MSO set residual generator.
 
         Determine causality for sequential residual generator for
@@ -550,15 +550,15 @@ class DiagnosisModel(object):
         self.P = np.arange(0, len(xIdx))
         self.Pfault = []
 
-    def IsDynamic(self):
+    def IsDynamic(self) -> bool:
         """Return True if model is dynamic."""
         return np.any(self.X == 2)
 
-    def IsStatic(self):
+    def IsStatic(self) -> bool:
         """Return True if model is static."""
         return not self.IsDynamic()
 
-    def Redundancy(self, eqs=None):
+    def Redundancy(self, eqs=None) -> int:
         """Return the redundancy of the model."""
         if eqs is None:
             eqs = []
@@ -568,7 +568,7 @@ class DiagnosisModel(object):
         dm = dmperm.GetDMParts(self.X[eqs, :])
         return len(dm.Mp.row) - len(dm.Mp.col)
 
-    def MTESRedundancy(self):
+    def MTESRedundancy(self) -> int:
         """Return the redundancy of an MTES for the model."""
         eqs = np.argwhere(np.any(self.F, axis=1))[:, 0]
         return self.Redundancy(eqs) + 1
