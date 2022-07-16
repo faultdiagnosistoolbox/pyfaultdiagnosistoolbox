@@ -3,7 +3,6 @@
 # %load_ext autoreload
 # %autoreload 2
 # %% Initial imports
-from warnings import warn
 from numpy.linalg import inv
 import matplotlib.pyplot as plt
 from controlpy.synthesis import controller_lqr
@@ -12,7 +11,6 @@ import os
 from faultdiagnosistoolbox.examples.ThreeTankSimulation import TankSimulation
 import numpy as np
 import sympy as sp
-from scipy.optimize import fsolve, root
 from extended_fdt import ExtendedModel
 from faultdiagnosistoolbox.models._three_tank_model import modelDef as tt_model_def
 
@@ -199,67 +197,4 @@ despine()
 
 
 # %%
-def consistent_initial_conditions(res_gen, model: ExtendedModel,
-                                  initial_state_dict: dict,
-                                  solver="hybr",
-                                  solver_options={}) -> tuple[np.ndarray, np.ndarray]:
-    # dx1 = f(x1, x2)
-    # 0 &= g(x1, x2)
-    # d/dt x1 = dx1
-
-    # w = res_gen.vars = (x1, dx1, x2)
-
-    # Find index into w for x1
-    n = len(res_gen.vars)
-    x1_idx = np.array([res_gen.vars.index(model.x[i]) for
-                       i in np.argwhere(np.any(model.X[mso] == 2, axis=0)).reshape(-1)])
-    n1 = len(x1_idx)
-
-    # Index for remaining variables (dx1, x2)
-    nx1_idx = np.array([i for i in range(n) if i not in x1_idx])
-    n2 = n - n1
-
-    # Initialize random
-    theta = np.random.default_rng().uniform(0, 1, n)
-
-    # Get initial values for x1(0)
-    x10 = [initial_state_dict[res_gen.vars[i]] for i in x1_idx]
-    w = np.zeros(n)
-    w[x1_idx] = x10
-    wp = np.zeros(n)
-
-    # Residual equations, solve for (d/dt x1(0), dx1(0), x2(0))
-    def initial_res(theta):
-        w[nx1_idx] = theta[0:n2]
-        wp[x1_idx] = theta[n2:n]
-        r = np.zeros(n)
-        res_gen._sim_residual(0, w, wp, r)
-        return r
-
-    sol = root(initial_res, theta, method=solver, options=solver_options)
-
-    if not sol.success:
-        warn(f"Consistent initial condition computations exited in error: {sol.message}", RuntimeWarning)
-
-    w[nx1_idx] = sol.x[0:n2]
-    wp[x1_idx] = sol.x[n2:n]
-
-    return w, wp
-
-
-t = sim[0].t
-y = sim[0].z.T
-init_dict = {'p1': y[0, 0], 'p2': y[1, 0]}
-
-r2_dae = ResGen2_dae(model_params)
-r2_dae.init(t, y)
-w, wp = r2_dae.consistent_initial_conditions(model, init_dict)
-r = np.zeros(8)
-r2_dae._sim_residual(0, w, wp, r)
-print(r)
-
-r2_dae.solve(t, w, wp)
-
-
-
-# %%
+plt.show()
