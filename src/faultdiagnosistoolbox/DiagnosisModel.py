@@ -488,7 +488,7 @@ class DiagnosisModel:
         else:
             return []
 
-    def SubModel(self, m, v, clear=True, remove=False, verbose=False):
+    def SubModel(self, m=None, v=None, clear=True, remove=False, verbose=False):
         """Extract submodel.
 
         Input
@@ -500,6 +500,11 @@ class DiagnosisModel:
           verbose : If true, verbose output (default: false)
           remove  : If true, supplied equations are removed instead of kept (default: false)
         """
+        if m is None:
+            m = range(self.ne())
+        if v is None:
+            v = range(self.nx())
+
         if remove:
             eqs = np.array([ei for ei in np.arange(0, self.ne()) if not (ei in m)])
             var = np.array([vi for vi in np.arange(0, self.nx()) if not (vi in v)])

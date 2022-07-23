@@ -11,7 +11,8 @@ import seaborn as sns
 from extended_fdt import ExtendedModel
 from faultdiagnosistoolbox import srank
 from scipy.optimize import root
-
+import time
+from math import log10, ceil
 import sympy as sp
 
 # %% Set up paths
@@ -40,8 +41,7 @@ re = [73, 75, 75, 3, 76, 3, 2]
 FSM = model.FSM([msos[ti] for ti in ts])
 
 # %% Code generation
-preamble = """
-from math import sqrt, exp, pi
+preamble = """from math import sqrt, exp, pi
 from extmodelfuns import a_eta_t_fun, b_eta_t_fun, eta_c_fun, W_ic_fun
 from extmodelfuns import W_af_fun, W_es_fun, PSI_th_fun, PI_wg_fun, PSIli_wg_fun, Tflow_wg_fun
 from extmodelfuns import W_c_fun, PHI_model_fun, PI_c_fun, W_t_fun, Tq_t_fun
@@ -120,6 +120,13 @@ res_gen.solve(t, w, wp)
 
 from ResGen_1649_1_dae import ResGen_1649_1_dae
 
+ds = "NF"
+state = data[ds]['state_init']
+Ts = data[ds]['Ts']
+z = data[ds]['z'].T
+N = len(data[ds]['time'])
+t = np.arange(0, N * Ts, Ts)
+
 res_gen = ResGen_1649_1_dae(diag_par)
 res_gen.init(t, z)
 
@@ -133,9 +140,11 @@ mso_hod_model.SubModel(m0, res_gen.vars)  # Get exactly determined part of MSO
 
 # Identify x1, x2, and x1d variables
 diff_constraints_idx = [eidx for eidx, _ in enumerate(mso_hod_model.e) if np.any(mso_hod_model.X[eidx] > 1)]
-x1_idx = [xidx for xidx, _ in enumerate(mso_hod_model.x) if np.any(mso_hod_model.X[:, xidx] == 2)]
+# x1_idx = [xidx for xidx, _ in enumerate(mso_hod_model.x) if np.any(mso_hod_model.X[:, xidx] == 2)]
+x1_idx = [np.argwhere(ei == 2)[0, 0] for ei in mso_hod_model.X[diff_constraints_idx]]
 x1 = [mso_hod_model.x[xi] for xi in x1_idx]
-x1d_idx = [xidx for xidx, _ in enumerate(mso_hod_model.x) if np.any(mso_hod_model.X[:, xidx] == 3)]
+# x1d_idx = [xidx for xidx, _ in enumerate(mso_hod_model.x) if np.any(mso_hod_model.X[:, xidx] == 3)]
+x1d_idx = [np.argwhere(ei == 3)[0, 0] for ei in mso_hod_model.X[diff_constraints_idx]]
 x1d = [mso_hod_model.x[xi] for xi in x1d_idx]
 x2_idx = [x for x, _ in enumerate(mso_hod_model.x) if x not in x1_idx + x1d_idx]
 x2 = [mso_hod_model.x[xi] for xi in x2_idx]
@@ -153,12 +162,12 @@ fig, ax = plt.subplots(num=10, clear=True)
 mso_hod_model.PlotMatching(Gamma, verbose=True)
 
 
-subs = {x1i: data["NF"]["state_init"][x1i] for x1i in x1}
-subs.update({zi: yzi for zi, yzi in zip(model.z, data["NF"]["z"][0])})
-subs.update({fi: 0 for fi in mso_hod_model.f})
-subs.update(diag_par)
+# subs = {x1i: data["NF"]["state_init"][x1i] for x1i in x1}
+# subs.update({zi: yzi for zi, yzi in zip(model.z, data["NF"]["z"][0])})
+subs = {fi: 0 for fi in mso_hod_model.f}
+# subs.update(diag_par)
 
-mso_hod_model.syme[Gamma.matching[1].row][0].subs(subs)
+# mso_hod_model.syme[Gamma.matching[1].row][0].subs(subs)
 
 for gammai in Gamma.matching:
     print(str(mso_hod_model.syme[gammai.row][0].lhs.subs(subs)), end="")
@@ -166,28 +175,43 @@ for gammai in Gamma.matching:
     # print(" => ", [mso_hod_model.x[xi] for xi in gammai.col])
 
 
-def foo_res(theta):
-    W_fc = theta
-    return W_fc - 2.73945950655852e-5
+# def foo_res(theta):
+#     W_fc = theta
+#     return W_fc - 2.73945950655852e-5
 
 
-root(foo_res, 0)
+# root(foo_res, 0)
 
 # %% Generate code for residual functions
 # Lägg till lösta variabler eftersom i substitutionskedjan
+f_sub = {sp.symbols(fi): 0 for fi in mso_hod_model.f}  # Substitute all fault variables
+block_num_size = ceil(log10(len(Gamma.matching))) + 1
 with open("ic_blocks.py", "wt") as f:
-    f.write("import numpy as np\n\n\n")
+    f.write('# File generated ' + time.strftime('%c') + '\n\n')
+    f.write("import numpy as np\n")
+    f.write(preamble)
+    f.write("\n\n")
+
     for k, g_i in enumerate(Gamma.matching):
         block_all_vars = set().union(*[ei.lhs.free_symbols for ei in mso_hod_model.syme[g_i.row]])
+        block_all_vars = block_all_vars - set(f_sub.keys())
         any_x1 = True if [x1i for x1i in x1 if sp.symbols(x1i) in block_all_vars] else False
         any_z = True if [zi for zi in mso_hod_model.z if sp.symbols(zi) in block_all_vars] else False
-        any_params = True if [pi for zi in mso_hod_model.parameters if sp.symbols(zi) in block_all_vars] else False
+        any_params = True if [pi for pi in mso_hod_model.parameters if sp.symbols(pi) in block_all_vars] else False
 
-        f.write(f"def block_{k}(x, subs):\n")
+        solve_vars = [mso_hod_model.x[xidx] for xidx in g_i.col]
+        pre_solve = [str(xi) for xi in block_all_vars if (str(xi) not in solve_vars and
+                                                          str(xi) not in mso_hod_model.parameters and
+                                                          str(xi) not in mso_hod_model.z and
+                                                          str(xi) not in x1)]
+
+        print(f"Block {k}: Solve for ", [mso_hod_model.x[xi] for xi in g_i.col])
+
+        f.write(f"def block_{k:0{block_num_size}}(x, subs):\n")
         f.write("    # Solve for: ")
         for xidx in g_i.col:
-            f.write(f"{mso_hod_model.x[xidx]} \n")
-        if any_x1 or any_z or any_params:
+            f.write(f"{mso_hod_model.x[xidx]}\n")
+        if any_x1 or any_z or any_params or pre_solve:
             f.write("    ")
             if any_z:
                 f.write("z, ")
@@ -201,10 +225,13 @@ with open("ic_blocks.py", "wt") as f:
                 f.write("params, ")
             else:
                 f.write("_, ")
+            if pre_solve:
+                f.write("pre_solve, ")
+            else:
+                f.write("_, ")
             f.write(" = subs\n")
         f.write("    ")
-        for xi in g_i.col:
-            xv = mso_hod_model.x[xi]
+        for xv in solve_vars:
             f.write(f"{xv}, ")
         f.write(" = x\n")
         for zi in mso_hod_model.z:
@@ -216,19 +243,57 @@ with open("ic_blocks.py", "wt") as f:
         for pi in diag_par:
             if sp.symbols(pi) in block_all_vars:
                 f.write(f"    {pi} = params[\"{pi}\"]\n")
+        for xi in pre_solve:
+            if sp.symbols(xi) in block_all_vars:
+                f.write(f"    {xi} = pre_solve[\"{xi}\"]\n")
         f.write("\n")
         f.write(f"    result = np.zeros({len(g_i.row)})\n")
         for i, e_idx in enumerate(g_i.row):
-            ei = mso_hod_model.syme[e_idx]
+            ei = mso_hod_model.syme[e_idx].subs(f_sub)
             if type(ei) is sp.Equality:
                 code = f"result[{i}] = {str(ei.lhs)}"
             f.write(f"    {code}\n")
 
         f.write("    return result\n\n\n")
-        # break
+
+# %% Solve for IC
+import ic_blocks
+
+z_0 = {z: zv for zv, z in zip(data["NF"]["z"][0], model.z)}
+# x1_0 = data["NF"]["state_init"]
+x1_0 = {x1i: data["NF"]["state_init"][x1i] for x1i in x1}
+pre_solve = {}
+
+for k in range(len(Gamma.matching)):
+    root_fun = getattr(ic_blocks, f"block_{k:0{block_num_size}}")
+    sol = root(lambda x: root_fun(x, (z_0, x1_0, diag_par, pre_solve)), 0)
+    if not sol.success:
+        print(sol.message)
+    else:
+        print(f"Solving for: {[mso_hod_model.x[xi] for xi in Gamma.matching[k].col]} => {sol.x}")
+    pre_solve.update({mso_hod_model.x[xi_idx]: xi_sol for xi_sol, xi_idx in zip(sol.x, Gamma.matching[k].col)})
+
+pre_solve.update(x1_0)
+pre_solve["r"] = -0.03408076330933641  # Include to solve for r!
+
+w0 = np.array([pre_solve[vi] for vi in res_gen.vars])
+wp0 = np.zeros(len(w0))
+wp0[x1_idx] = w0[x1d_idx]
+
+
+res = np.zeros(len(w0))
+res_gen._sim_residual(0, w0, wp0, res)
+
 # %%
 plt.show()
 
-# %%
-block_all_vars = set().union(*[ei.lhs.free_symbols for ei in mso_hod_model.syme[g_i.row]])
+# %% Better way to treat r?
+mso_model = model.copy()
+mso_model.SubModel(mso, res_gen.vars)
+
+mso_model.syme[re[0]] = sp.Eq(mso_model.syme[re[0]].lhs - sp.symbols("r"), 0)
+mso_model.x.append("r")
+mso_model.X = np.column_stack((mso_model.X, np.zeros(mso_model.X.shape[0])))
+mso_model.X[red, -1] = 1
+
 # %%
