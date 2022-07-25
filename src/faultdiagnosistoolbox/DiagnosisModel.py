@@ -495,7 +495,7 @@ class DiagnosisModel:
         -----
           eqs     : Set of indices to or logicals for equations to keep/remove
           vars    : Set of indices to or logicals for variables to keep/remove
-          clear   : If true, non used varaibles in the submodel will be
+          clear   : If true, non used variables in the submodel will be
                     eliminated (default: true)
           verbose : If true, verbose output (default: false)
           remove  : If true, supplied equations are removed instead of kept (default: false)
