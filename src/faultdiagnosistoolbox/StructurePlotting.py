@@ -262,7 +262,7 @@ def PlotDM(model, ax, **options):
                 if fvidx == 0:
                     fstr = fv
                 else:
-                    fstr = "%s, %s" % (fstr, fv)
+                    fstr = f"{fstr}, {fv}"
                 ax.plot([-1, nVars], [ff, ff], 'r--')
                 ax.text(nVars - 0.1, ff + 0.17, fstr, color='r')
 

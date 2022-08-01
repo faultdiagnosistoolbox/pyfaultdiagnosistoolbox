@@ -97,19 +97,19 @@ def AlgebraicHallComponent(model, g, language, user_functions=None):
     resGen = []
     for varSol in sol:
         if len(hcVars) == 1:
-            genCode = "%s = %s%s %s %s" % (varSol,
-                                           ExprToCode(sol[varSol],
-                                                      language,
-                                                      user_functions),
-                                           CodeEOL(language),
-                                           CodeComment(language),
-                                           model.e[g.row[0]])
+            genCode = "{} = {}{} {} {}".format(varSol,
+                                               ExprToCode(sol[varSol],
+                                                          language,
+                                                          user_functions),
+                                               CodeEOL(language),
+                                               CodeComment(language),
+                                               model.e[g.row[0]])
         else:
-            genCode = "%s = %s%s" % (varSol,
-                                     ExprToCode(sol[varSol],
-                                                language,
-                                                user_functions),
-                                     CodeEOL(language))
+            genCode = "{} = {}{}".format(varSol,
+                                         ExprToCode(sol[varSol],
+                                                    language,
+                                                    user_functions),
+                                         CodeEOL(language))
         resGen.append(genCode)
     return resGen
 
@@ -117,27 +117,26 @@ def AlgebraicHallComponent(model, g, language, user_functions=None):
 def CodeApproxInt(v, dv, enum, language):
     """Generate code for simple approximate integrator."""
     if language == 'Matlab':
-        return 'ApproxInt(%s,state.%s,Ts)%s %s %s' % (
+        return 'ApproxInt({}, state.{}, Ts){} {} {}'.format(
             dv, v, CodeEOL(language), CodeComment(language), enum)
     elif language == 'C':
-        return 'ApproxInt(%s,state->%s,Ts)%s %s %s' % (
+        return 'ApproxInt({}, state->{}, Ts){} {} {}'.format(
             dv, v, CodeEOL(language), CodeComment(language), enum)
-
     else:
-        return "ApproxInt(%s, state['%s'], Ts)%s %s %s" % (
+        return "ApproxInt({}, state['{}'], Ts){} {} {}".format(
             dv, v, CodeEOL(language), CodeComment(language), enum)
 
 
 def CodeApproxDer(v, enum, language):
     """Generate code for simple approximate differentiator."""
     if language == 'Matlab':
-        return 'ApproxDiff(%s, state.%s, Ts)%s %s %s' % (
+        return 'ApproxDiff({}, state.{}, Ts){} {} {}'.format(
             v, v, CodeEOL(language), CodeComment(language), enum)
     elif language == 'C':
-        return 'ApproxDiff(%s, state->%s, Ts)%s %s %s' % (
+        return 'ApproxDiff({}, state->{}, Ts){} {} {}'.format(
             v, v, CodeEOL(language), CodeComment(language), enum)
     else:
-        return "ApproxDiff(%s, state['%s'], Ts)%s %s %s" % (
+        return "ApproxDiff({}, state['{}'], Ts){} {} {}".format(
             v, v, CodeEOL(language), CodeComment(language), enum)
 
 
@@ -152,7 +151,7 @@ def IntegralHallComponent(model, g, language, user_functions=None):
                           np.array(model.e)[g.row]):
         if not fdt.IsDifferentialConstraint(e):
             sol = sym.solve(e.subs(fzSub), sym.var(v))
-            genCode = "%s = %s%s %s %s" % (
+            genCode = "{} = {}{} {} {}".format(
                 v, ExprToCode(sol[0], language, user_functions),
                 CodeEOL(language), CodeComment(language), enum)
             resGen.append(genCode)
@@ -177,7 +176,7 @@ def MixedHallComponent(model, g, language, user_functions=None):
                           np.array(model.e)[g.row]):
         if not fdt.IsDifferentialConstraint(e):
             sol = sym.solve(e.subs(fzSub), sym.var(v))
-            genCode = "%s = %s%s %s %s" % (
+            genCode = "{} = {}{} {} {}".format(
                 v, ExprToCode(sol[0], language, user_functions),
                 CodeEOL(language), CodeComment(language), enum)
             resGen.append(genCode)
@@ -208,7 +207,7 @@ def GenerateResidualEquations(model, resEq, diffres, language,
         fzSub = list(zip(model.f, np.zeros(len(model.f), dtype=np.int64)))
         e = e.subs(fzSub)
         resExpr = e.lhs - e.rhs
-        genCode = ["%s = %s%s %s %s" % (
+        genCode = ["{} = {}{} {} {}".format(
             resvar,
             ExprToCode(resExpr, language, user_functions=user_functions),
             CodeEOL(language), CodeComment(language),
@@ -220,7 +219,7 @@ def GenerateResidualEquations(model, resEq, diffres, language,
         if diffres == 'der':
             iv = IVar(e)
             dv = DVar(e)
-            genCode = ['%s = %s-%s' % (
+            genCode = ['{} = {}-{}'.format(
                 resvar, dv, CodeApproxDer(iv, np.array(model.e)[resEq],
                                           language))]
             iState = []
@@ -230,15 +229,15 @@ def GenerateResidualEquations(model, resEq, diffres, language,
             iv = IVar(e)
             dv = DVar(e)
             if language == 'Python':
-                genCode = ["%s = %s-state['%s']%s %s %s" % (
+                genCode = ["{} = {}-state['{}']{} {} {}".format(
                     resvar, iv, iv, CodeEOL(language),
                     CodeComment(language), np.array(model.e)[resEq])]
             elif language == "C":
-                genCode = ['%s = %s-state->%s%s %s %s' % (
+                genCode = ['{} = {}-state->{}{} {} {}'.format(
                     resvar, iv, iv, CodeEOL(language),
                     CodeComment(language), np.array(model.e)[resEq])]
             else:
-                genCode = ['%s = %s-state.%s%s %s %s' % (
+                genCode = ['{} = {}-state.{}{} {} {}'.format(
                     resvar, iv, iv, CodeEOL(language),
                     CodeComment(language), np.array(model.e)[resEq])]
             iState = [iv]

@@ -1118,7 +1118,7 @@ class DiagnosisModel:
             print('Warning! Model is underdetermined')
             war = war + 1
 
-        print('  Model validation finished with %d errors and %d warnings.' % (err, war))
+        print(f'  Model validation finished with {err} errors and {war} warnings.')
 
 
 def DiffConstraint(dvar, ivar):

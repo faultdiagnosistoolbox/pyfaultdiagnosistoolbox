@@ -57,7 +57,7 @@ def PlotConfusionMatrix(C, ax=None):
     ax.imshow(C, cmap=summer_cmap)
     for fi in range(nf):
         for fj in range(nf):
-            ax.text(fi, fj, '%.1f' % (C[fj, fi] * 100),
+            ax.text(fi, fj, f'{(C[fj, fi] * 100):.1f}',
                     ha='center', va='center', color='k')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
