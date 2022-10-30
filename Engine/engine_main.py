@@ -27,7 +27,7 @@ import GetMeasurementData as gm
 sns.set(style='white', rc={'lines.linewidth': 0.75, 'axes.linewidth': 0.5})
 
 # %% Model
-import VEP4Engine
+import VEP4Engine  # noqa
 model = VEP4Engine.model
 model.Lint()
 
@@ -121,13 +121,13 @@ for test, redIdx in zip(ts, re):
         print('Failure!')
 
 # %% Import generated residual generator modules
-import ResGen_1649_1
-import ResGen_4011_1
-import ResGen_4016_1
-import ResGen_4017_84
-import ResGen_4066_1
-import ResGen_4074_84
-import ResGen_4477_86
+import ResGen_1649_1  # noqa
+import ResGen_4011_1  # noqa
+import ResGen_4016_1  # noqa
+import ResGen_4017_84  # noqa
+import ResGen_4066_1  # noqa
+import ResGen_4074_84  # noqa
+import ResGen_4477_86  # noqa
 
 res_gens = [ResGen_1649_1.ResGen_1649_1, ResGen_4011_1.ResGen_4011_1, ResGen_4016_1.ResGen_4016_1,
             ResGen_4017_84.ResGen_4017_84, ResGen_4066_1.ResGen_4066_1, ResGen_4074_84.ResGen_4074_84,
