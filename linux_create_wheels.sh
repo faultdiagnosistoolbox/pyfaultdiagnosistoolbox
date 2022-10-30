@@ -62,6 +62,19 @@ mv -f wheelhouse/* .
 cd ..
 deactivate
 
+# Generate Python3.11
+. /py_env/env311/bin/activate
+python setup.py build_ext --inplace
+python setup.py bdist_wheel > log.txt
+wheel_name=$(grep "creating 'dist/" log.txt | sed "s/.*dist\/\(.*\)' and .*/\1/g")
+rm -f log.txt
+cd dist
+auditwheel repair "$wheel_name"
+rm -f "$wheel_name"
+mv -f wheelhouse/* .
+cd ..
+deactivate
+
 # Cleanup
 rm -rf dist/wheelhouse
 

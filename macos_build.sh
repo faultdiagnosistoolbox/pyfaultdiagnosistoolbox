@@ -4,6 +4,12 @@ cd src
 
 make cleanall
 
+# Generate Python3.11
+source ../fdt_311/bin/activate
+make build_ext
+make wheel
+deactivate
+
 # Generate Python3.10
 source ../fdt_310/bin/activate
 make build_ext

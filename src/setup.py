@@ -23,7 +23,7 @@ class get_numpy_include(object):
     def __str__(self):
         import numpy
         return numpy.get_include()
-    
+
 
 if platform.system() == "Windows":
     extra_compile = []
@@ -74,7 +74,7 @@ setup(
     ext_modules=[strucanalysis_ext],
 
     include_package_data=True,
-    
+
     # Choose your license
     license='MIT',
 
@@ -99,6 +99,7 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
 
     # What does your project relate to?

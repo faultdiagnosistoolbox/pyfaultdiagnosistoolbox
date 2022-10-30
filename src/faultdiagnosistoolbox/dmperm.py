@@ -59,17 +59,17 @@ def srank(A) -> int:
 class EqBlock:
     """EqBlock class."""
 
-    row: np.array = np.array([], dtype=np.int64)
-    col: np.array = np.array([], dtype=np.int64)
+    row: np.array = field(default_factory=lambda: np.array([], dtype=np.int64))
+    col: np.array = field(default_factory=lambda: np.array([], dtype=np.int64))
 
 
 @dataclass
 class DMResult:
     """Dulmage-Mendelsohn decomposition base class."""
 
-    Mm: EqBlock = EqBlock([], [])
+    Mm: EqBlock = field(default_factory=lambda: EqBlock([], []))
     M0: list = field(default_factory=lambda: [])
-    Mp: EqBlock = EqBlock([], [])
+    Mp: EqBlock = field(default_factory=lambda: EqBlock([], []))
     rowp: list = field(default_factory=lambda: [])
     colp: list = field(default_factory=lambda: [])
     M0eqs: list = field(default_factory=lambda: [])

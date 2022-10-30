@@ -4,8 +4,8 @@ build_ext: # CSparse/Lib/libcsparse.a  # Built by setup script
 	python setup.py build_ext --inplace
 
 wheel: # CSparse/Lib/libcsparse.a build_ext  # Built by setup script
-	python -m build --wheel
-#	python setup.py bdist_wheel
+#	python -m build --wheel
+	python setup.py bdist_wheel
 
 clean:
 	rm -rf build *~ faultdiagnosistoolbox/*.so
