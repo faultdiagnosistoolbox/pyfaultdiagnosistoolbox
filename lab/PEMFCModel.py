@@ -2,7 +2,7 @@ import faultdiagnosistoolbox as fdt
 import sympy as sym
 
 # %% Define model object
-modelDef={}
+modelDef = {}
 modelDef['type'] = 'Symbolic'
 
 modelDef['x'] = ['AHamb' , 'AHcmp' , 'cpair' , 'd_p' , 'dpcritic' , 'EAct' , 'EDif' , 
