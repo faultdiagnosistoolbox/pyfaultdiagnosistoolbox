@@ -1038,8 +1038,8 @@ class DiagnosisModel:
 
     def Lint(self):
         """Print model information and checks for inconsistencies in model definition."""
-        war = False
-        err = False
+        war = 0
+        err = 0
 
 #        dm = dmperm.GetDMParts(self.X)
 
