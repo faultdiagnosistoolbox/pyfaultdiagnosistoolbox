@@ -388,7 +388,7 @@ class DiagnosisModel:
     def AlgebraicVariables(self) -> tuple[list, list[int]]:
         """Return variables and index to algebraic variables in model."""
         dyn_idx = np.where(np.any(self.X == 2, axis=0))[0]
-        idx = [x for x in range(self.nx()) if not(x in dyn_idx)]
+        idx = [x for x in range(self.nx()) if not (x in dyn_idx)]
         c = list(np.array(self.x)[idx])
         return c, idx
 

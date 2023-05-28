@@ -1,4 +1,5 @@
 # %%
+# %matplotlib
 # %load_ext autoreload
 # % %autoreload 2
 
@@ -6,20 +7,13 @@ from matplotlib.ticker import MaxNLocator
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import os
-import sys
 import pathlib
 import numpy as np
 from scipy.stats import gaussian_kde
 import seaborn as sns
 import platform
 
-# %% Set up paths
-if not('Engine' in sys.path):
-    sys.path.append(os.getcwd() + '/Engine')
-
-if not os.getcwd().endswith("Engine"):
-    os.chdir('Engine')
-
+# %%
 import batchfaultisolation as bfi
 from diagutil import loadmat, RunResgenOnDataSets, Timer, PlotConfusionMatrix
 import GetMeasurementData as gm
@@ -27,7 +21,7 @@ import GetMeasurementData as gm
 sns.set(style='white', rc={'lines.linewidth': 0.75, 'axes.linewidth': 0.5})
 
 # %% Model
-import VEP4Engine
+import VEP4Engine  # noqa
 model = VEP4Engine.model
 model.Lint()
 
@@ -121,13 +115,13 @@ for test, redIdx in zip(ts, re):
         print('Failure!')
 
 # %% Import generated residual generator modules
-import ResGen_1649_1
-import ResGen_4011_1
-import ResGen_4016_1
-import ResGen_4017_84
-import ResGen_4066_1
-import ResGen_4074_84
-import ResGen_4477_86
+import ResGen_1649_1  # noqa
+import ResGen_4011_1  # noqa
+import ResGen_4016_1  # noqa
+import ResGen_4017_84  # noqa
+import ResGen_4066_1  # noqa
+import ResGen_4074_84  # noqa
+import ResGen_4477_86  # noqa
 
 res_gens = [ResGen_1649_1.ResGen_1649_1, ResGen_4011_1.ResGen_4011_1, ResGen_4016_1.ResGen_4016_1,
             ResGen_4017_84.ResGen_4017_84, ResGen_4066_1.ResGen_4066_1, ResGen_4074_84.ResGen_4074_84,
@@ -394,6 +388,5 @@ ax.set_xlabel('Injected fault')
 ax.set_ylabel('Diagnosed fault')
 _ = ax.set_title('Fault Isolation Performance Matrix')
 
-plt.show()
-
 # %%
+plt.show()
