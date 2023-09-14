@@ -1160,7 +1160,8 @@ def IsDifferentialConstraint(rel):
 
 def IsSymbolic(v):
     """Return true if variable is symbolic."""
-    return isinstance(v, tuple(sym.core.core.all_classes))
+    return isinstance(v, sym.core.Expr)
+    # return isinstance(v, tuple(sym.core.core.all_classes))
 
 
 def _ToEquations(rels):

@@ -118,7 +118,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     setup_requires=['numpy', 'wheel'],
-    install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'sklearn', 'wheel'],
+    install_requires=['sympy', 'numpy', 'scipy', 'matplotlib', 'scikit-learn', 'wheel'],
     python_requires='>=3.8'
     # List additional groups of dependencies here (e.g. development
     # dependencies). You can install these using the following syntax,

@@ -1,0 +1,103 @@
+running bdist_wheel
+running build
+running build_py
+running egg_info
+writing faultdiagnosistoolbox.egg-info/PKG-INFO
+writing dependency_links to faultdiagnosistoolbox.egg-info/dependency_links.txt
+writing requirements to faultdiagnosistoolbox.egg-info/requires.txt
+writing top-level names to faultdiagnosistoolbox.egg-info/top_level.txt
+reading manifest file 'faultdiagnosistoolbox.egg-info/SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+adding license file 'LICENSE'
+writing manifest file 'faultdiagnosistoolbox.egg-info/SOURCES.txt'
+running build_ext
+installing to build/bdist.linux-x86_64/wheel
+running install
+running install_lib
+creating build/bdist.linux-x86_64/wheel
+creating build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/CodeGeneration.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/DiagnosisModel.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/MHS.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/MSOAlg.cc -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/MSOAlg.h -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/Matching.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/SensorPlacement.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/SparseMatrix.cc -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/SparseMatrix.h -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/StructuralAnalysisModel.cc -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/StructuralAnalysisModel.h -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/StructurePlotting.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/TestSelection.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/VarIdGen.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/__init__.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/_version.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/diag_util.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/dmperm.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+creating build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/Commault.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/ElectricMotor.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/InductionMotor.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/SmallLinear.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples
+creating build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples/TestSelection
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/TestSelection/data.mat -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples/TestSelection
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/TestSelection/example_util_functions.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples/TestSelection
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/TestSelection/main.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples/TestSelection
+creating build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples/ThreeTankSimulation
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/ThreeTankSimulation/TankSimulation.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples/ThreeTankSimulation
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/examples/ThreeTankSimulation/main.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/examples/ThreeTankSimulation
+creating build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/models
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/models/__init__.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/models
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/models/_electric_motor_model.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/models
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/models/_induction_motor_model.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/models
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/models/_three_tank_model.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox/models
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/structuralanalysis.cpython-310-x86_64-linux-gnu.so -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/structuralanalysismodule.cc -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/testselection_rf.py -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+copying build/lib.linux-x86_64-cpython-310/faultdiagnosistoolbox/timer.h -> build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox
+running install_egg_info
+Copying faultdiagnosistoolbox.egg-info to build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox-0.12.3-py3.10.egg-info
+running install_scripts
+creating build/bdist.linux-x86_64/wheel/faultdiagnosistoolbox-0.12.3.dist-info/WHEEL
+creating 'dist/faultdiagnosistoolbox-0.12.3-cp310-cp310-linux_x86_64.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+adding 'faultdiagnosistoolbox/CodeGeneration.py'
+adding 'faultdiagnosistoolbox/DiagnosisModel.py'
+adding 'faultdiagnosistoolbox/MHS.py'
+adding 'faultdiagnosistoolbox/MSOAlg.cc'
+adding 'faultdiagnosistoolbox/MSOAlg.h'
+adding 'faultdiagnosistoolbox/Matching.py'
+adding 'faultdiagnosistoolbox/SensorPlacement.py'
+adding 'faultdiagnosistoolbox/SparseMatrix.cc'
+adding 'faultdiagnosistoolbox/SparseMatrix.h'
+adding 'faultdiagnosistoolbox/StructuralAnalysisModel.cc'
+adding 'faultdiagnosistoolbox/StructuralAnalysisModel.h'
+adding 'faultdiagnosistoolbox/StructurePlotting.py'
+adding 'faultdiagnosistoolbox/TestSelection.py'
+adding 'faultdiagnosistoolbox/VarIdGen.py'
+adding 'faultdiagnosistoolbox/__init__.py'
+adding 'faultdiagnosistoolbox/_version.py'
+adding 'faultdiagnosistoolbox/diag_util.py'
+adding 'faultdiagnosistoolbox/dmperm.py'
+adding 'faultdiagnosistoolbox/structuralanalysis.cpython-310-x86_64-linux-gnu.so'
+adding 'faultdiagnosistoolbox/structuralanalysismodule.cc'
+adding 'faultdiagnosistoolbox/testselection_rf.py'
+adding 'faultdiagnosistoolbox/timer.h'
+adding 'faultdiagnosistoolbox/examples/Commault.py'
+adding 'faultdiagnosistoolbox/examples/ElectricMotor.py'
+adding 'faultdiagnosistoolbox/examples/InductionMotor.py'
+adding 'faultdiagnosistoolbox/examples/SmallLinear.py'
+adding 'faultdiagnosistoolbox/examples/TestSelection/data.mat'
+adding 'faultdiagnosistoolbox/examples/TestSelection/example_util_functions.py'
+adding 'faultdiagnosistoolbox/examples/TestSelection/main.py'
+adding 'faultdiagnosistoolbox/examples/ThreeTankSimulation/TankSimulation.py'
+adding 'faultdiagnosistoolbox/examples/ThreeTankSimulation/main.py'
+adding 'faultdiagnosistoolbox/models/__init__.py'
+adding 'faultdiagnosistoolbox/models/_electric_motor_model.py'
+adding 'faultdiagnosistoolbox/models/_induction_motor_model.py'
+adding 'faultdiagnosistoolbox/models/_three_tank_model.py'
+adding 'faultdiagnosistoolbox-0.12.3.dist-info/LICENSE'
+adding 'faultdiagnosistoolbox-0.12.3.dist-info/METADATA'
+adding 'faultdiagnosistoolbox-0.12.3.dist-info/WHEEL'
+adding 'faultdiagnosistoolbox-0.12.3.dist-info/top_level.txt'
+adding 'faultdiagnosistoolbox-0.12.3.dist-info/RECORD'
+removing build/bdist.linux-x86_64/wheel
