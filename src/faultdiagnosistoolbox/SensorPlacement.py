@@ -87,6 +87,8 @@ def IsolabilitySubProblem(X, F, P, fi, Ispec):
         e = np.where(Fisol[:, fj])[0]
         if len(e) == 0:
             e = -1
+        else:
+            e = e[0]
         feq[fj] = e
 
     nondet = np.where(list(map(lambda f: feq[f] in dm.M0eqs,
@@ -134,7 +136,7 @@ def BlockAndFaultOrder(X, F, dm):
     # 2.1 Determine e_f for each fault (must be 1 equation for each fault)
     ef = np.zeros(F.shape[1], dtype=np.int64)
     for fi in np.arange(0, F.shape[1]):
-        ef[fi] = np.where(F[:, fi])[0]
+        ef[fi] = np.where(F[:, fi])[0][0]
 
     # 2.2 Determine block membership for each fault
     efrep = np.unique(ef)
