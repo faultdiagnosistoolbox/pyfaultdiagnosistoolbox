@@ -538,15 +538,15 @@ class DiagnosisModel:
         # Differential order for z and f
         z_idx = np.where(Z[diff_eq, :].any(axis=0))[0]
         z_diff = np.zeros(len(z_idx), dtype=int)
-        for zi in z_idx:
+        for k, zi in enumerate(z_idx):
             ez = np.where(Z[:, zi])[0][0]
-            z_diff[zi] = max([rho for rho, ei in zip(num_diff, diff_eq) if ei == ez])
+            z_diff[k] = max([rho for rho, ei in zip(num_diff, diff_eq) if ei == ez])
 
         f_idx = np.where(F[diff_eq, :].any(axis=0))[0]
         f_diff = np.zeros(len(f_idx), dtype=int)
-        for fi in f_idx:
+        for k, fi in enumerate(f_idx):
             ez = np.where(F[:, fi])[0][0]
-            f_diff[fi] = min([rho for rho, ei in zip(num_diff, diff_eq) if ei == ez])
+            f_diff[k] = min([rho for rho, ei in zip(num_diff, diff_eq) if ei == ez])
 
         return eq_order, z_idx, z_diff, f_idx, f_diff
 

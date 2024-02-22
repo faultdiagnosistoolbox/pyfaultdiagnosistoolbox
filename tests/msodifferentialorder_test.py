@@ -17,7 +17,7 @@ model_small = fdt.DiagnosisModel(model_def, name="Small model")
 model_induction = fdt.models.induction_motor
 
 
-def small_diff_order_test():
+def test_small_diff_order():
     mso = model_small.MSO()[0]
     eqorder, zidx, zorder, fidx, forder = model_small.MSOdifferentialOrder(mso)
     assert eqorder == [0, 1, 2, 0, 0, 1]
@@ -27,7 +27,7 @@ def small_diff_order_test():
     assert (forder == [0]).all()
 
 
-def induction_diff_order_test():
+def test_induction_diff_order():
     msos = model_induction.MSO()
     mso = np.sort(msos[0])
     eqorder, zidx, zorder, fidx, forder = model_induction.MSOdifferentialOrder(mso)
