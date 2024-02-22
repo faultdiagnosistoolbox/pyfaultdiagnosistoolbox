@@ -5,6 +5,7 @@ fdt_310
 fdt_311
 fdt_312
 build
+pypi_token.txt
 
 .coverage
 *.a
