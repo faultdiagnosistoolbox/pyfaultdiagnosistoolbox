@@ -1,6 +1,3 @@
-PyFaultDiagnosisToolbox - A Python toolbox for fault diagnosis
---------
-
 Fault Diagnosis Toolbox is a Python package for analysis and design of fault diagnosis systems for dynamic systems, 
 primarily described by differential-algebraic equations. Key features of the toolbox are extensive support for 
 structural analysis of large-scale dynamic models, fault isolability analysis, sensor placement analysis, 

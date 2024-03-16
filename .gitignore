@@ -6,6 +6,7 @@ fdt_311
 fdt_312
 build
 pypi_token.txt
+pypi_test_token.txt
 
 .coverage
 *.a

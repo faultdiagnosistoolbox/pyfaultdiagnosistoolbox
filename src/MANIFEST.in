@@ -1,7 +1,0 @@
-recursive-include CSparse *
-recursive-exclude CSparse *.o
-recursive-exclude CSparse *.a
-include faultdiagnosistoolbox/*.h
-recursive-include faultdiagnosistoolbox/examples *.py
-include faultdiagnosistoolbox/examples/TestSelection/data.mat
-

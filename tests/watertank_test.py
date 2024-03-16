@@ -10,8 +10,8 @@ msos = model.MSO()
 mtes = model.MTES()
 
 I_mixed = model.IsolabilityAnalysis()
-I_der = model.IsolabilityAnalysis(causality='der')
-I_int = model.IsolabilityAnalysis(causality='int')
+I_der = model.IsolabilityAnalysis(causality="der")
+I_int = model.IsolabilityAnalysis(causality="int")
 
 ts = [0, 1, 5, 10, 13]
 red = [1, 1, 5, 1, 0]
@@ -25,7 +25,7 @@ def test_define_model():
     assert dm.M0 == []
     assert dm.Mm.row == []
     assert dm.Mm.col == []
-    assert np.all(dm.Mp.row == np.array([0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10]))
+    assert np.all(dm.Mp.row == np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
     assert np.all(dm.Mp.col == np.array([0, 1, 2, 3, 4, 5, 6]))
 
 
@@ -50,11 +50,12 @@ def test_mso():
 
 
 def test_fsm():
-    assert np.all(np.array(FSM) == np.array([[1, 0, 0, 0, 1, 0],
-                                             [0, 1, 1, 0, 0, 0],
-                                             [0, 1, 0, 1, 1, 0],
-                                             [0, 1, 0, 0, 0, 1],
-                                             [1, 0, 1, 1, 0, 1]]))
+    assert np.all(
+        np.array(FSM)
+        == np.array(
+            [[1, 0, 0, 0, 1, 0], [0, 1, 1, 0, 0, 0], [0, 1, 0, 1, 1, 0], [0, 1, 0, 0, 0, 1], [1, 0, 1, 1, 0, 1]]
+        )
+    )
 
     assert np.all(I_mixed == model.IsolabilityAnalysisArrs([msos[ti] for ti in ts]))
 
@@ -66,16 +67,16 @@ def test_codegen():
         m0 = [e for e in mso if e != red_k]
         resName = f"r{k + 1}"
         Gamma = model.Matching(m0)
-        print(f'Generating code for {resName} ...', end='')
+        print(f"Generating code for {resName} ...", end="")
         try:
-            model.SeqResGen(Gamma, red_k, resName, language='C', batch=True)
+            model.SeqResGen(Gamma, red_k, resName, language="C", batch=True)
             assert True
         except:
             assert False
 
     for k, _ in enumerate(zip(ts, red)):
         resName = f"r{k + 1}"
-        print(f"Compiling residual generator: {resName} ... ", end='')
+        print(f"Compiling residual generator: {resName} ... ", end="")
         if platform.system() == "Windows":
             compile_cmd = f"python {resName}_setup.py build_ext --inplace"
         else:
@@ -86,7 +87,8 @@ def test_codegen():
             assert False
 
     # Cleanup
-    files_to_remove = [fi for fi in os.listdir() if re.match('r[1-5]*', fi)]
+    files_to_remove = [fi for fi in os.listdir() if re.match("r[1-5]*", fi)] + [
+        "src/" + fi for fi in os.listdir("src") if re.match("r[1-5]*", fi)
+    ]
     for fi in files_to_remove:
         os.remove(fi)
-

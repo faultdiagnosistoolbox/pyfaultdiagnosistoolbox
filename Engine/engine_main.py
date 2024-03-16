@@ -18,7 +18,7 @@ import batchfaultisolation as bfi
 from diagutil import loadmat, RunResgenOnDataSets, Timer, PlotConfusionMatrix
 import GetMeasurementData as gm
 
-sns.set(style="white", rc={"lines.linewidth": 0.75, "axes.linewidth": 0.5})
+sns.set_theme(style="white", rc={"lines.linewidth": 0.75, "axes.linewidth": 0.5})
 
 # %% Model
 import VEP4Engine  # noqa
@@ -70,7 +70,7 @@ FSM = model.FSM([msos[ti] for ti in ts])
 # %% Plot fault signature matrix and fault isolation matrix for selected set of tests
 fIdx = [model.f.index(fi) for fi in ["fyw_af", "fyp_im", "fyp_ic", "fyT_ic"]]
 
-fig, ax = plt.subplots(1, 2, num=30, clear=True)
+fig, ax = plt.subplots(1, 2, num=30, clear=True, layout="constrained")
 ax[0].spy(FSM[:, fIdx], markersize=6, marker="o", color="b")
 ax[0].set_xticks(range(len(fIdx)))
 ax[0].set_xticklabels(np.array(model.f)[fIdx])
@@ -87,7 +87,6 @@ ax[1].set_yticks(range(len(fIdx)))
 ax[1].set_yticklabels(np.array(model.f)[fIdx])
 ax[1].get_xaxis().set_ticks_position("bottom")
 ax[1].set_title("Fault isolation matrix")
-fig.tight_layout()
 
 # %% Code generation
 for test, redIdx in zip(ts, re):
@@ -170,7 +169,7 @@ _ = ax.set_title("EPA Highway Fuel Economy Test Cycle (HWFET)")
 DS = 500  # Down sampling rate in plots
 t_lim = [data["NF"]["time"][0], data["NF"]["time"][-1] / 60]
 
-fig, ax = plt.subplots(3, 3, num=80, clear=True)
+fig, ax = plt.subplots(3, 3, num=80, clear=True, layout="constrained")
 yIdx = model.z.index("y_omega_e")
 ax[0, 0].plot(data["NF"]["time"][::DS] / 60.0, data["NF"]["z"][::DS, yIdx] / (2 * np.pi) * 60)
 ax[0, 0].set_ylabel("rpm")
@@ -246,8 +245,6 @@ ax[2, 2].set_xlim(t_lim[0], t_lim[1])
 sns.despine()
 ax[2, 2].get_yaxis().set_major_locator(MaxNLocator(4))
 ax[2, 2].set_ylim(99, 101)
-fig.tight_layout()
-fig.subplots_adjust(top=0.9)
 _ = fig.suptitle("Measurement data, no-fault dataset", fontsize=14, weight="bold")
 
 # %% Run residual generators on measurement data
@@ -278,7 +275,7 @@ ds = 500
 dc = ["NF", "fyw_af"]
 for idx, fm in enumerate(dc):
     if fm in r[0]:  # Data set exists in first residual
-        fig, ax = plt.subplots(3, 3, num=50 + idx, clear=True)
+        fig, ax = plt.subplots(3, 3, num=50 + idx, clear=True, layout="constrained")
         for ridx, ri in enumerate(r):
             # ax: plt.Axes = fig.add_subplot(3, 3, ridx + 1)
             # ax_list.append(ax)
@@ -309,8 +306,6 @@ for idx, fm in enumerate(dc):
         ax[1, 1].set_xlabel("t [min]")
         ax[1, 2].set_xlabel("t [min]")
         ax[2, 0].set_xlabel("t [min]")
-        fig.tight_layout()
-        fig.subplots_adjust(top=0.9)
         _ = fig.suptitle("Dataset: " + fm, fontsize=12, weight="bold")
 
 # %% Plot residual distributions
@@ -320,7 +315,7 @@ M = 50  # Number of data points in KDE plots
 dc = ["NF", "fyw_af"]
 for idx, fm in enumerate(dc):
     if fm in r[0]:  # Data set exists in first residual
-        fig, ax = plt.subplots(3, 3, num=60 + idx, clear=True)
+        fig, ax = plt.subplots(3, 3, num=60 + idx, clear=True, layout="constrained")
         for ridx, ri in enumerate(r):
             ax_idx = (ridx // 3, ridx % 3)
             pNF = gaussian_kde(ri[fm][data[fm]["fault_vector"] == 0][::ds])
@@ -345,8 +340,6 @@ for idx, fm in enumerate(dc):
             sns.despine()
         ax[2, 1].axis("off")
         ax[2, 2].axis("off")
-        fig.tight_layout()
-        fig.subplots_adjust(top=0.9)
         fig.suptitle("Dataset: " + fm, fontsize=12, weight="bold")
 
 # %% Fault isolation and confusion matrix
@@ -371,7 +364,7 @@ for fiIdx, fi in enumerate(np.array(model.f)[fIdx]):
 
 ds = 1000
 for idx, fm in enumerate(dc):
-    fig, ax = plt.subplots(2, 2, num=80 + idx, clear=True)
+    fig, ax = plt.subplots(2, 2, num=80 + idx, clear=True, layout="constrained")
 
     for fiIdx in np.arange(0, nf):
         ax_idx = (fiIdx // 2, fiIdx % 2)
@@ -393,8 +386,6 @@ for idx, fm in enumerate(dc):
         sns.despine()
     ax[1, 0].set_xlabel("t [min]")
     ax[1, 1].set_xlabel("t [min]")
-    fig.tight_layout()
-    fig.subplots_adjust(top=0.9)
     fig.suptitle("Fault isolation: " + fm, fontweight="bold", fontsize=12)
 
 _, ax = plt.subplots(num=100, clear=True)
