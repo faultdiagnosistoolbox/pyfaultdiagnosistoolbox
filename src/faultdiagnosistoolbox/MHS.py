@@ -1,13 +1,21 @@
 """Minimal Hitting Set functionality."""
+
 import numpy as np
 
 
 def MHS(conflist) -> list[np.ndarray]:
     """Return Minimal Hitting Set for a set of sets.
 
-    Input
-    -----
-      conflist : list of lists of integers
+    Parameters
+    ----------
+    conflist : list
+        list of lists of integers
+
+    Returns
+    -------
+    mmhs : list
+        list of minimal hitting sets
+
     """
     mmhs = [np.array([], dtype=np.int64)]
     for c in conflist:

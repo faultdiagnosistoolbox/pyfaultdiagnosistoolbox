@@ -18,73 +18,70 @@ import sys
 class DiagnosisModel:
     """Diagnosis model.
 
-    DiagnosisModel(model_def)
-    where model_def is a dictionary with the keys
+    Parameters
+    ----------
+    model_def: dict
+        A dictionary with the following keys:
 
-    type - type of model (Symbolic, VarStruc, MatrixStruc)
-    x - list of unknown variables in the model
-    f - list of fault variables
-    z - list of known variables
-    rels - list of model equations (in case of symbolic model)
-    X/F/Z - structure matrices (in case of MatrixStruc model)
-    parameters - list of parameters (optional) For the induction motor model, this corresponds to
+    type :  string
+        type of model (Symbolic, VarStruc, MatrixStruc)
+    x : list
+        list of unknown variables in the model
+    f : list
+        list of fault variables
+    z : list
+        list of known variables
+    rels : list
+        list of model equations (in case of symbolic model)
+    X/F/Z : arraylike
+        structure matrices (in case of MatrixStruc model)
+    parameters : list
+        list of parameters (optional) For the induction motor model, this corresponds to
 
     Example
     -------
-    Consider a dynamic model described by the equations below with unknown variables
-    x = (i_a, i_b, lambda_a, lambda_b, w, di_a, di_b, dlambda_a, dlambda_b, dw, q_a, q_b, Tl),
-    three measurements y1, y2, y3, and known input controls u_a, and u_b,
-    z = (u_a, u_b, y1, y2, y3), and two sensor faults f=(f_a, f_b).
-
-    q_a = w*lambda_a,
-    q_b = w*lambda_b,
-    di_a = -a*i_a + b*c*lambda_a + b*q_b + d*u_a,
-    di_b = -a*i_b + b*c*lambda_b + b*q_a + d*u_b,
-    dlambda_a = L_M*c*i_a - c*lambda_a-q_b,
-    dlambda_b = L_M*c*i_b - c*lambda_b-q_a,
-    dw = -k*c_f*w + k*c_t*(i_a*lambda_b - i_b*lambda_a) - k*Tl,
-    d/dt i_a = di_a
-    d/dt i_b = di_b
-    d/dt lambda_a = dlambda_a
-    d/dt lambda_b = dlambda_b
-    d/dt w = dw
-    y1 = i_a + f_a
-    y2 = i_b + f_b
-    y3 = w
+    Consider a dynamic model described by the equations below with unknown variables ``x = (i_a, i_b, lambda_a, lambda_b, w, di_a, di_b, dlambda_a, dlambda_b, dw, q_a, q_b, Tl)``,
+    three measurements ``y1, y2, y3``, and known input controls ``u_a, u_b``, i.e., ``z = (u_a, u_b, y1, y2, y3)``, and two sensor faults ``f=(f_a, f_b)``.
 
     To define a symbolic model, define model variables,
-    model_def = {'type': 'Symbolic',
-                 'x': ['i_a', 'i_b', 'lambda_a', 'lambda_b', 'w',
-                       'di_a', 'di_b', 'dlambda_a', 'dlambda_b', 'dw', 'q_a', 'q_b', 'Tl'],
-                 'f': ['f_a', 'f_b'],
-                 'z': ['u_a', 'u_b', 'y1', 'y2', 'y3'],
-                 'parameters': ['a', 'b', 'c', 'd', 'L_M', 'k', 'c_f', 'c_t']}
-    and make variables symolic using SymPy.
-    sym.var(model_def['x'])
-    sym.var(model_def['f'])
-    sym.var(model_def['z'])
-    sym.var(model_def['parameters'])
+
+    >>> model_def = {'type': 'Symbolic',
+                     'x': ['i_a', 'i_b', 'lambda_a', 'lambda_b', 'w',
+                         'di_a', 'di_b', 'dlambda_a', 'dlambda_b', 'dw', 'q_a', 'q_b', 'Tl'],
+                     'f': ['f_a', 'f_b'],
+                     'z': ['u_a', 'u_b', 'y1', 'y2', 'y3'],
+                     'parameters': ['a', 'b', 'c', 'd', 'L_M', 'k', 'c_f', 'c_t']}
+
+    and make variables symolic using SymPy, for example as:
+
+    >>> sym.var(model_def['x'])
+    >>> sym.var(model_def['f'])
+    >>> sym.var(model_def['z'])
+    >>> sym.var(model_def['parameters'])
 
     Then, the model equations can be represented by
-    model_def['rels'] = [
-      -q_a + w*lambda_a,
-      -q_b + w*lambda_b,
-      -di_a + -a*i_a + b*c*lambda_a + b*q_b + d*u_a,
-      -di_b + -a*i_b + b*c*lambda_b + b*q_a + d*u_b,
-      -dlambda_a + L_M*c*i_a - c*lambda_a-q_b,
-      -dlambda_b + L_M*c*i_b - c*lambda_b-q_a,
-      -dw + -k*c_f*w + k*c_t*(i_a*lambda_b - i_b*lambda_a) - k*Tl,
-      fdt.DiffConstraint('di_a','i_a'),
-      fdt.DiffConstraint('di_b','i_b'),
-      fdt.DiffConstraint('dlambda_a','lambda_a'),
-      fdt.DiffConstraint('dlambda_b','lambda_b'),
-      fdt.DiffConstraint('dw','w'),
-      -y1 + i_a + f_a,
-      -y2 + i_b + f_b,
-      -y3 + w]
+
+    >>> model_def['rels'] = [
+        -q_a + w*lambda_a,
+        -q_b + w*lambda_b,
+        -di_a + -a*i_a + b*c*lambda_a + b*q_b + d*u_a,
+        -di_b + -a*i_b + b*c*lambda_b + b*q_a + d*u_b,
+        -dlambda_a + L_M*c*i_a - c*lambda_a-q_b,
+        -dlambda_b + L_M*c*i_b - c*lambda_b-q_a,
+        -dw + -k*c_f*w + k*c_t*(i_a*lambda_b - i_b*lambda_a) - k*Tl,
+        fdt.DiffConstraint('di_a','i_a'),
+        fdt.DiffConstraint('di_b','i_b'),
+        fdt.DiffConstraint('dlambda_a','lambda_a'),
+        fdt.DiffConstraint('dlambda_b','lambda_b'),
+        fdt.DiffConstraint('dw','w'),
+        -y1 + i_a + f_a,
+        -y2 + i_b + f_b,
+        -y3 + w]
 
     Now, the model can be defined using
-    model = fdt.DiagnosisModel(model_def, name ='Induction motor')
+
+    >>> model = fdt.DiagnosisModel(model_def, name ='Induction motor')
+
     """
 
     def __init__(self, modeldef, name=""):
@@ -214,8 +211,8 @@ class DiagnosisModel:
         this is a purely structural method, no noise or model uncertainty
         considerations are used.
 
-        Input
-        -----
+        Parameters
+        ----------
           arr               : An array of arrays, interpreted as a set of equations
                               sets used to design residuals. For eample the ouput of
                               the MSO or MTES functions
@@ -253,8 +250,8 @@ class DiagnosisModel:
     def IsPSO(self, eq=None) -> bool:
         """Return True if the model is a PSO set.
 
-        Input
-        -----
+        Parameters
+        ----------
           eq (optional) : Set of equations to analyze. (default: all equations)
         """
         if eq is None:
@@ -302,8 +299,8 @@ class DiagnosisModel:
     def IsObservable(self, eq=None) -> bool:
         """Return true if the model is observable.
 
-        Input
-        -----
+        Parameters
+        ----------
           eq : Set of equations to analyze. (default: all equations)
         """
         if eq is None:
@@ -350,8 +347,8 @@ class DiagnosisModel:
     def IsHighIndex(self, eq=None) -> bool:
         """Return true if the model is high structural differential index.
 
-        Input
-        -----
+        Parameters
+        ----------
           eq : Set of equations to analyze. (default: all equations)
         """
         if eq is None:
@@ -363,8 +360,8 @@ class DiagnosisModel:
     def IsLowIndex(self, eq=None) -> bool:
         """Return true if the model is low structural differential index.
 
-        Input
-        -----
+        Parameters
+        ----------
           eq : Set of equations to analyze. (default: all equations)
         """
         if eq is None:
@@ -396,8 +393,8 @@ class DiagnosisModel:
     def FSM(self, eqs_sets, plot=False) -> np.ndarray:
         """Return the fault signature matrix for a set of equation sets.
 
-        Input
-        -----
+        Parameters
+        ----------
           eqs_sets : list of sets of equations, e.g., MSO sets
           Plot     : If True, plot the fault signature matrix (dafault: False)
         """
@@ -416,8 +413,8 @@ class DiagnosisModel:
     def Matching(self, eqs) -> match.Matching:
         """Return a matching for a set of equations.
 
-        Input
-        -----
+        Parameters
+        ----------
           eqs : Set of equations
         """
         return match.Matching(self.X, np.array(eqs))
@@ -428,19 +425,19 @@ class DiagnosisModel:
         Determine causality for sequential residual generator for
         each n residual equations for a given MSO set.
 
-        Input
-        -----
-          mso       : list of equations
-          diffres   : Can be 'int' or 'der' (default 'int'). Determines how
-                      to treat differential constraints when used as a
-                      residual equation.
-          causality : Can be 'int' or 'der'. When causality is specified,
-                      the call returns a boolean vector indicating if it is
-                      possible to realize the residual generator in
-                      derivative or integral causality respectively with the
-                      corresponding equations as residual equation. If
-                      this option is given, the diffres key have no
-                      effect.
+        Parameters
+        ----------
+          mso       :
+            list of equations
+          diffres   :
+            Can be 'int' or 'der' (default 'int'). Determines how
+            to treat differential constraints when used as a
+            residual equation.
+          causality :
+            Can be 'int' or 'der'. When causality is specified, the call returns a boolean vector indicating
+            if it is possible to realize the residual generator in derivative or integral causality respectively
+            with the corresponding equations as residual equation. If this option is given, the diffres key have no effect.
+
         """
 
         def IsDifferentialStructure(Xi, eq):
@@ -553,8 +550,8 @@ class DiagnosisModel:
     def MeasurementEquations(self, m):
         """Return indices to measurement equations.
 
-        Input
-        -----
+        Parameters
+        ----------
           m : List of names for measurement variables (strings)
         """
         mIdx = np.array([self.z.index(zi) for zi in m if zi in self.z])
@@ -566,14 +563,19 @@ class DiagnosisModel:
     def SubModel(self, m, v, clear=True, remove=False, verbose=False):
         """Extract submodel.
 
-        Input
-        -----
-          eqs     : Set of indices to or logicals for equations to keep/remove
-          vars    : Set of indices to or logicals for variables to keep/remove
-          clear   : If true, non used varaibles in the submodel will be
-                    eliminated (default: true)
-          verbose : If true, verbose output (default: false)
-          remove  : If true, supplied equations are removed instead of kept (default: false)
+        Parameters
+        ----------
+          eqs     :
+            Set of indices to or logicals for equations to keep/remove
+          vars    :
+            Set of indices to or logicals for variables to keep/remove
+          clear   :
+            If true, non used varaibles in the submodel will be eliminated (default: true)
+          verbose :
+            If true, verbose output (default: false)
+          remove  :
+            If true, supplied equations are removed instead of kept (default: false)
+
         """
         if remove:
             eqs = np.array([ei for ei in np.arange(0, self.ne()) if not (ei in m)])
@@ -656,8 +658,8 @@ class DiagnosisModel:
         Dulmage, A. and Mendelsohn, N. "Coverings of bipartite graphs."
         Canadian Journal of Mathematics 10.4 (1958): 516-534.
 
-        Input
-        -----
+        Parameters
+        ----------
           eqclass : If True, perform canonical decomposition of M+ and
                     plot equivalence classes
           fault   : If true, indicates fault equations in canonical
@@ -704,8 +706,8 @@ class DiagnosisModel:
         Plot the structure in an upper-triangular
         incidence matrix with the matched variables in the diagonal.
 
-        Input
-        -----
+        Parameters
+        ----------
           Gamma : A matching computed by the Matching class method
         """
         q = np.array([], dtype=np.int64)
@@ -723,8 +725,8 @@ class DiagnosisModel:
     def PossibleSensorLocations(self, x=None):
         """Set possible sensor locations.
 
-        Input
-        -----
+        Parameters
+        ----------
           x : Specification of possible sensor locations
               The sensor positions x can be given either as
               indices into model.x or variable names (default: all positions)
@@ -740,8 +742,8 @@ class DiagnosisModel:
     def SensorLocationsWithFaults(self, x=None):
         """Set possible sensor locations that has faults in new sensors.
 
-        Input
-        -----
+        Parameters
+        ----------
           x : Index to those sensor locations that can become faulty.
               If no input argument is given, no sensors may
               become faulty. The sensor positions x can be
@@ -763,8 +765,8 @@ class DiagnosisModel:
         diagnosis." Systems, Man and Cybernetics, Part A: Systems and Humans,
         IEEE Transactions on 38.6 (2008): 1398-1410.
 
-        Input
-        -----
+        Parameters
+        ----------
           isolabilityspecification : Isolability specification, a 0/1-matrix with
                                      a 0 in position (i,j) if fault fi should be
                                      isolable from fault fj; 1 otherwise. Structural
@@ -774,7 +776,7 @@ class DiagnosisModel:
                                      the identity matrix, i.e., full isolability
                                      among faults.
 
-        Outputs
+        Returns
         -------
         res - list of all minimal sensor sets, represented by strings
         idx - same as res, but represented with indicices into model.f
@@ -793,7 +795,7 @@ class DiagnosisModel:
         diagnosis." Systems, Man and Cybernetics, Part A: Systems and Humans,
         IEEE Transactions on 38.6 (2008): 1398-1410.
 
-        Outputs
+        Returns
         -------
         res - list of all minimal sensor sets, represented by strings
         idx - same as res, but represented with indicices into model.f
@@ -803,8 +805,8 @@ class DiagnosisModel:
     def AddSensors(self, sensors, name=None, fault=None):
         """Add sensor equations to a model.
 
-        Input
-        -----
+        Parameters
+        ----------
           sensors : Description of sensors to add s can be a list of strings
                     with the names of sensors to add or indices into the known
                     variables (model.x) which sensors to add.
@@ -888,8 +890,8 @@ class DiagnosisModel:
     def DetectabilityAnalysis(self, causality="mixed"):
         """Perform a structural detectability analysis.
 
-        Inputs
-        ------
+        Parameters
+        ----------
           causality : Can be 'mixed' (default), 'int', or 'der' for mixed,
                       integral, or derivative causality analysis respectively.
                       For details, see
@@ -901,7 +903,7 @@ class DiagnosisModel:
                       Cybernetics, Part A: Systems and Humans, 2012, 42(5),
                       1216-1229.
 
-        Outputs
+        Returns
         -------
           df  : Detectable faults
           ndf : Non-detectable faults
@@ -920,28 +922,33 @@ class DiagnosisModel:
     def IsolabilityAnalysis(self, ax=None, permute=True, causality="mixed"):
         """Perform structural single fault isolability analysis of model.
 
-        Inputs
-        ------
-          ax        : If not None, plot the isolability matrix in the specified axis
-          permute   : If True, permute the fault variables such that the
-                      isolability matrix gets a block structure for easier
-                      interpretation when plotted. Does not affect the output
-                      argument im, only the plot (default True)
+        Parameters
+        ----------
+          ax        :
+            If not None, plot the isolability matrix in the specified axis
+          permute   :
+            If True, permute the fault variables such that the
+            isolability matrix gets a block structure for easier
+            interpretation when plotted. Does not affect the output
+            argument im, only the plot (default True)
 
-          causality : Can be 'mixed' (default), 'int', or 'der' for mixed,
-                      integral, or derivative causality analysis respectively.
-                      For details, see
+          causality :
+            Can be 'mixed' (default), 'int', or 'der' for mixed,
+            integral, or derivative causality analysis respectively.
+            For details, see
 
-                      Frisk, E., Bregon, A., Aaslund, J., Krysander, M.,
-                      Pulido, B., Biswas, G., "Diagnosability analysis
-                      considering causal interpretations for differential
-                      constraints", IEEE Transactions on Systems, Man and
-                      Cybernetics, Part A: Systems and Humans, 2012, 42(5),
-                      1216-1229.
-        Outputs
+            Frisk, E., Bregon, A., Aaslund, J., Krysander, M.,
+            Pulido, B., Biswas, G., "Diagnosability analysis
+            considering causal interpretations for differential
+            constraints", IEEE Transactions on Systems, Man and
+            Cybernetics, Part A: Systems and Humans, 2012, 42(5),
+            1216-1229.
+
+        Returns
         -------
-          im        : Isolability matrix, im(i,j)=1 if fault i can be isolated
-                      from fault j, 0 otherwise
+          im        :
+            Isolability matrix, im(i,j)=1 if fault i can be isolated from fault j, 0 otherwise
+
         """
 
         # MplusCausal = lambda X: dmperm.Mplus(X, causality=causality)
@@ -999,19 +1006,23 @@ class DiagnosisModel:
     def IsolabilityAnalysisArrs(self, arrs, permute=True, ax=None):
         """Perform structural single fault isolability analysis of a set of ARRs.
 
-        Inputs
-        ------
-          arrs      : List of ARRs, e.g., list of MSO sets
-          ax        : If not None, plot the isolability matrix in the specified axis
-          permute   : If True, permute the fault variables such that the
-                      isolability matrix gets a block structure for easier
-                      interpretation when plotted. Does not affect the output
-                      argument im, only the plot (default True)
+        Parameters
+        ----------
+          arrs      :
+            List of ARRs, e.g., list of MSO sets
+          ax        :
+            If not None, plot the isolability matrix in the specified axis
+          permute   :
+            If True, permute the fault variables such that the
+            isolability matrix gets a block structure for easier
+            interpretation when plotted. Does not affect the output
+            argument im, only the plot (default True)
 
-        Outputs
+        Returns
         -------
           im        : Isolability matrix, im(i,j)=1 if fault i can be isolated
                       from fault j, 0 otherwise
+
         """
         FSM = self.FSM(arrs)
         return self.IsolabilityAnalysisFSM(FSM, permute=permute, ax=ax)
@@ -1019,19 +1030,23 @@ class DiagnosisModel:
     def IsolabilityAnalysisFSM(self, FSM, permute=True, ax=None):
         """Perform structural single fault isolability analysis of a fault sensitivity matrix (FSM).
 
-        Inputs
-        ------
-          FSM       : Fault sensitivity matrix
-          ax        : If not None, plot the isolability matrix in the specified axis
-          permute   : If True, permute the fault variables such that the
-                      isolability matrix gets a block structure for easier
-                      interpretation when plotted. Does not affect the output
-                      argument im, only the plot (default True)
+        Parameters
+        ----------
+          FSM       :
+            Fault sensitivity matrix
+          ax        :
+            If not None, plot the isolability matrix in the specified axis
+          permute   :
+            If True, permute the fault variables such that the
+            isolability matrix gets a block structure for easier
+            interpretation when plotted. Does not affect the output
+            argument im, only the plot (default True)
 
-        Outputs
+        Returns
         -------
-          im        : Isolability matrix, im(i,j)=1 if fault i can be isolated
-                      from fault j, 0 otherwise
+          im        :
+            Isolability matrix, im(i,j)=1 if fault i can be isolated from fault j, 0 otherwise
+
         """
         nf = FSM.shape[1]
         #        nr = FSM.shape[0]
@@ -1078,29 +1093,30 @@ class DiagnosisModel:
         residual generator. Generates Python/C file. How to call/compile  the
         generated file is described in the generated file (or the user manual).
 
-        Inputs
-        ------
-          Gamma            : Matching
-          resEq            : Index to equation to use as residual equation
-          name             : Name of residual equation. Will also be used as a basis for
-                             filename.
-          diffres          : Can be 'int' or 'der' (default 'int'). Determines how
-                             to treat differential constraints when used as a
-                             residual equation.
-          language         : Defaults to Matlab but also C code can be generated
+        Parameters
+        ----------
+          Gamma            :
+            Matching
+          resEq            :
+            Index to equation to use as residual equation
+          name             :
+            Name of residual equation. Will also be used as a basis for filename.
+          diffres          :
+            Can be 'int' or 'der' (default 'int'). Determines how
+            to treat differential constraints when used as a residual equation.
+          language         :
+            Defaults to Matlab but also C code can be generated
+          batch            :
+            Generate a batch mode residual generator, only applicable when generating C code.
+            Instead of computing the residual for one data samnple, batch mode runs the residual
+            generator for a whole data set. This can significantly decrease computational time.
+          user_functions   :
+            Translation dictionary, from user function name to generated code
+          external_src     :
+            List of Python files with external functions used in residual generator
+          external_headers :
+            List of external header files to include in generated C source
 
-          batch            : Generate a batch mode residual generator, only
-                             applicable when generating C code. Instead of
-                             computing the residual for one data samnple,
-                             batch mode runs the residual generator for a whole
-                             data set. This can significantly decrease
-                             computational time.
-          user_functions   : Translation dictionary, from user function name
-                             to generated code
-          external_src     : List of Python files with external functions
-                             used in residual generator
-          external_headers : List of external header files to include in
-                             generated C source
         """
         if user_functions is None:
             user_functions = {}

@@ -1,0 +1,8 @@
+sphinx
+numpy
+pandas
+scikit-learn
+numpydoc
+nbsphinx
+myst_parser
+pydata_sphinx_theme
