@@ -1,0 +1,28 @@
+FROM quay.io/pypa/manylinux_2_28_x86_64:latest
+RUN mkdir /py_env && mkdir /fdt_build
+
+RUN python3.10 -m venv /py_env/env310 && \
+    . /py_env/env310/bin/activate && \
+    pip install -U pip && \
+    pip install setuptools wheel auditwheel && \
+    pip install numpy build && \
+    deactivate
+
+RUN python3.11 -m venv /py_env/env311 && \
+    . /py_env/env311/bin/activate && \
+    pip install -U pip && \
+    pip install setuptools wheel auditwheel && \
+    pip install numpy build && \
+    deactivate
+
+RUN python3.12 -m venv /py_env/env312 && \
+    . /py_env/env312/bin/activate && \
+    pip install -U pip && \
+    pip install setuptools wheel auditwheel && \
+    pip install numpy build && \
+    deactivate
+
+
+WORKDIR /fdt_build
+
+CMD ["./linux_create_wheels.sh"]
