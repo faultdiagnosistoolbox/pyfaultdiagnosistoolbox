@@ -11,3 +11,4 @@ Source/cs_compress.c  Source/cs_dropzeros.c Source/cs_gaxpy.c     Source/cs_lsol
 
 add_library(csparse STATIC ${CSPARSE_SOURCE_FILES})
 target_include_directories(csparse PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/Include)
+set_property(TARGET csparse PROPERTY POSITION_INDEPENDENT_CODE ON)

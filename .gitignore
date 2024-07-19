@@ -1,4 +1,5 @@
 doc_build/
+build_envs
 env
 fdt_39
 fdt_38

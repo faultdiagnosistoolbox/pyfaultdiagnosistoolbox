@@ -11,7 +11,7 @@ authors = [
 dependencies=['sympy', 'numpy', 'scipy', 'matplotlib', 'scikit-learn']
 description = "A toolbox for Model Based Fault Diagnosis of dynamic systems based on structural analysis"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

@@ -3,10 +3,17 @@
 # docker run -v `pwd`:/fdt_build buildpyfdt
 # docker run -it -v `pwd`:/fdt_build buildpyfdt /bin/bash
 
-cd src
-
-make cleanall
+# Generate Python3.9
+source /py_env/env39/bin/activate
+python -m build --wheel > log.txt
+wheel_name=$(grep "Successfully" log.txt | sed "s/Successfully built \(.*\.whl\)/\1/g")
+rm -f log.txt
+cd dist
+auditwheel repair "$wheel_name"
+rm -f "$wheel_name"
+mv -f wheelhouse/* .
 cd ..
+deactivate
 
 # Generate Python3.10
 source /py_env/env310/bin/activate
