@@ -10,7 +10,7 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # Add dependecies
-add_subdirectory(extern/CSParse EXCLUDE_FROM_ALL)
+add_subdirectory(extern/CSparse EXCLUDE_FROM_ALL)
 
 # nanobind
 find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
@@ -29,7 +29,7 @@ execute_process(
 nanobind_add_module(dmpermlib src_extension/dmpermlib.cc src_extension/SparseMatrix.cc src_extension/StructuralAnalysisModel.cc src_extension/MSOAlg.cc)
 target_link_libraries(dmpermlib PRIVATE csparse)
 target_include_directories(dmpermlib PRIVATE ${NUMPY_DIR})
-target_compile_features(dmpermlib PRIVATE cxx_std_17)
+target_compile_features(dmpermlib PRIVATE cxx_std_20)
 target_compile_options(dmpermlib PRIVATE -Wall -Wextra -Wpedantic -Wno-nested-anon-types -Wno-zero-length-array)
 
 # Copy the extension module to the src directory
