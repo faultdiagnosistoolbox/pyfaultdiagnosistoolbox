@@ -1,3 +1,6 @@
+cmake_minimum_required(VERSION 3.22.0)
+project(csparce VERSION 0.1.0 LANGUAGES C CXX)
+
 set(CSPARSE_SOURCE_FILES
 Source/cs_counts.c    Source/cs_dupl.c      Source/cs_happly.c    Source/cs_ltsolve.c   Source/cs_norm.c      Source/cs_qr.c        Source/cs_schol.c     Source/cs_updown.c
 Source/cs_add.c       Source/cs_cumsum.c    Source/cs_entry.c     Source/cs_house.c     Source/cs_lu.c        Source/cs_permute.c   Source/cs_qrsol.c     Source/cs_spsolve.c   Source/cs_usolve.c

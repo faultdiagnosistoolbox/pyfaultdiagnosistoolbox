@@ -33,4 +33,7 @@ target_compile_features(dmpermlib PRIVATE cxx_std_17)
 target_compile_options(dmpermlib PRIVATE -Wall -Wextra -Wpedantic -Wno-nested-anon-types -Wno-zero-length-array)
 
 # Copy the extension module to the src directory
-add_custom_command(TARGET dmpermlib POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:dmpermlib> ${PROJECT_SOURCE_DIR}/src/faultdiagnosistoolbox)
+# add_custom_command(TARGET dmpermlib POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:dmpermlib> ${PROJECT_SOURCE_DIR}/src/faultdiagnosistoolbox)
+
+# install the generated extension module in the toolbox directory
+install(TARGETS dmpermlib LIBRARY DESTINATION faultdiagnosistoolbox)

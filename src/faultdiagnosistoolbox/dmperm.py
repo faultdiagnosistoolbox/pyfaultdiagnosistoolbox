@@ -1,5 +1,6 @@
 """Dulmage-Mendelsohn an MSO functionality."""
-import faultdiagnosistoolbox.structuralanalysis as sa
+
+import faultdiagnosistoolbox.dmpermlib as dmpermlib
 import scipy.sparse as sp
 import numpy as np
 import copy
@@ -8,13 +9,15 @@ from dataclasses import dataclass, field
 
 def CSCDict(A):
     """Compressed matrix format."""
-    return {'nzmax': A.nnz,
-            'm': A.shape[0],
-            'n': A.shape[1],
-            'p': A.indptr.astype(np.int64),
-            'i': A.indices.astype(np.int64),
-            'x': A.data.astype(np.float64),
-            'nz': -1}
+    return {
+        "nzmax": A.nnz,
+        "m": A.shape[0],
+        "n": A.shape[1],
+        "p": A.indptr.astype(np.int64),
+        "i": A.indices.astype(np.int64),
+        "x": A.data.astype(np.float64),
+        "nz": -1,
+    }
 
 
 def dmperm(A) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -30,9 +33,9 @@ def dmperm(A) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarra
     """
 
     if sp.issparse(A):
-        return sa.dmperm_internal(CSCDict(A))
+        return dmpermlib.dmperm(A)
     else:
-        return sa.dmperm_internal(CSCDict(sp.csc_matrix(A)))
+        return dmpermlib.dmperm(sp.csc_matrix(A))
 
 
 def srank(A) -> int:
@@ -79,9 +82,9 @@ class DMResult:
 def MSO(X):
     """Compute set of MSO sets."""
     if sp.issparse(X):
-        return sa.findmso_internal(CSCDict(X))
+        return dmpermlib.MSO(X)
     else:
-        return sa.findmso_internal(CSCDict(sp.csc_matrix(X)))
+        return dmpermlib.MSO(sp.csc_matrix(X))
 
 
 def GetDMParts(X) -> DMResult:
@@ -109,20 +112,18 @@ def GetDMParts(X) -> DMResult:
     else:
         idx = 0
         if s[1] > r[1]:  # Existance of M-
-            res.Mm = EqBlock(np.sort(p[r[0]:r[1]]), np.sort(q[s[0]:s[1]]))
+            res.Mm = EqBlock(np.sort(p[r[0] : r[1]]), np.sort(q[s[0] : s[1]]))
             idx = idx + 1
         else:
             res.Mm = EqBlock([], [])
 
         while (idx < r.size - 1) and (r[idx + 1] - r[idx]) == (s[idx + 1] - s[idx]):
             # M0 block exists
-            res.M0.append(EqBlock(np.sort(p[r[idx]:r[idx + 1]]),
-                                  np.sort(q[s[idx]:s[idx + 1]])))
+            res.M0.append(EqBlock(np.sort(p[r[idx] : r[idx + 1]]), np.sort(q[s[idx] : s[idx + 1]])))
             idx = idx + 1
 
         if idx < r.size - 1:  # M+ exists
-            res.Mp = EqBlock(np.sort(p[r[idx]:r[idx + 1]]),
-                             np.sort(q[s[idx]:s[idx + 1]]))
+            res.Mp = EqBlock(np.sort(p[r[idx] : r[idx + 1]]), np.sort(q[s[idx] : s[idx + 1]]))
         else:
             res.Mp = EqBlock([], [])
         res.rowp = p
@@ -163,14 +164,12 @@ def PSODecomposition(X) -> dict[list[EqBlock], np.ndarray, np.ndarray, np.ndarra
             delrows = [x for x in delrows if x not in ec.row]
         else:
             trivclass = np.concatenate((trivclass, [delrows[0]]))
-            delrows = delrows[1:len(delrows)]
+            delrows = delrows[1 : len(delrows)]
     X0 = np.sort([x for x in np.arange(0, m) if not (x in Mi)])
     if len(X0) == 0:
         X0 = []
 
-    res = {'eqclass': eqclass,
-           'trivclass': trivclass,
-           'X0': X0}
+    res = {"eqclass": eqclass, "trivclass": trivclass, "X0": X0}
 
     p = np.array([], dtype=np.int64)
     q = np.array([], dtype=np.int64)
@@ -181,8 +180,8 @@ def PSODecomposition(X) -> dict[list[EqBlock], np.ndarray, np.ndarray, np.ndarra
     p = np.concatenate((p, trivclass))
     q = np.concatenate((q, X0))
 
-    res['p'] = p
-    res['q'] = q
+    res["p"] = p
+    res["q"] = q
     return res
 
 
@@ -199,17 +198,13 @@ def IsPSO(X, eq=None) -> bool:
 
 def IsObservable(Xin, eq=None) -> bool:
     """Return True if observable."""
+
     def DiffConstraints(X):
         diffEqs = np.where(np.any(X == 2, axis=1))[0]
-        algEqs = np.array([ei for ei in np.arange(0, ne)
-                           if not (ei in diffEqs)])
+        algEqs = np.array([ei for ei in np.arange(0, ne) if not (ei in diffEqs)])
         x1Idx = np.argwhere(np.any(X[diffEqs, :] == 2, axis=0)).flatten()
-        dx1Idx = np.array(list(
-            map(lambda x1i: np.argwhere(
-                X[np.argwhere(X[:, x1i] == 2)[0][0], :] == 3)[0][0],
-                x1Idx)))
-        x2Idx = np.array([xi for xi in np.arange(0, nx)
-                          if (not (xi in x1Idx)) and (not (xi in dx1Idx))])
+        dx1Idx = np.array(list(map(lambda x1i: np.argwhere(X[np.argwhere(X[:, x1i] == 2)[0][0], :] == 3)[0][0], x1Idx)))
+        x2Idx = np.array([xi for xi in np.arange(0, nx) if (not (xi in x1Idx)) and (not (xi in dx1Idx))])
         return diffEqs, algEqs, x1Idx, dx1Idx, x2Idx
 
     if eq is None:
@@ -226,7 +221,7 @@ def IsObservable(Xin, eq=None) -> bool:
     diffEqs, algEqs, x1Idx, dx1Idx, x2Idx = DiffConstraints(X)
     n1 = len(x1Idx)
     n2 = len(x2Idx)
-#    nalg = len(algEqs)
+    #    nalg = len(algEqs)
 
     # Model format:
     #  x1' = dx1
@@ -238,10 +233,10 @@ def IsObservable(Xin, eq=None) -> bool:
     A11 = A[:, np.arange(0, n1)]
     A12 = A[:, np.arange(n1, n1 + n2)]
     A13 = A[:, np.arange(n1 + n2, 2 * n1 + n2)]
-    AC = np.vstack((np.hstack((np.zeros((n1, n1 + n2)),
-                               np.eye(n1))), A)).astype(np.int64)
-    F = np.vstack((np.hstack((np.eye(n1), np.zeros((n1, n1 + n2)))),
-                   np.zeros((ne - n1, n1 + n2 + n1)))).astype(np.int64)
+    AC = np.vstack((np.hstack((np.zeros((n1, n1 + n2)), np.eye(n1))), A)).astype(np.int64)
+    F = np.vstack((np.hstack((np.eye(n1), np.zeros((n1, n1 + n2)))), np.zeros((ne - n1, n1 + n2 + n1)))).astype(
+        np.int64
+    )
 
     # Condition 1: srank(A-sF)=n1+n2
     obs = srank(np.hstack((np.logical_or(A11, A13), A12))) == n1 + n2
@@ -254,8 +249,7 @@ def IsObservable(Xin, eq=None) -> bool:
         G3 = np.maximum(AC, 2 * F)
         dm = GetDMParts(G3)
         if len(dm.M0) > 0:
-            hc_sarcs = list(
-                map(lambda hc: np.any(G3[hc.row, :][:, hc.col] == 2), dm.M0))
+            hc_sarcs = list(map(lambda hc: np.any(G3[hc.row, :][:, hc.col] == 2), dm.M0))
             obs = len(hc_sarcs) == 0 or (not np.any(hc_sarcs))
 
     return obs
@@ -283,34 +277,29 @@ def IsLowIndex(X, eq=None) -> bool:
     return not IsHighIndex(X, eq)
 
 
-def Mplus(X, causality='mixed'):
+def Mplus(X, causality="mixed"):
     """Compute over-determined part."""
+
     def Gp(Gi):
         dm = GetDMParts(Gi[2])
         if len(dm.Mp.row) == 0 or len(dm.Mp.col) == 0:
             return np.array([]), np.array([]), np.array([[]])
         G1 = copy.deepcopy(Gi)
-        return (G1[0][dm.Mp.row],
-                G1[1][dm.Mp.col],
-                G1[2][dm.Mp.row, :][:, dm.Mp.col])
+        return (G1[0][dm.Mp.row], G1[1][dm.Mp.col], G1[2][dm.Mp.row, :][:, dm.Mp.col])
 
     def Gm(Gi):
         dm = GetDMParts(Gi[2])
         if len(dm.Mm.row) == 0 or len(dm.Mm.col) == 0:
             return np.array([]), np.array([]), np.array([[]])
         G1 = copy.deepcopy(Gi)
-        return (G1[0][dm.Mm.row],
-                G1[1][dm.Mm.col],
-                G1[2][dm.Mm.row, :][:, dm.Mm.col])
+        return (G1[0][dm.Mm.row], G1[1][dm.Mm.col], G1[2][dm.Mm.row, :][:, dm.Mm.col])
 
     def G0(Gi):
         dm = GetDMParts(Gi[2])
         if len(dm.M0eqs) == 0 or len(dm.M0vars) == 0:
             return np.array([]), np.array([]), np.array([[]])
         G1 = copy.deepcopy(Gi)
-        return (G1[0][dm.M0eqs],
-                G1[1][dm.M0vars],
-                G1[2][dm.M0eqs, :][:, dm.M0vars])
+        return (G1[0][dm.M0eqs], G1[1][dm.M0vars], G1[2][dm.M0eqs, :][:, dm.M0vars])
 
     # def Gadd(G1, G2):
     #     c1, x1, A1 = copy.deepcopy(G1)
@@ -351,14 +340,12 @@ def Mplus(X, causality='mixed'):
 
     Xc = np.array(X.copy())
     # Represent graph as a tuple G=(constraints,variables, adjacency matrix)
-    G = (np.arange(0, Xc.shape[0], dtype=np.int64),
-         np.arange(0, Xc.shape[1], dtype=np.int64),
-         Xc)
+    G = (np.arange(0, Xc.shape[0], dtype=np.int64), np.arange(0, Xc.shape[1], dtype=np.int64), Xc)
 
-    if causality == 'mixed':
+    if causality == "mixed":
         return Gp(G)[0]
 
-    elif causality == 'int':
+    elif causality == "int":
         while True:
             # G := G+
             G = Gp(G)
@@ -376,7 +363,7 @@ def Mplus(X, causality='mixed'):
             else:
                 break
         return G[0]
-    elif causality == 'der':
+    elif causality == "der":
         Xc = []
         while True:
             # Gnc := G - Xc
@@ -390,8 +377,7 @@ def Mplus(X, causality='mixed'):
             # Xc:= Xc u X(Gni+ u Gni0)
             Gnip = Gp(Gni)
             Gni0 = G0(Gni)
-            X1 = np.unique(np.concatenate(
-                (Gnip[1], Gni0[1]))).astype(np.int64)  # X1 = X(Gni+ u Gni0)
+            X1 = np.unique(np.concatenate((Gnip[1], Gni0[1]))).astype(np.int64)  # X1 = X(Gni+ u Gni0)
             Xc = np.unique(np.concatenate((Xc, X1))).astype(np.int64)
 
             if len(X1) == 0:
@@ -407,16 +393,15 @@ def Mplus(X, causality='mixed'):
 
 def MixedCausalityMatching(Gin):
     """Compute mixed causality matching."""
+
     def FindAdmissibleIntEdge(G):
         X = G[2]
         dm = GetDMParts(X)
         for hallComponent in dm.M0:
-            Ei = np.argwhere(
-                X[hallComponent.row, :][:, hallComponent.col] == 2)
+            Ei = np.argwhere(X[hallComponent.row, :][:, hallComponent.col] == 2)
             if len(Ei) > 0:
                 Ei = Ei[0]  # Get the first one
-                return np.array([G[0][hallComponent.row[Ei[0]]],
-                                 G[1][hallComponent.col[Ei[1]]]])
+                return np.array([G[0][hallComponent.row[Ei[0]]], G[1][hallComponent.col[Ei[1]]]])
         return []
 
     G = [Gin[0].copy(), Gin[1].copy(), Gin[2].copy()]
@@ -444,21 +429,21 @@ def MixedCausalityMatching(Gin):
 
 def MTES(self):
     """Compute set of MTES sets."""
-    S = {'eq': [], 'f': [], 'sr': []}
+    S = {"eq": [], "f": [], "sr": []}
     m = MTES_initModel(self)  # overdetermined or empty
-    if not (m is None) and m['sr'] > 0 and len(m['f']) > 0:
+    if not (m is None) and m["sr"] > 0 and len(m["f"]) > 0:
         S = MTES_FindMTES(m, 0)
-#    return np.array(S['eq'], dtype=object)
-    return S['eq']
+    #    return np.array(S['eq'], dtype=object)
+    return S["eq"]
 
 
 def MTES_storeFS(m):
     """internal."""
     #    eq = np.sort(np.hstack(m['e'])).tolist()
     #    f = np.sort(np.hstack(m['f'])).tolist()
-    eq = np.sort(np.hstack(m['e']))
-    f = np.sort(np.hstack(m['f']))
-    return {'eq': [eq], 'f': [f], 'sr': [m['sr']]}
+    eq = np.sort(np.hstack(m["e"]))
+    f = np.sort(np.hstack(m["f"]))
+    return {"eq": [eq], "f": [f], "sr": [m["sr"]]}
 
 
 def MTES_initModel(model):
@@ -477,11 +462,13 @@ def MTES_initModel(model):
     # m['delrow'] = 0
     # m['e'] = list(map(lambda ei: np.array([ei]), idx))
     if len(row_over) > 0:
-        m = {'sr': len(row_over) - len(col_over),
-             'X': model.X[idx, :][:, col_over],
-             'f': list(map(lambda fi: np.argwhere(fi)[0], model.F[ef, :])),
-             'delrow': 0,
-             'e': list(map(lambda ei: np.array([ei]), idx))}
+        m = {
+            "sr": len(row_over) - len(col_over),
+            "X": model.X[idx, :][:, col_over],
+            "f": list(map(lambda fi: np.argwhere(fi)[0], model.F[ef, :])),
+            "delrow": 0,
+            "e": list(map(lambda ei: np.array([ei]), idx)),
+        }
     else:
         m = None
 
@@ -491,34 +478,34 @@ def MTES_initModel(model):
 def MTES_GetPartialModel(m, rows):
     """internal."""
     n = {}
-    variables = np.any(m['X'][rows, :], axis=0)
-    n['X'] = m['X'][rows, :][:, variables]
-#    n['e'] = list(np.array(m['e'])[rows])
-    n['e'] = [m['e'][k] for k in range(len(m['e'])) if k in rows]
-#    n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
-    n['f'] = [m['f'][ei] for ei in rows if ei < len(m['f'])]
-    n['sr'] = n['X'].shape[0] - n['X'].shape[1]
-    n['delrow'] = np.sum(rows < m['delrow'])
+    variables = np.any(m["X"][rows, :], axis=0)
+    n["X"] = m["X"][rows, :][:, variables]
+    #    n['e'] = list(np.array(m['e'])[rows])
+    n["e"] = [m["e"][k] for k in range(len(m["e"])) if k in rows]
+    #    n['f'] = list(np.array(m['f'])[[ei for ei in rows if ei < len(m['f'])]])
+    n["f"] = [m["f"][ei] for ei in rows if ei < len(m["f"])]
+    n["sr"] = n["X"].shape[0] - n["X"].shape[1]
+    n["delrow"] = np.sum(rows < m["delrow"])
     return n
 
 
 def MTES_FindMTES(m, p):
     """internal."""
     m, _ = MTES_LumpExt(m, 0)
-    if len(m['f']) == 1:  # m is an MTES
+    if len(m["f"]) == 1:  # m is an MTES
         S = MTES_storeFS(m)
     else:  # recurse
         if p == 1:
             S = MTES_storeFS(m)
         else:
-            S = {'eq': [], 'f': [], 'sr': []}
-        row = m['delrow']
-        while len(m['f']) > row:
+            S = {"eq": [], "f": [], "sr": []}
+        row = m["delrow"]
+        while len(m["f"]) > row:
             m, row = MTES_LumpExt(m, row)
-        for delrow in np.arange(m['delrow'], len(m['f'])):
+        for delrow in np.arange(m["delrow"], len(m["f"])):
             # create the model where delrow has been removed
-            m['delrow'] = delrow
-            rows = np.delete(np.arange(0, m['X'].shape[0]), delrow)
+            m["delrow"] = delrow
+            rows = np.delete(np.arange(0, m["X"].shape[0]), delrow)
             n = MTES_GetPartialModel(m, rows)
             Sn = MTES_FindMTES(n, p)  # make recursive call
             S = MTES_addResults(S, Sn)
@@ -529,11 +516,11 @@ def MTES_LumpExt(m, row):
     """MTES lumping."""
     n = {}
 
-    no_rows = m['X'].shape[0]
+    no_rows = m["X"].shape[0]
     remRows = np.hstack((np.arange(0, row), np.arange(row + 1, no_rows)))
-    remRowsf = np.hstack((np.arange(0, row), np.arange(row + 1, len(m['f']))))
+    remRowsf = np.hstack((np.arange(0, row), np.arange(row + 1, len(m["f"]))))
 
-    dm = GetDMParts(m['X'][remRows, :])
+    dm = GetDMParts(m["X"][remRows, :])
     row_just = dm.M0eqs
     row_over = np.array(dm.Mp.row, dtype=np.int64)
     col_over = np.array(dm.Mp.col, dtype=np.int64)
@@ -541,44 +528,56 @@ def MTES_LumpExt(m, row):
         eqcls = np.hstack((remRows[row_just], [row]))
         no_rows_before_row = np.sum(eqcls < row)
         row = row - no_rows_before_row
-        no_rows_before = np.sum(eqcls < m['delrow'])
-        n['delrow'] = m['delrow'] - no_rows_before
-        eqclsf = eqcls[eqcls < len(m['f'])]
+        no_rows_before = np.sum(eqcls < m["delrow"])
+        n["delrow"] = m["delrow"] - no_rows_before
+        eqclsf = eqcls[eqcls < len(m["f"])]
         row_overf = row_over[row_over < len(remRowsf)]
         if no_rows_before > 0:
-            rowinsert = n['delrow']
+            rowinsert = n["delrow"]
         else:
             rowinsert = row
-        x1 = m['X'][remRows[row_over[0:rowinsert]], :][:, col_over]
-        x3 = m['X'][remRows[row_over[rowinsert:]], :][:, col_over]
-        x2 = np.any(m['X'][eqcls, :][:, col_over], axis=0).astype(np.int64)
-        n['X'] = np.vstack((x1, x2, x3))
+        x1 = m["X"][remRows[row_over[0:rowinsert]], :][:, col_over]
+        x3 = m["X"][remRows[row_over[rowinsert:]], :][:, col_over]
+        x2 = np.any(m["X"][eqcls, :][:, col_over], axis=0).astype(np.int64)
+        n["X"] = np.vstack((x1, x2, x3))
 
-        foo = remRows[row_over[0:rowinsert]].astype(np.int64) \
-            if len(row_over[0:rowinsert]) > 0 else np.array([], dtype=np.int64)
-#        e1 = list(np.array(m['e'], dtype=np.ndarray)[foo])
-        e1 = [m['e'][idx] for idx in foo]
-#        e2 = list([np.hstack(np.array(m['e'], dtype=np.ndarray)[eqcls])])
-        e2 = list([np.hstack([m['e'][idx] for idx in eqcls])])
-        foo = (remRows[row_over[rowinsert:]].astype(np.int64) if
-               len(row_over[rowinsert:]) > 0 else np.array([], dtype=np.int64))
-#        e3 = list(np.array(m['e'], dtype=np.ndarray)[foo])
-        e3 = [m['e'][idx] for idx in foo]
-        n['e'] = e1 + e2 + e3
+        foo = (
+            remRows[row_over[0:rowinsert]].astype(np.int64)
+            if len(row_over[0:rowinsert]) > 0
+            else np.array([], dtype=np.int64)
+        )
+        #        e1 = list(np.array(m['e'], dtype=np.ndarray)[foo])
+        e1 = [m["e"][idx] for idx in foo]
+        #        e2 = list([np.hstack(np.array(m['e'], dtype=np.ndarray)[eqcls])])
+        e2 = list([np.hstack([m["e"][idx] for idx in eqcls])])
+        foo = (
+            remRows[row_over[rowinsert:]].astype(np.int64)
+            if len(row_over[rowinsert:]) > 0
+            else np.array([], dtype=np.int64)
+        )
+        #        e3 = list(np.array(m['e'], dtype=np.ndarray)[foo])
+        e3 = [m["e"][idx] for idx in foo]
+        n["e"] = e1 + e2 + e3
 
-        foo = (remRowsf[row_overf[0:rowinsert]].astype(np.int64) if
-               len(row_overf[0:rowinsert]) > 0 else np.array([], dtype=np.int64))
-        ef1 = list(np.array(m['f'], dtype=np.ndarray)[foo])
-        ef2 = list([np.hstack(np.array(m['f'], dtype=np.ndarray)[eqclsf])])
-        foo = (remRowsf[row_overf[rowinsert:]].astype(np.int64) if
-               len(row_overf[rowinsert:]) > 0 else np.array([], dtype=np.int64))
-        ef3 = list(np.array(m['f'], dtype=np.ndarray)[foo])
-        n['f'] = ef1 + ef2 + ef3
+        foo = (
+            remRowsf[row_overf[0:rowinsert]].astype(np.int64)
+            if len(row_overf[0:rowinsert]) > 0
+            else np.array([], dtype=np.int64)
+        )
+        ef1 = list(np.array(m["f"], dtype=np.ndarray)[foo])
+        ef2 = list([np.hstack(np.array(m["f"], dtype=np.ndarray)[eqclsf])])
+        foo = (
+            remRowsf[row_overf[rowinsert:]].astype(np.int64)
+            if len(row_overf[rowinsert:]) > 0
+            else np.array([], dtype=np.int64)
+        )
+        ef3 = list(np.array(m["f"], dtype=np.ndarray)[foo])
+        n["f"] = ef1 + ef2 + ef3
 
-        n['sr'] = m['sr']
+        n["sr"] = m["sr"]
 
         if no_rows_before > 0:
-            n['delrow'] = n['delrow'] + 1
+            n["delrow"] = n["delrow"] + 1
     else:
         n = m
 
@@ -588,6 +587,4 @@ def MTES_LumpExt(m, row):
 
 def MTES_addResults(S, Sn):
     """internal."""
-    return {'eq': S['eq'] + Sn['eq'],
-            'f': S['f'] + Sn['f'],
-            'sr': S['sr'] + Sn['sr']}
+    return {"eq": S["eq"] + Sn["eq"], "f": S["f"] + Sn["f"], "sr": S["sr"] + Sn["sr"]}

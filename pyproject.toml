@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61.0", "numpy"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core", "nanobind", "numpy"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "faultdiagnosistoolbox"
@@ -19,6 +19,9 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering"
 ]
+
+[tool.scikit-build]
+cmake.build-type = "Release"
 
 [project.urls]
 "Homepage" = "https://faultdiagnosistoolbox.github.io"
