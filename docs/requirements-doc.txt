@@ -6,3 +6,4 @@ numpydoc
 nbsphinx
 myst_parser
 pydata_sphinx_theme
+sphinx_rtd_theme

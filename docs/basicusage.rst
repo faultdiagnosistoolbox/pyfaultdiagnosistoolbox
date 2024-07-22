@@ -20,7 +20,7 @@ The package is a binary distribution and should work on Windows, Mac, and Linux 
 Defining models
 ---------------
 
-.. image:: images/Three_Tanks.png
+.. image:: images/Three_tanks.png
    :width: 55%
    :align: right
 
