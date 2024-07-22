@@ -4,7 +4,7 @@ Use-case -- Diagnosing an automotive engine
 
 This use-case is taken from the conference paper:
     
-    E. Frisk, M. Krysander, and D. Jung "*A Toolbox for Analysis and Design of Model Based Diagnosis Systems for Large Scale Models* (https://doi.org/10.1016/j.ifacol.2017.08.504), IFAC World Congress, Toulouse, France, 2017.
+    E. Frisk, M. Krysander, and D. Jung "*A Toolbox for Analysis and Design of Model Based Diagnosis Systems for Large Scale Models*" (https://doi.org/10.1016/j.ifacol.2017.08.504), IFAC World Congress, Toulouse, France, 2017.
 
 where the interested reader can find more complete explanations and a full set of references for explainations to used concepts and methods.  
 
