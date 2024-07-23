@@ -5,7 +5,7 @@
 
 # Generate Python3.9
 source /py_env/env39/bin/activate
-python -m build --wheel > log.txt
+python -m build --wheel | tee log.txt
 wheel_name=$(grep "Successfully" log.txt | sed "s/Successfully built \(.*\.whl\)/\1/g")
 rm -f log.txt
 cd dist
@@ -17,7 +17,7 @@ deactivate
 
 # Generate Python3.10
 source /py_env/env310/bin/activate
-python -m build --wheel > log.txt
+python -m build --wheel | tee log.txt
 wheel_name=$(grep "Successfully" log.txt | sed "s/Successfully built \(.*\.whl\)/\1/g")
 rm -f log.txt
 cd dist
@@ -29,7 +29,7 @@ deactivate
 
 # Generate Python3.11
 source /py_env/env311/bin/activate
-python -m build --wheel > log.txt
+python -m build --wheel | tee log.txt
 wheel_name=$(grep "Successfully" log.txt | sed "s/Successfully built \(.*\.whl\)/\1/g")
 rm -f log.txt
 cd dist
@@ -41,7 +41,7 @@ deactivate
 
 # Generate Python3.12
 . /py_env/env312/bin/activate
-python -m build --wheel > log.txt
+python -m build --wheel | tee log.txt
 wheel_name=$(grep "Successfully" log.txt | sed "s/Successfully built \(.*\.whl\)/\1/g")
 rm -f log.txt
 cd dist
