@@ -3,14 +3,14 @@ Basic Usage
 
 This toolbox covers a set of methods and functionality for fault diagnosis of dynamic systems described by differential (or static) equations. 
 The field of fault diagnosis is wide and there are many available methods described in the literature. This toolbox focuses on techniques from the Automatic Control community (Safeprocess) and some from the logic field (DX).
-In particular, techniques related to *structural analysis* is covered because they are particularly suited to automate in a computer tool. 
+In particular, techniques related to *structural analysis* are covered because they are particularly suited to automate in a computer tool. 
 
-This manual is for the python version of the toolbox, see https://faultdiagnosistoolbox.github.io for more information on the corresponding Matlab version of the toolbox.
+This manual is for the Python version of the toolbox, see https://faultdiagnosistoolbox.github.io for more information on the corresponding Matlab version of the toolbox.
 
 Installation
 ------------
 
-The toolbox is available as a binary distribution on PyPI and can be installed dirctly using pip::
+The toolbox is available as a binary distribution on PyPI and can be installed directly using pip::
 
     % pip install faultdiagnosistoolbox
 
@@ -24,7 +24,7 @@ Defining models
    :width: 55%
    :align: right
 
-A three-tank example will be used as a running example, highlighting functionality of the toolbox. The system consists of three coupled tanks, some sensors, and a controllable inflow. The tanks are connected in series and the flow between the tanks is controlled by the valves. 
+A three-tank example will be used as a running example, highlighting the functionality of the toolbox. The system consists of three coupled tanks, some sensors, and a controllable inflow. The tanks are connected in series and the flow between the tanks is controlled by the valves. 
 
 A simple model of the system can be described by the following equations:
 
@@ -41,7 +41,7 @@ A simple model of the system can be described by the following equations:
     \end{align*}
 
 where :math:`p_i` is the pressure in tank :math:`i`, :math:`q_{i}` the flow through valve :math:`i`, :math:`R_{Vi}` the flow resistance of valve :math:`i`, and :math:`C_{Ti}` the capacitance of tank :math:`i`. Three sensors :math:`y_{i}` measure :math:`p_{1}`, :math:`q_{2}`, and :math:`q_{0}`, respectively. 
-For this example, six parametric faults have been considered in the plant: change in capacity of tanks and partial blocks in the valves.
+For this example, six parametric faults have been considered in the plant: change in the capacity of tanks and partial blocks in the valves.
 
 The definition of this model is done by specifying a dictionary with all model specifications. First, define `type` (here only `Symbolic` models are illustrated), unknown variables `x`, fault variables `f`, known variables `z`, and parameters `parameters`. 
 
@@ -100,7 +100,7 @@ Finally, the model object is created by
 
     model = fdt.DiagnosisModel(modelDef, name='Three tank system')
 
-With a model object, basic information about the model can be printes using the ``Lint`` method and the model structure can be plotted using the command
+With a model object, basic information about the model can be printed using the ``Lint`` method and the model structure can be plotted using the command
 
 .. code-block:: python
 
@@ -127,7 +127,7 @@ and then the ``extfun`` function can be used as any other when defining your mod
 Basic Diagnosability Analysis
 -----------------------------
 
-A set of methods for analyzing diagnosability of a model or a set of residual generators are available. Here, diagnosability means to analyze which faults that are structurally detectable and structurally isolable. Basic definitions on detectability and isolability used in the toolbox can be found in the references
+A set of methods for analyzing diagnosability of a model or a set of residual generators is available. Here, diagnosability means to analyze which faults that are structurally detectable and structurally isolable. Basic definitions of detectability and isolability used in the toolbox can be found in the references
 
     E. Frisk, A. Bregon, J. Åslund, M. Krysander, B. Pulido, and G. Biswas. "*Diagnosability analysis considering causal interpretations for differential constraints*" (https://doi.org/10.1109/TSMCA.2012.2189877). Systems, Man and Cybernetics, Part A: Systems and Humans, IEEE Transactions on, 42(5):1216-1229, 2012.
 
@@ -142,11 +142,11 @@ For a basic detectability analysis of a given model, use the class method ``Dete
 
 The ``df`` output is the set of detectable faults and ``ndf`` the set of non-detectable faults. In this case it will show that all faults are detectable.
 
-When doing any sorts of structural analysis for fault diagnosis, the Dulmage-Mendelsohn decomposition
+When doing any sort of structural analysis for fault diagnosis, the Dulmage-Mendelsohn decomposition
 
     Dulmage, A. L., Mendelsohn, N. S. (1958). "*Coverings of bipartite graphs*". Canadian Journal of Mathematics, 10, 517-534.
 
-is a very useful tool. Given a structural model, by proper and well defined reordering of variables and equations, a structure graph can always be transformed into the form shown in
+is a very useful tool. Given a structural model, by proper and well-defined reordering of variables and equations, a structure graph can always be transformed into the form shown in
 
 .. image:: images/dmperm_general.png
    :width: 55%
@@ -166,7 +166,7 @@ For fault diagnosis, there is a particular decomposition of the overdetermined p
 
     Krysander, M., Åslund, J., Nyberg, M. (2007). "*An efficient algorithm for finding minimal overconstrained subsystems for model-based diagnosis*" (https://doi.org/10.1109/TSMCA.2007.909555). IEEE Transactions on Systems, Man, and Cybernetics-Part A: Systems and Humans, 38(1), 197-206.
 
-and can be computed using the ``PSODecomposition`` method.  There is also a class method that can plot the Dulmage-Mendelsohn decomposition of the model structure in an informative way. For this method, there are two options that can be activated, perform the decomposition of the over-determined part of the model, and indicate which equations that are influenced by faults. This is particularly important in diagnosability analysis.
+and can be computed using the ``PSODecomposition`` method.  There is also a class method that can plot the Dulmage-Mendelsohn decomposition of the model structure in an informative way. For this method, there are two options that can be activated, perform the decomposition of the over-determined part of the model, and indicate which equations are influenced by faults. This is particularly important in diagnosability analysis.
 
 .. code-block:: python
 
@@ -197,7 +197,7 @@ produces the figures
 Sensor Placement
 ----------------
 
-As shown above, the provided sensors does not uniquely isolable faults and additional sensors are needed. The sensor placement problem is a combinatorial optimization problem that can be solved using the method ``SensorPlacementIsolability``. The method returns a list of sets of sensors that uniquely isolates the faults. The method can also be used to plot the isolability analysis for each sensor set.
+As shown above, the provided sensors do not uniquely isolate the faults and additional sensors are needed. The sensor placement problem is a combinatorial optimization problem that can be solved using the method ``SensorPlacementIsolability``. The method returns a list of sets of sensors that uniquely isolate the faults. The method can also be used to plot the isolability analysis for each sensor set.
 
 .. code-block:: python
 
@@ -205,7 +205,7 @@ As shown above, the provided sensors does not uniquely isolable faults and addit
     model_with_new_sensor = model.copy()
     model_with_new_sensor.AddSensors(sens[0])
 
-This will conclude that the flow out of tank 3 ``q3`` is needed to uniquely isolate all faults. Plotting the isolability analysis for a model with extensed sensor set confirms that full (structural) fault isolability is achieved.
+This will conclude that the flow out of tank 3 ``q3`` is needed to uniquely isolate all faults. Plotting the isolability analysis for a model with extended sensor set confirms that full (structural) fault isolability is achieved.
 
 MSO, MTES, and Residual Generator Design
 ----------------------------------------
@@ -222,7 +222,7 @@ The sets of equations can be computed using the ``MSO`` and ``MTES`` class metho
     msos = model.MSO()
     mtes = model.MTES()
 
-In this case there are 6 MSO sets and 5 MTES sets. Here, focus will be on the MSO sets and how to generate residuals. First, it can be useful to filter out MSO sets with low differential index, since these can be realized as a residual generator without the need for numerical differentiation. It is also possible to check obsevability properties of the MSO sets in case an observer approach is pursued. this can be done using the ``IsLowIndex`` and ``IsObservable`` class methods as
+In this case there are 6 MSO sets and 5 MTES sets. Here, the focus will be on the MSO sets and how to generate residuals. First, it can be useful to filter out MSO sets with low differential index, since these can be realized as a residual generator without the need for numerical differentiation. It is also possible to check observability properties of the MSO sets in case an observer approach is pursued. this can be done using the ``IsLowIndex`` and ``IsObservable`` class methods as
 
 .. code-block:: python
 
@@ -232,7 +232,8 @@ In this case there are 6 MSO sets and 5 MTES sets. Here, focus will be on the MS
 
 This shows that all MSOs are observable and that 5 out of the 6 MSO sets are low-index. This means that one of the MSO sets can't be used for residual generation without numerical differentiation. This is also the reason why the isolability analysis differs between integral causality and no causality assumption.
 
-Now, all MSO sets are not needed to achieve best (structural) isolability. The method ``TestSelection`` can be used to find sets of MSO sets that cna be used to find residuals. Code below runs the test selection algorithm resulting in 3 required MSOs/residuals. The code also computes the Fault Signature Matrix (FSM) and the corresponding isolability performance of the selected set of MSOs and it can be verified that isolation performance equals the initial isolability analysis using integral causality.
+Now, all MSO sets are not needed to achieve the best (structural) isolability performance. The method ``TestSelection`` can be used to find sets of MSO sets that can be used to find residuals. 
+The code below runs the test selection algorithm resulting in 3 required MSOs/residuals. The code also computes the Fault Signature Matrix (FSM) and the corresponding isolability performance of the selected set of MSOs and it can be verified that isolation performance equals the initial isolability analysis using integral causality.
 
 .. code-block:: python
 
@@ -241,7 +242,7 @@ Now, all MSO sets are not needed to achieve best (structural) isolability. The m
     FSM = model.FSM(model.FSM(ts_msos))
     model.IsolabilityAnalysisFSM(FSM)
 
-Now, to generate residual generator code, let's consider the first low_index MSO set ``ts_msos[0]``. The objective is to choose one equations a redundanrt/residual equation and use the rest to compute all unknown variables. 
+Now, to generate residual generator code, let's consider the first low_index MSO set ``ts_msos[0]``. The objective is to choose one equation as a redundant/residual equation and use the rest to compute all unknown variables. 
 
 .. code-block:: python
 
@@ -251,7 +252,7 @@ Now, to generate residual generator code, let's consider the first low_index MSO
 
     >> [ 7  6  4 10  3  8  9  0]
     
-The method ``MSOCausalitySweep`` can be used to identify which of these equations that can be used as a residual equation that lead to non-differential causality
+The method ``MSOCausalitySweep`` can be used to identify which of these equations can be used as a residual equation that leads to non-differential causality
 
 .. code-block:: python
 
@@ -259,13 +260,13 @@ The method ``MSOCausalitySweep`` can be used to identify which of these equation
 
     >> ['der', 'int', 'der', 'mixed', 'mixed', 'mixed', 'int', 'mixed']
 
-This means that selecting 2nd or 7th equation as a residual equation will lead to a residual generator with no differential causality. Here, let's choose the second equation ``(model.syme[6])`` corresponding to 
+This means that selecting the 2nd or 7th equation as a residual equation will lead to a residual generator with no differential causality. Here, let's choose the second equation ``(model.syme[6])`` corresponding to 
 
 .. math::
 
     e_7: y_1 = p_1
 
-The residual generator can be generated using the ``Gamma`` method to compute a matching and the ``SeqResGen`` method to generate code. In this case, python code is generated but it is also possible to generate C-code.
+The residual generator can be generated using the ``Gamma`` method to compute a matching and the ``SeqResGen`` method to generate code. In this case, Python code is generated but it is also possible to generate C-code.
 
 **NOTE** This part of the toolbox is highly experimental and non-tested. It might work and it might not.
 
@@ -277,7 +278,7 @@ The residual generator can be generated using the ``Gamma`` method to compute a 
 
     model.SeqResGen(Gamma, res, "residual")
 
-The core part of the generated python file looks like below, where the pressures ``p1`` and ``p2`` are states and updated using a simple Euler-forward integrator.
+The core part of the generated Python file looks like below, where the pressures ``p1`` and ``p2`` are dynamic states and updated using a simple Euler-forward integrator.
 
 .. code-block:: python
 

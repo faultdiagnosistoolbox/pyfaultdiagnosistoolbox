@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "faultdiagnosistoolbox"
-copyright = "2024, Erik Frisk"
+copyright = "Erik Frisk"
 author = "Erik Frisk"
 
 # The short X.Y version
@@ -40,8 +40,8 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.todo",
     "sphinx_rtd_theme",
+    "nbsphinx",
     # "numpydoc",
-    #    "nbsphinx",
     #    "myst_parser",
     #    'jupyter_sphinx'
 ]
@@ -66,7 +66,11 @@ language = "en"
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 # exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
+latex_elements = {
+    "preamble": r"""
+\usepackage{enumitem}\setlistdepth{99}
+"""
+}
 
 # pygments_style = "sphinx"
 

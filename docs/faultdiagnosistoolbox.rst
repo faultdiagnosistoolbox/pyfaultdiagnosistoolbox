@@ -7,7 +7,7 @@ The faultdiagnosistoolbox package
    :members: 
 
 .. automodule:: faultdiagnosistoolbox.dmperm
-   :members: srank
+   :members: srank, GetDMParts
 
 .. automodule:: faultdiagnosistoolbox.MHS
    :members: 

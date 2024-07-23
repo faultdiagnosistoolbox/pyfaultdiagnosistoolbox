@@ -30,15 +30,15 @@ Introduction
    :width: 55%
    :align: right
 
-The air-path of an automotive gasoline engine is important for
+The air path of an automotive gasoline engine is important for
 understanding how much fuel to inject, how to keep combustion emissions low,
 protect exhaust catalysts, and optimize efficiency. This system is not only
-industrially relevant, it is also an interesting system for academic basic
-research due to its complexity, its highly interconnected subsystems due to turbocharging, and
-challenging to model accurately. The model used here is based on a control oriented model of the air-path
+industrially relevant, but it is also an interesting system for academic basic
+research due to its complexity, its highly interconnected subsystems due to turbocharging, and a system that is
+challenging to model accurately. The model used here is based on a control-oriented model of the air-path
 consisting of pressure dynamics that describe flows and thermodynamic relations to
 describe temperatures and heat flows. The model has 94 equations and
-14 states. The model is highly non-linear, has
+14 states. The model is highly non-linear and has
 external, mapped, functions implemented as lookup-tables, and hybrid
 mode-switching statements (if-statements).
 
@@ -46,7 +46,7 @@ The measurements/control outputs used, in total 10, are: pressure sensors
 (throttle, intake manifold, ambient), temperature sensors (throttle, ambient),
 intake air mass flow, engine speed, throttle position, waste-gate position, and
 commanded amount of injected fuel. The considered faults, in total 11, are:
-Clogging of the air filter, leakages (before compressor, after throttle,
+Clogging of the air filter, leakages (before the compressor, after throttle,
 before intercooler), stuck intake valve, increased turbine friction,
 sensors (throttle position, air mass flow, intake manifold pressure,
 pressure before throttle, temperature before throttle)
@@ -117,7 +117,7 @@ as
     # ...
     ]
 
-The toolbox supports structural model only models, but here models with symbolic model equations is used since the objective of the use case is to go from model to generating code for residual generators and then expressions for the model equations are needed.
+The toolbox supports structural-only models, but here a model with symbolic model equations is used since the objective of the use case is to go from model to generating code for residual generators and then expressions for the model equations are needed.
 When the ``modeldef`` dict has been defined and the ``model`` object has been created it is time to explore the model. Basic model information is obtained using the ``Lint`` class method
 
 .. code-block:: python
@@ -145,11 +145,11 @@ When the ``modeldef`` dict has been defined and the ``model`` object has been cr
     :width: 65%
     :align: right
 
-The model structure, i.e., which variables that appear in which constraints, are
+The model structure, i.e., which variables appear in which constraints, are
 extensively used by the methods implemented in the toolbox. This model structure
 is automatically inferred from the model equations and the ``PlotModel`` class method can
 be used to visualize the model structure. It shows the equations on the vertical axis
-and the variables on the horizontal axis. A dot represent that a
+and the variables on the horizontal axis. A dot represents that a
 variable appears in the corresponding equation. Blue, red, and black
 dots represent unknown, fault, and known variables respectively.
 
@@ -196,7 +196,7 @@ which results in the plot
     :width: 100%
     :align: center
 
-It is a Dulmage-Mendelsohn decomposition with an additional canonical decomposition of the overdetermined part. The overdetermined part is marked with a blue rectangle and faults entering in equations contained in the overdetermined part are structurally detectable. The set of equations in the overdetermined part is partitioned into equivalence classes, indicated by gray shaded rectangles in the figure, with the property that all faults appearing in the same equivalence class is not structurally isolable from each other.
+It is a Dulmage-Mendelsohn decomposition with an additional canonical decomposition of the overdetermined part. The overdetermined part is marked with a blue rectangle and faults entering in equations contained in the overdetermined part are structurally detectable. The set of equations in the overdetermined part is partitioned into equivalence classes, indicated by gray-shaded rectangles in the figure, with the property that all faults appearing in the same equivalence class is not structurally isolable from each other.
 
 .. _diaganalysis_fi:
 
@@ -227,7 +227,7 @@ The isolability of faults when only using low-index approaches can be computed b
     :width: 50%
     :align: left
 
-The isolability matrix shows how the fault isolability performance degrades, which is expected, if the residual generation techniques are limited to pure integration based methods. These isolability matrices gives a direct way to early evaluate possible isolation performance of the model and with the given measurements. Of course, these are structural results meaning that even if the isolability matrix indicate that all faults are uniquely isolable, it is not certain that this is realizable in the real application with a required detection and false-alarm probabilities. But is gives an important first indication on what is possible.
+The isolability matrix shows how the fault isolability performance degrades, which is expected if the residual generation techniques are limited to pure integration-based methods. These isolability matrices give a direct way to early evaluate the possible isolation performance of the model and with the given measurements. Of course, these are structural results meaning that even if the isolability matrix indicates that all faults are uniquely isolable, it is not certain that this is realizable in the real application with a required detection and false-alarm probabilities. But, it gives an important first indication of what is possible.
 
 .. _resanalysisdesign:
 
@@ -235,7 +235,7 @@ Residual Generator Analysis and Design
 ======================================
 One successful approach to residual generation is to find testable sub-models and then, based on such sub-models, design residual generators.
 The first step is then to make a complete search for testable sub-models, here [Minimally Structurally Overdetermined (MSO)](https://doi.org/10.1109/TSMCA.2007.909555)
-set of equations. This step is based only on the structure of the model and in the engine model there are 4496 MSO sets. This means that, even with redundancy degree of only 4, there are several thousand different sub-models that can be tested independently. In the software, to compute the set of MSO sets use the ``MSO`` class method as
+set of equations. This step is based only on the structure of the model and in the engine model there are 4496 MSO sets. This means that, even with a redundancy degree of only 4, there are several thousand different sub-models that can be tested independently. In the software, to compute the set of MSO sets use the ``MSO`` class method as
 
 .. code-block:: python
 
@@ -254,13 +254,13 @@ that is equal to the isolability matrix computed earlier.
 Low-index and observability properties of sub-models
 ====================================================
 
-The toolbox supports sequential residual generator design and for models with high differential-index such direct residual design is not always appropriate since numerical differentiation of measurement signals are needed. The structural differential-index can be determined by efficient structural algorithms and the MSO sets with low-index can be found using the ``IsLowIndex`` class method as
+The toolbox supports sequential residual generator design and for models with high differential-index such direct residual design is not always appropriate since numerical differentiation of measurement signals is needed. The structural differential index can be determined by efficient structural algorithms and the MSO sets with low-index can be found using the ``IsLowIndex`` class method as
 
 .. code-block:: python
 
     low_index_msos = [m for m in msos if model.IsLowIndex(m)]
 
-For the engine model there are 206 low-index MSO sets out of the 4496. Performing the call
+For the engine model, there are 206 low-index MSO sets out of the 4496. Performing the call
 
 .. code-block:: python
 
@@ -282,7 +282,7 @@ MSO set have exactly one more equation than the number of unknown
 variables and this means that if one equation is used as the residual
 equation, the remaining equations will form an exactly determined
 system of equations. Then, the exactly determined set of equations is
-solved for all unknown variables numerically on-line and insertion of
+solved for all unknown variables numerically online and the insertion of
 all computed variables in the residual equation then produces a
 residual. For the engine model there were 4496 different MSO sets and
 previous analysis gives that there exists 206 low-index
@@ -290,8 +290,8 @@ sub-models. From these 206 sub-models the toolbox can automatically
 generate a large number, here 728, of candidate residual generators
 with integral causality. Using the ``IsLowIndex`` class method, it
 is concluded that MSO number 1650 with its 74:th equation as a
-residual equation constitute a low-index problem. A matching, i.e.,
-computational path for the exactly determined model is found using the
+residual equation constitutes a low-index problem. A matching, i.e.,
+a computational path for the exactly determined model is found using the
 class method ``Matching`` and then the method ``SeqResGen``
 can be used to generate Python or C-code.
 
@@ -319,7 +319,7 @@ This generates a file ``residual_1_setup.py`` and C-code that can be compiled in
 
     % python residual_1_setup.py build_ext --inplace
 
-Next step is to evaluate generated code for a set of such residuals on measurement data.
+The next step is to evaluate the generated code for a set of such residuals on measurement data.
 
 .. _testcelleval:
 
@@ -330,15 +330,15 @@ To illustrate performance on measurement data we consider only 4 of
 the 11 faults; faults in the air-flow sensor ``fy_waf``, the intake
 manifold pressure sensor ``fyp_im``, the intercooler pressure
 sensor ``fyp_ic``, and the intercooler temperature sensor
-``fyT_ic``. Measurement data were collected for the fault free and
-4 faulty cases, then in total 5 data sets, during a 12 minute long EPA highway
-fuel economy test cycle. Sample measurements from the fault free case are
+``fyT_ic``. Measurement data were collected for the fault-free and
+4 faulty cases, then in total 5 data sets, during a 12-minute long EPA highway
+fuel economy test cycle. Sample measurements from the fault-free case are
 
 .. image:: images/engine/engine_NF_data.png
     :width: 100%
     :align: center
 
-Out of the 728 residuals only a few is needed for isolating between
+Out of the 728 residuals, only a few are needed for isolating between
 the 4 faults and using a data-driven test selection procedure not
 described here, 7 residuals were in the end chosen for this
 illustration. Using class methods `FSM` and
@@ -358,7 +358,7 @@ Running residual generators
 ===========================
 
 The generated code for the 7 residuals are run on the 5 data sets and
-the residuals in the fault free case are shown in the plot below where the dashed
+the residuals in the fault-free case are shown in the plot below where the dashed
 lines correspond to thresholds selected to achieve a 1% false alarm probability.
 
 .. image:: images/engine/engine_res_NF.png
@@ -383,17 +383,16 @@ where ``z`` is a matrix with the measurements, the struct ``state_init`` gives t
 Fault Isolation Performance
 ===========================
 According to the fault signature matrix above, the
-red colored residuals should be sensitive to the air-flow sensor fault
-but not the blue colored residuals. The fault is present during the
+red-colored residuals should be sensitive to the air-flow sensor fault
+but not the blue-colored residuals. The fault is present during the
 gray shaded intervals, i.e., the fault is injected intermittently. The
-blue colored residuals are not sensitive to the fault as expected and
+blue-colored residuals are not sensitive to the fault as expected and
 residuals 1, 2, and 5 are above the dashed thresholds when the fault is
-present. Residual 3 should be sensitive to this fault but the fault to
-noise ratio is apparently too low for this fault, but is selected for
-its ability to detect fault ``fyp_ic``.
+present. Residual 3 should be sensitive to this fault but the fault-to-noise ratio is apparently too low for this fault, but is selected for
+its ability to detect the fault ``fyp_ic``.
 
 The figure below  shows in blue the distributions of the
-residuals in the fault free case and in red the distributions of the
+residuals in the fault-free case and in red the distributions of the
 residuals for an air-flow sensor fault. It is clear that residuals 1,
 2, and 5 are good at detecting this fault since the residual
 distributions change significantly.
@@ -402,7 +401,7 @@ distributions change significantly.
     :width: 90%
     :align: center
 
-Given the residuals and thresholds, the consistency based diagnosis candidates
+Given the residuals and thresholds, the consistency-based diagnosis candidates
 as a function of time, in the case of an air mass-flow sensor fault, are
 
 .. image:: images/engine/engine_res_isol_fywaf.png
@@ -413,21 +412,17 @@ In the figure, a 1 means that the fault is a diagnosis and a
 0 that it is not. The percentage of time where there is an isolation
 error is shown above each plot. Here, no post-processing is performed,
 and the error can be improved by post-filtering or applying adaptive
-thresholds, maybe at the cost of a delayed detection.
-It is clear that the fault isolation reliably indicates the correct
+thresholds, maybe at the cost of delayed detection.
+It is clear that fault isolation reliably indicates the correct
 fault ``fyw_af`` and isolates reliably from ``fyp_ic`` and
 ``fyT_ic`` but has a little more difficulty isolating from fault
 ``fyp_im``.
 
-To summarize the performance of the generated diagnosis system, the
-confusion matrix is illustrated using a 3D-plot
+To summarize the performance of the generated diagnosis system, the confusion matrix is illustrated using a 3D plot
 
 .. image:: images/engine/engine_res_isol_confusion_3d.png
     :width: 90%
     :align: center
 
-Here, the probability of correct isolation is plotted, and a perfect system
-would correspond to a diagonal with probability 1. It is clear from the figure
-that faults ``fyw_af``, ``fyp_ic``, and ``fyT_ic`` can be reliably isolated. Fault ``fyp_im``
-however can be reliably detected but is sometimes difficult to isolate from ``fyw_af``.
+Here, the probability of correct isolation is plotted, and a perfect system would correspond to a diagonal with probability 1. It is clear from the figure that faults ``fyw_af``, ``fyp_ic``, and ``fyT_ic`` can be reliably isolated. Fault ``fyp_im`` however can be reliably detected but is sometimes difficult to isolate from ``fyw_af``.
 
