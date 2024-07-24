@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "faultdiagnosistoolbox"
-version = "0.12.5.dev1"
+version = "0.12.5"
 authors = [
   { name="Erik Frisk", email="erik.frisk@liu.se" },
 ]
