@@ -7,10 +7,7 @@
 Fault Diagnosis Toolbox is a Python package for the analysis and design of fault diagnosis systems for dynamic systems, 
 primarily described by differential algebraic equations. Key features of the toolbox are extensive support for 
 structural analysis of large-scale dynamic models, fault isolability analysis, sensor placement analysis, 
-and code generation in C/C++ and Python.
-
-The toolbox is an adaptation of our Matlab toolbox that can be downloaded from https://faultdiagnosistoolbox.github.io where you 
-can also find [documentation](https://faultdiagnosistoolbox.github.io/_releases/user-manual_2018-12-09.pdf). The latest version of the python package can always be pip-installed.
+and code generation in C/C++ and Python. The toolbox is an adaptation of our Matlab toolbox that can be downloaded from https://faultdiagnosistoolbox.github.io.
 
 The toolbox is freely available under an MIT license. 
 
