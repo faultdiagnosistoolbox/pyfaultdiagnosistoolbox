@@ -1,7 +1,7 @@
 # Fault Diagnosis Toolbox
 <p>
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/faultdiagnosistoolbox)
-![PyPI - License](https://img.shields.io/pypi/l/faultdiagnosistoolbox)
+<img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/faultdiagnosistoolbox" />
+<img alt="PyPI - License" src="https://img.shields.io/pypi/l/faultdiagnosistoolbox" />
 </p>
 
 Fault Diagnosis Toolbox is a Python package for the analysis and design of fault diagnosis systems for dynamic systems, 
