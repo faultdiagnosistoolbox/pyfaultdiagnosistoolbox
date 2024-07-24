@@ -1,6 +1,6 @@
 # Fault Diagnosis Toolbox
 <p>
-<img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/faultdiagnosistoolbox" />
+<img alt="PyPI - Python Version" src="https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Ffaultdiagnosistoolbox%2Fpyfaultdiagnosistoolbox%2Fmaster%2Fpyproject.toml" />
 <img alt="PyPI - License" src="https://img.shields.io/pypi/l/faultdiagnosistoolbox" />
 </p>
 
