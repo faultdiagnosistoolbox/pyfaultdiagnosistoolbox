@@ -24,4 +24,6 @@ classifiers = [
 cmake.build-type = "Release"
 
 [project.urls]
-"Homepage" = "https://faultdiagnosistoolbox.github.io"
+Homepage = "https://faultdiagnosistoolbox.github.io"
+Documentation = "https://faultdiagnosistoolbox.readthedocs.io/"
+Issues = "https://github.com/faultdiagnosistoolbox/pyfaultdiagnosistoolbox/issues"
