@@ -8,7 +8,7 @@ version = "0.12.5"
 authors = [
   { name="Erik Frisk", email="erik.frisk@liu.se" },
 ]
-dependencies=['sympy', 'numpy', 'scipy', 'matplotlib', 'scikit-learn']
+dependencies=['sympy', 'numpy', 'scipy', 'matplotlib', 'scikit-learn', 'setuptools']
 description = "A toolbox for Model Based Fault Diagnosis of dynamic systems based on structural analysis"
 readme = "README.md"
 requires-python = ">=3.9"
