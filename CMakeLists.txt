@@ -30,7 +30,9 @@ nanobind_add_module(dmpermlib src/src_extension/dmpermlib.cc src/src_extension/S
 target_link_libraries(dmpermlib PRIVATE csparse)
 target_include_directories(dmpermlib PRIVATE ${NUMPY_DIR})
 target_compile_features(dmpermlib PRIVATE cxx_std_20)
-target_compile_options(dmpermlib PRIVATE -Wall -Wextra -Wpedantic -Wno-nested-anon-types -Wno-zero-length-array)
+if (NOT WIN32)
+  target_compile_options(dmpermlib PRIVATE -Wall -Wextra -Wno-nested-anon-types -Wno-zero-length-array)
+endif()
 
 # Copy the extension module to the src directory
 # add_custom_command(TARGET dmpermlib POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:dmpermlib> ${PROJECT_SOURCE_DIR}/src/faultdiagnosistoolbox)
