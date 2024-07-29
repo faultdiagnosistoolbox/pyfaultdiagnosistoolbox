@@ -1,0 +1,8 @@
+BasedOnStyle: llvm
+IndentWidth: 4
+AccessModifierOffset: -4
+ColumnLimit: 120
+AlwaysBreakAfterReturnType: TopLevelDefinitions
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterFunction: true
