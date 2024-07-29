@@ -1,0 +1,6 @@
+Checks: >
+    *,-abseil*,-altera*,-android*,-fuchsia*,-google*,-objc*,
+    -readability-identifier-length,-modernize-use-trailing-return-type,-llvmlibc*,
+    -bugprone-easily-swappable-parameters,-cppcoreguidelines-init-variables,-modernize-use-nodiscard,
+    -cppcoreguidelines-avoid-magic-numbers,-readability-magic-numbers,-misc-non-private-member-variables-in-classes,-misc-unused-parameters
+HeaderFilterRegex: '.*'
