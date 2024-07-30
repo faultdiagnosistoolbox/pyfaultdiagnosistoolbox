@@ -30,7 +30,7 @@ A simple model of the system can be described by the following equations:
 
 .. math::
 
-    \begin{align*} 
+    \begin{aligned} 
         e_1&: q_1 = \frac{1}{R_{V1}} (p_1 - p_2) &    e_{7}&: y_{1} = p_1 \\
         e_2&: q_2 = \frac{1}{R_{V2}} (p_2 - p_3) &      e_{8}&: y_{2} = q_2 \\
         e_3&: q_3 = \frac{1}{R_{V3}} (p_3) &       e_{9}&: y_{3} = q_0 \\
@@ -38,7 +38,7 @@ A simple model of the system can be described by the following equations:
         \dot{p}_1 = \frac{dp_1}{dt} \\
         e_5&: \dot{p}_2 = \frac{1}{C_{T2}} (q_1 - q_2) & e_{11}&: \dot{p}_2 = \frac{dp_2}{dt}\\
         e_{6}&: \dot{p}_3 = \frac{1}{C_{T3}} (q_2 - q_3) & e_{12}&: \dot{p}_3 = \frac{dp_3}{dt}
-    \end{align*}
+    \end{aligned}
 
 where :math:`p_i` is the pressure in tank :math:`i`, :math:`q_{i}` the flow through valve :math:`i`, :math:`R_{Vi}` the flow resistance of valve :math:`i`, and :math:`C_{Ti}` the capacitance of tank :math:`i`. Three sensors :math:`y_{i}` measure :math:`p_{1}`, :math:`q_{2}`, and :math:`q_{0}`, respectively. 
 For this example, six parametric faults have been considered in the plant: change in the capacity of tanks and partial blocks in the valves.
