@@ -216,12 +216,6 @@ class DiagnosisModel:
           arr               : An array of arrays, interpreted as a set of equations
                               sets used to design residuals. For eample the ouput of
                               the MSO or MTES functions
-          isolabilitymatrix : Matrix specifying required isolability
-                              performance. A 0 in position (i,j) represents that
-                              fault i is isolable from fault j, a 1 indicates
-                              that fault i is not isolable from fault j. A fault
-                              can not be isolable from itself and therefore must
-                              the diagonal always be 1.
           method            : Choice of test seleciton method.
                               'aminc' -  Searches for a subset minimal sets of tests
                                          that fulfills requirements (default)
@@ -240,6 +234,12 @@ class DiagnosisModel:
                                        that fulfills requirements. Warning,
                                        might easily lead to computationally
                                        intractable problems.
+          isolabilitymatrix : Matrix specifying required isolability
+                              performance. A 0 in position (i,j) represents that
+                              fault i is isolable from fault j, a 1 indicates
+                              that fault i is not isolable from fault j. A fault
+                              can not be isolable from itself and therefore must
+                              the diagonal always be 1.
         """
         return testselection.TestSelection(self, arr, method, isolabilitymatrix)
 
@@ -248,11 +248,18 @@ class DiagnosisModel:
         return dmperm.srank(self.X)
 
     def IsPSO(self, eq=None) -> bool:
-        """Return True if the model is a PSO set.
+        """
+        Return True if the model is a PSO set.
 
         Parameters
         ----------
-          eq (optional) : Set of equations to analyze. (default: all equations)
+        eq : int or array-like, optional
+            Set of equations to analyze. If not provided, all equations will be analyzed. (default: None)
+
+        Returns
+        -------
+        bool
+            True if the model is a PSO set, False otherwise.
         """
         if eq is None:
             eqs = np.arange(0, self.X.shape[0])
@@ -396,7 +403,7 @@ class DiagnosisModel:
         Parameters
         ----------
           eqs_sets : list of sets of equations, e.g., MSO sets
-          Plot     : If True, plot the fault signature matrix (dafault: False)
+          plot     : If True, plot the fault signature matrix (dafault: False)
         """
         r = np.zeros((len(eqs_sets), self.F.shape[1]), dtype=np.int64)
         for idx, eqs in enumerate(eqs_sets):
