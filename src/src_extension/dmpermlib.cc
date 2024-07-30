@@ -7,7 +7,6 @@ extern "C" {
 
 #include "MSOAlg.h"
 #include <array>
-#include <iostream>
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/list.h>
@@ -131,7 +130,7 @@ dmperm(const nb::object &o)
 
     // Do not cleanup data, ndarray is responsible for it
     // cs_dfree(dm);
-    auto [p, q, r, s, cc, rr, m] = create_dmperm_output(sm, dm);
+    const auto [p, q, r, s, cc, rr, m] = create_dmperm_output(sm, dm);
     return nb::make_tuple(p, q, r, s, cc, rr, m);
 }
 
