@@ -4,10 +4,6 @@
 if [ ! -d "build_envs" ]; then
     mkdir build_envs
 
-    python3.9 -m venv build_envs/env39
-    source build_envs/env39/bin/activate
-    pip install -U pip build
-
     python3.10 -m venv build_envs/env310
     source build_envs/env310/bin/activate
     pip install -U pip build
@@ -19,12 +15,11 @@ if [ ! -d "build_envs" ]; then
     python3.12 -m venv build_envs/env312
     source build_envs/env312/bin/activate
     pip install -U pip build
-fi
 
-# Python 3.9
-source build_envs/env39/bin/activate
-python -m build --wheel
-deactivate
+    python3.13 -m venv build_envs/env313
+    source build_envs/env312/bin/activate
+    pip install -U pip build
+fi
 
 # Python 3.10
 source build_envs/env310/bin/activate
@@ -38,6 +33,11 @@ deactivate
 
 # Python 3.12
 source build_envs/env312/bin/activate
+python -m build --wheel
+deactivate
+
+# Python 3.13
+source build_envs/env313/bin/activate
 python -m build --wheel
 deactivate
 
