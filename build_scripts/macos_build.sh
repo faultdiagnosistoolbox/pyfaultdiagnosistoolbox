@@ -17,7 +17,7 @@ if [ ! -d "build_envs" ]; then
     pip install -U pip build
 
     python3.13 -m venv build_envs/env313
-    source build_envs/env312/bin/activate
+    source build_envs/env313/bin/activate
     pip install -U pip build
 fi
 

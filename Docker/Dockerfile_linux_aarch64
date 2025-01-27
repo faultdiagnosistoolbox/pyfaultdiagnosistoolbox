@@ -24,6 +24,11 @@ RUN /opt/python/cp313-cp313/bin/python3 -m venv /py_env/env313 && \
     pip install -U pip build auditwheel && \
     deactivate
 
+RUN /opt/python/cp313-cp313t/bin/python3 -m venv /py_env/env313t && \
+    . /py_env/env313t/bin/activate && \
+    pip install -U pip build auditwheel && \
+    deactivate
+
 ENV CC=clang
 ENV CXX=clang++
 
