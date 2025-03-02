@@ -289,10 +289,16 @@ for idx, fm in enumerate(dc):
                     t1 = data[fm]["time"][t1Idx] / 60.0
                     t2 = data[fm]["time"][t2Idx] / 60.0
                     ax[ax_idx].add_patch(
-                        mpatches.Rectangle((t1, y1), t2 - t1, y2 - y1, facecolor="0.9", edgecolor="none")
+                        mpatches.Rectangle(
+                            (t1, y1), t2 - t1, y2 - y1, facecolor="0.9", edgecolor="none"
+                        )
                     )
-            ax[ax_idx].plot(data[fm]["time"][::ds] / 60.0, data[fm]["time"][::ds] * 0 + J[ridx], "k--")
-            ax[ax_idx].plot(data[fm]["time"][::ds] / 60.0, data[fm]["time"][::ds] * 0 - J[ridx], "k--")
+            ax[ax_idx].plot(
+                data[fm]["time"][::ds] / 60.0, data[fm]["time"][::ds] * 0 + J[ridx], "k--"
+            )
+            ax[ax_idx].plot(
+                data[fm]["time"][::ds] / 60.0, data[fm]["time"][::ds] * 0 - J[ridx], "k--"
+            )
 
             if fm in model.f and FSM[ridx, model.f.index(fm)] == 1:
                 ax[ax_idx].set_title(f"r{ridx + 1}: MSO {ts[ridx]} (*)", fontsize=10, weight="bold")
@@ -377,7 +383,9 @@ for idx, fm in enumerate(dc):
                 y1, y2 = ax[ax_idx].get_ylim()
                 t1 = data[fm]["time"][t1Idx] / 60.0
                 t2 = data[fm]["time"][t2Idx] / 60.0
-                ax[ax_idx].add_patch(mpatches.Rectangle((t1, 0.05), t2 - t1, 0.9, facecolor="0.9", edgecolor="none"))
+                ax[ax_idx].add_patch(
+                    mpatches.Rectangle((t1, 0.05), t2 - t1, 0.9, facecolor="0.9", edgecolor="none")
+                )
             perf = C[list(np.array(model.f)[fIdx]).index(fm), fiIdx]
         else:
             perf = np.sum(dx[idx][fiIdx, :] == 0) / len(data[fm]["fault_vector"])
