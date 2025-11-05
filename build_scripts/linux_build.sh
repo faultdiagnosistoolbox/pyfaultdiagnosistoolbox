@@ -63,5 +63,30 @@ mv -f wheelhouse/* .
 cd ..
 deactivate
 
+# Generate Python3.14
+. /py_env/env314/bin/activate
+python -m build --wheel | tee log.txt
+wheel_name=$(grep "Successfully" log.txt | sed "s/Successfully built \(.*\.whl\)/\1/g")
+rm -f log.txt
+cd dist
+auditwheel repair "$wheel_name"
+rm -f "$wheel_name"
+mv -f wheelhouse/* .
+cd ..
+deactivate
+
+# Generate Python3.14t
+. /py_env/env314t/bin/activate
+python -m build --wheel | tee log.txt
+wheel_name=$(grep "Successfully" log.txt | sed "s/Successfully built \(.*\.whl\)/\1/g")
+rm -f log.txt
+cd dist
+auditwheel repair "$wheel_name"
+rm -f "$wheel_name"
+mv -f wheelhouse/* .
+cd ..
+deactivate
+
+
 # Cleanup
 rm -rf dist/wheelhouse

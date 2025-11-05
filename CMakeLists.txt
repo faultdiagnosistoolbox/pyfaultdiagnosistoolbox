@@ -26,7 +26,12 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE NUMPY_DIR)
 
 # Add the extension module to the build
-nanobind_add_module(dmpermlib src/src_extension/dmpermlib.cc src/src_extension/SparseMatrix.cc src/src_extension/StructuralAnalysisModel.cc src/src_extension/MSOAlg.cc)
+nanobind_add_module(dmpermlib
+  src/src_extension/dmpermlib.cc
+  src/src_extension/SparseMatrix.cc
+  src/src_extension/StructuralAnalysisModel.cc
+  src/src_extension/MSOAlg.cc)
+
 target_link_libraries(dmpermlib PRIVATE csparse)
 target_include_directories(dmpermlib PRIVATE ${NUMPY_DIR})
 target_compile_features(dmpermlib PRIVATE cxx_std_20)

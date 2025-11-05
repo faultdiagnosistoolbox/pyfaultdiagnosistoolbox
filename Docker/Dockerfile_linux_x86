@@ -4,11 +4,6 @@ RUN yum check-update | exit 0 && yum install -y ninja-build clang
 
 RUN mkdir /py_env && mkdir /fdt_build
 
-RUN /opt/python/cp310-cp310/bin/python3 -m venv /py_env/env310 && \
-    . /py_env/env310/bin/activate && \
-    pip install -U pip build auditwheel && \
-    deactivate
-
 RUN /opt/python/cp311-cp311/bin/python3 -m venv /py_env/env311 && \
     . /py_env/env311/bin/activate && \
     pip install -U pip build auditwheel && \
@@ -26,6 +21,16 @@ RUN /opt/python/cp313-cp313/bin/python3 -m venv /py_env/env313 && \
 
 RUN /opt/python/cp313-cp313t/bin/python3 -m venv /py_env/env313t && \
     . /py_env/env313t/bin/activate && \
+    pip install -U pip build auditwheel && \
+    deactivate
+
+RUN /opt/python/cp314-cp314/bin/python3 -m venv /py_env/env314 && \
+    . /py_env/env314/bin/activate && \
+    pip install -U pip build auditwheel && \
+    deactivate
+
+RUN /opt/python/cp314-cp314t/bin/python3 -m venv /py_env/env314t && \
+    . /py_env/env314t/bin/activate && \
     pip install -U pip build auditwheel && \
     deactivate
 
