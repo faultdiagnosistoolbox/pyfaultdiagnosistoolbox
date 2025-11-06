@@ -1,0 +1,13 @@
+ipython
+numpy
+scipy
+build
+jupyter
+jupyterlab
+matplotlib
+build
+black
+nanobind
+pytest
+pytest-cov
+twine
