@@ -9,6 +9,8 @@ build
 pypi_token.txt
 pypi_test_token.txt
 
+.vscode/
+
 .coverage
 *.a
 *.ipynb_checkpoints
