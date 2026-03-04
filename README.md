@@ -24,6 +24,49 @@ The toolbox is available on [pip](https://pypi.org/project/faultdiagnosistoolbox
 pip install faultdiagnosistoolbox
 ```
 
+## Development
+
+Set up the toolbox for development:
+
+Clone the repository:
+```bash
+git clone <repository-url>
+cd pyfaultdiagnosistoolbox
+```
+
+Create a virtual environment:
+```bash
+python -m venv venv
+```
+
+Activate it:
+
+- **Linux / macOS**
+  ```bash
+  source venv/bin/activate
+  ```
+
+- **Windows (PowerShell)**
+  ```powershell
+  .\venv\Scripts\Activate.ps1
+  ```
+
+- **Windows (Command Prompt)**
+  ```cmd
+  venv\Scripts\activate.bat
+  ```
+
+Install development dependencies:
+```bash
+pip install -r requirements_develop.txt
+```
+
+Install in edit-mode: \
+This enables live updates when you modify the source code
+```bash
+pip install -e .
+```
+
 ## Publications
 
 If you use this toolbox in your research, please cite 
