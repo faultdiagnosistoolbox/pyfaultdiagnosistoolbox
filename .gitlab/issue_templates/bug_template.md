@@ -6,8 +6,8 @@
 **Visuella bevis:** <!-- Skärmdumpar, videor eller loggar som visar problemet. -->
 
 <!-- Välj priority genom att skriva critical, high, medium eller low efter priority:: -->
-/label priority::
+/label ~"priority::"
 
-/label type::bug
-/label status::new
-/assign @youdr728 @meleh036
+/label ~"type::bug"
+/label ~"status::new"
+/assign @meleh036
