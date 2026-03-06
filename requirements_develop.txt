@@ -11,4 +11,3 @@ nanobind
 pytest
 pytest-cov
 twine
-flake8

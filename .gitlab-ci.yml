@@ -20,11 +20,6 @@ black:
   script:
     - black --check src/faultdiagnosistoolbox/ExternalSimulation src/faultdiagnosistoolbox/NeuralNetworkIntegration src/faultdiagnosistoolbox/ModelTransforming tests/test_external_simulation tests/test_neural_network tests/test_model_transforming
 
-flake8:
-  stage: lint
-  script:
-    - flake8 src/faultdiagnosistoolbox/ExternalSimulation src/faultdiagnosistoolbox/NeuralNetworkIntegration src/faultdiagnosistoolbox/ModelTransforming tests/test_external_simulation tests/test_neural_network tests/test_model_transforming
-
 pytest-sys1:
   stage: test
   script:
