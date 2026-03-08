@@ -1,9 +1,9 @@
-# **🚀Merge Request🚀 {{title}}**
+# **🚀Merge Request🚀**
 
 ## ✅ Checklista innan Merge Request
 *Utvecklaren bekräftar följande innan granskning påbörjas:*
 - [ ] **Koden är kommenterad och skriven på Engelska**
-- [ ] **Koden följer PEP 8 standard** 🐍
+- [ ] **Koden följer Black standard** 🐍
 - [ ] **Koden uppfyller funktionalitet**
 - [ ] **Koden har passerat samtliga tester** 🧪
 
