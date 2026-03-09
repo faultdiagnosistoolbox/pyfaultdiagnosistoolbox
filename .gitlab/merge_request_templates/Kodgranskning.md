@@ -3,7 +3,7 @@
 ## ✅ Checklista innan Merge Request
 *Utvecklaren bekräftar följande innan granskning påbörjas:*
 - [ ] **Koden är kommenterad och skriven på Engelska**
-- [ ] **Koden följer Black standard** 🐍
+- [ ] **Koden följer PEP8 standard** 🐍
 - [ ] **Koden uppfyller funktionalitet**
 - [ ] **Koden har passerat samtliga tester** 🧪
 
