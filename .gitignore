@@ -11,6 +11,7 @@ pypi_test_token.txt
 
 .vscode/
 venv/
+.venv/
 
 .coverage
 *.a
