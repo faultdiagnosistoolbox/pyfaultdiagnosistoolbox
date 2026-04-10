@@ -28,15 +28,11 @@ def em_fmu_path():
     output_path = "generated/electricmotor_model.fmu"
     generator = FMUGenerator(
         model=em_model,
-        output_path=output_path,
         model_path=em_path,
         Gamma=em_model.Matching(em_model.MTES()[0][1:]),
         res_eq=em_model.MTES()[0][0],
     )
-    try:
-        generator.generate_fmu()
-    except NotImplementedError as exc:
-        pytest.skip(f"FMU generation is not implemented: {exc}")
+    generator.generate_fmu()
     return output_path
 
 

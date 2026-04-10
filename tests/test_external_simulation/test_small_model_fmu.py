@@ -28,15 +28,11 @@ def tiny_fmu_path():
     output_path = "generated/small_model.fmu"
     generator = FMUGenerator(
         model=small_model,
-        output_path=output_path,
         model_path=small_model_path,
         Gamma=small_model.Matching(small_model.MTES()[0][1:]),
         res_eq=small_model.MTES()[0][0],
     )
-    try:
-        generator.generate_fmu()
-    except NotImplementedError as exc:
-        pytest.skip(f"FMU generation is not implemented: {exc}")
+    generator.generate_fmu()
     return output_path
 
 
@@ -76,7 +72,6 @@ def test_variable_causality(tiny_fmu_path):
     assert (
         "y1" in causalities["input"] and "y2" in causalities["input"]
     ), "y1 och y2 not in input"
-    # assert "XXX" in causality["parameter"], "no valid parameter"
 
 
 def test_model_name(tiny_fmu_path):
