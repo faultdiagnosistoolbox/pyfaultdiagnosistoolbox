@@ -1,11 +1,11 @@
 import time
+import copy
 
 
 class ModelTransforming:
     def create_model_copy(model):
         """Returns copy of user model"""
-        # TODO implement function
-        return model
+        return copy.deepcopy(model)
 
     def get_optimized_model(model):
         """Returns model transformed to representation that satisfies toolbox limitations"""

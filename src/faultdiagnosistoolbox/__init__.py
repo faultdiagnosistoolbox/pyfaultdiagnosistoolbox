@@ -29,3 +29,4 @@ from . MHS import MHS
 from . import models
 from . dmperm import srank
 from . _version import __version__
+from .ModelTransforming import ModelTransforming
