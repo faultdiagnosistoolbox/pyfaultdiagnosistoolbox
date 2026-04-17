@@ -44,7 +44,7 @@
 *Granskaren fyller i följande under granskningen:*
 
 ## Granskningsdata
-| Granskare | Utvecklare | Datum | Rader ändrade | Hittade buggar | Granskningstid (min) | Åtgärdstid (min) |
+| Granskare | Utvecklare | Datum | Rader ändrade | Hittade åtgärdspunkter | Granskningstid (min) | Åtgärdstid (min) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | @användare | @utvecklare | 2026-MM-DD | + tal - tal| | | |
 
