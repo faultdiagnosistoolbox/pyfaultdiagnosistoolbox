@@ -9,7 +9,8 @@ from test_engine_model import LiU_ICE_model
 @pytest.fixture
 def nni():
     """Initializes and returns an instance of NeuralNetworkIntegration"""
-    return NeuralNetworkIntegration()
+    model = LiU_ICE_model
+    return NeuralNetworkIntegration(model)
 
 
 @pytest.fixture
@@ -18,9 +19,14 @@ def config_setup(tmp_path):
     test_dir = str(tmp_path / _get_config_path())
     os.mkdir(test_dir)
     file_name = _get_config_name()
-    full_path = os.path.join(test_dir, file_name)
+    model_type = _get_model_type()
+    model_name = _get_model_name()
+    mso_index = _get_mso_index()
 
-    yield test_dir, file_name, full_path
+    path = os.path.join(test_dir, file_name)
+    full_path = path + f"_{model_type}.yml"
+
+    yield test_dir, file_name, full_path, model_type, model_name, mso_index
 
     # Cleanup
     if os.path.exists(full_path):
@@ -35,8 +41,26 @@ def _get_config_path():
 
 def _get_config_name():
     """Returns a test config file name"""
-    name = "model_1_config.yaml"
+    name = "model_1_config"
     return name
+
+
+def _get_model_type():
+    """Returns a test model type"""
+    model_type = "latent"
+    return model_type
+
+
+def _get_model_name():
+    """Returns a test model name"""
+    model_name = LiU_ICE_model.name
+    return model_name
+
+
+def _get_mso_index():
+    """Returns a test mso index"""
+    mso_index = 0
+    return mso_index
 
 
 def _get_complete_mso():
@@ -53,12 +77,20 @@ def test_config_file_created_at_destination(config_setup, nni):
     Solves: Issue #31
     """
     # Setup for the test path and file
-    test_dir, file_name, expected_full_path = config_setup
+    test_dir, file_name, expected_full_path, model_type, model_name, mso_index = (
+        config_setup
+    )
 
     mso = _get_complete_mso()
 
-    # Call for the config file generator
-    nni.generate_config_file(mso=mso, name=file_name, path=test_dir)
+    nni.generate_config_file(
+        mso=mso,
+        mso_number=mso_index,
+        model_name=model_name,
+        file_name=file_name,
+        path=test_dir,
+        model_type=model_type,
+    )
 
     # Check that the file and path was created at correct locations and with correct names
     assert os.path.exists(
@@ -106,11 +138,17 @@ def test_generated_config_file_structure(config_setup, nni):
     Solves: Issue #27
     """
     # Setup for the test path and file
-    test_dir, file_name, full_path = config_setup
+    test_dir, file_name, full_path, model_type, model_name, mso_index = config_setup
     mso = _get_complete_mso()
 
-    # Call for the config file generator
-    nni.generate_config_file(mso=mso, name=file_name, path=test_dir)
+    nni.generate_config_file(
+        mso=mso,
+        mso_number=mso_index,
+        model_name=model_name,
+        file_name=file_name,
+        path=test_dir,
+        model_type=model_type,
+    )
 
     # Check that the file was generated correctly and with the correct content
     accepted_file_formats = [".yaml", ".yml"]
@@ -153,7 +191,7 @@ def test_generated_config_file_structure(config_setup, nni):
         dictionary_types = ["signals", "dynamic", "predictors"]
         for key in string_types:
             assert isinstance(
-                config_data[key], dict
+                config_data[key], str
             ), f"The {key} was not in correct format (should have been of type string)"
         for key in dictionary_types:
             assert isinstance(
@@ -169,7 +207,7 @@ def test_generated_config_file_structure(config_setup, nni):
         # Confirm that all predictors are defined in the signals model aswell
         for predictor in config_data["predictors"]:
             assert predictor in [
-                signal.key() for signal in config_data["signals"]
+                signal for signal in config_data["signals"]
             ], f"Predictor: {predictor} is an unknown variable!"
 
 
@@ -181,11 +219,17 @@ def test_generated_config_file_data(config_setup, nni):
     """
 
     # Setup for the test path and file
-    test_dir, file_name, full_path = config_setup
+    test_dir, file_name, full_path, model_type, model_name, mso_index = config_setup
     mso = _get_complete_mso()
 
-    # Call for the config file generator
-    nni.generate_config_file(mso=mso, name=file_name, path=test_dir)
+    nni.generate_config_file(
+        mso=mso,
+        mso_number=mso_index,
+        model_name=model_name,
+        file_name=file_name,
+        path=test_dir,
+        model_type=model_type,
+    )
 
     # Check that the file contains the correct data
     with open(full_path, "r") as config_file:
@@ -257,14 +301,21 @@ def test_time(config_setup, nni):
     assert len(mso) <= 50, "Mso has more than 50 equations"
 
     # Setup for the test path and file
-    test_dir, file_name, _ = config_setup
+    test_dir, file_name, _, model_type, model_name, mso_index = config_setup
 
     runs = 5
     times = []
 
     for _ in range(runs):
         start = time.perf_counter()
-        nni.generate_config_file(mso, file_name, test_dir)
+        nni.generate_config_file(
+            mso=mso,
+            mso_number=mso_index,
+            model_name=model_name,
+            file_name=file_name,
+            path=test_dir,
+            model_type=model_type,
+        )
         end = time.perf_counter()
         times.append(end - start)
 
