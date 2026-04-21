@@ -22,7 +22,7 @@ def analyze_modelDef(model_def):
     # Check if input is correct type
     if not isinstance(model_def["rels"], list):
         raise TypeError("Only model_def are allowed")
-    
+
     # Run Common Subexpression Elimination (CSE) on the model relations.
     # - replacements: list of (replacement_symbol, expression)
     # - reduced_equations: equations that use those replacement symbols
