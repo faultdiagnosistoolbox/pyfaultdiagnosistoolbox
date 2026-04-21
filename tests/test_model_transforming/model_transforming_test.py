@@ -19,7 +19,7 @@ def test_logging_timing():
         events.append((time.monotonic(), args))
 
     start_time = time.monotonic()
-    # Temporarly replace built in print function with modified one
+    # Temporarily replace built in print function with modified one
     with patch("builtins.print", timed_print):
         mt.get_optimized_modelDef(bad_subexpr_modelDef)
 
@@ -58,20 +58,21 @@ def test_timed_model_transformation():
 def test_find_and_replace():
     """Test that given a model, the identified reoccuring subexpressions and their replacements, a new model
     is returned with the replacements made. Requirement #10, #14"""
-    reduced_modelDef = mt.find_and_replace(
-        subexpr_id_modelDef,
-        subexpr_id_correct_reduction,
-    )
+    reduced_modelDef = mt.get_optimized_modelDef(subexpr_id_modelDef)
 
+    # check that the same number of equations are in the reduced model and the correct reduced model
+    assert len(reduced_modelDef["rels"]) == len(subexpr_id_reduced_modelDef["rels"])
+
+    # tests each equation in the reduced model is the same as the expected reduced model
+    for i, (actual, expected) in enumerate(
+        zip(reduced_modelDef["rels"], subexpr_id_reduced_modelDef["rels"])
+    ):
+        assert actual.equals(
+            expected
+        ), f"Equation {i} does not match expected. Got {actual}, expected {expected}"
+
+    # tests the entire dictionary structure
     assert reduced_modelDef == subexpr_id_reduced_modelDef
-    result = 0
-    offset = len(reduced_modelDef) - len(subexpr_id_modelDef["rels"])
-    # Iterate backwards to get equivalent equations from both
-    for i in range(len(subexpr_id_modelDef["rels"]) - 1, 0, -1):
-        result += abs(
-            reduced_modelDef["rels"][i + offset] - subexpr_id_modelDef["rels"][i]
-        )
-    assert result == 0
 
 
 def test_view_reduced_subexprs(capsys):
