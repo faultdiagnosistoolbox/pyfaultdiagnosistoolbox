@@ -2,6 +2,7 @@ import os
 import importlib.util
 from pathlib import Path
 import fmpy
+import numpy as np
 from fmpy.validation import validate_fmu, validate_model_description
 from fmpy import extract, read_model_description
 import pytest
@@ -19,13 +20,13 @@ def _load_model(model_file_name):
 
 small_model = _load_model("small_example.py")
 
-model_name = "small_model"
+model_name = "small_example"
 
 
 @pytest.fixture(scope="session")
 def tiny_fmu_path():
     small_model_path = "tests/test_external_simulation/small_example.py"
-    output_path = "generated/small_model.fmu"
+    output_path = "generated/small_example.fmu"
     generator = FMUGenerator(
         model=small_model,
         model_path=small_model_path,
@@ -71,7 +72,7 @@ def test_variable_causality(tiny_fmu_path):
     assert "r" in causalities["output"], "r not in output"
     assert (
         "y1" in causalities["input"] and "y2" in causalities["input"]
-    ), "y1 och y2 not in input"
+    ), "y1 and y2 not in input"
 
 
 def test_model_name(tiny_fmu_path):
@@ -83,11 +84,27 @@ def test_model_name(tiny_fmu_path):
     ), f"Wrong model name: {model_desc.modelName}, correct: {model_name}"
 
 
-def test_model_exchange(tiny_fmu_path):
-    """Test that the FMU modelDescription.xml has the correct model exchange identifier"""
+def test_co_simulate(tiny_fmu_path):
+    """Test that the FMU modelDescription.xml has the correct co-simulated identifier"""
     fmu_path = tiny_fmu_path
     model_desc = fmpy.read_model_description(fmu_path)
-    assert model_desc.modelExchange != None, f"Model exchange not found!"
+    assert model_desc.coSimulation != None, f"Co-simulation not found!"
+
+
+def test_simulate_small_model_fmu_does_not_crash(tiny_fmu_path):
+    """Smoke test that the generated FMU can be instantiated and stepped."""
+    time = np.linspace(0.0, 1.0, 10)
+    inputs = np.zeros(len(time), dtype=[("time", float), ("y1", float), ("y2", float)])
+    inputs["time"] = time
+    inputs["y1"] = 2.0
+    inputs["y2"] = 4.0
+
+    fmpy.simulate_fmu(
+        tiny_fmu_path,
+        start_time=0.0,
+        stop_time=1.0,
+        input=inputs,
+    )
 
 
 def test_OS_binaries(tiny_fmu_path):

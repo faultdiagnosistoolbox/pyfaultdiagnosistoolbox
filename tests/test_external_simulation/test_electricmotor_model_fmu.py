@@ -2,6 +2,7 @@ import os
 import importlib.util
 from pathlib import Path
 import fmpy
+import numpy as np
 from fmpy.validation import validate_fmu, validate_model_description
 from fmpy import extract, read_model_description
 import pytest
@@ -19,7 +20,7 @@ def _load_model(model_file_name):
 
 em_model = _load_model("electricmotor_model.py")
 
-model_name = "Electric motor"
+model_name = "electricmotor_model"
 
 
 @pytest.fixture(scope="session")
@@ -73,7 +74,7 @@ def test_variable_causality(em_fmu_path):
         "yw" in causalities["input"] and "yT" in causalities["input"]
     ), "yw och yT not in input"
     assert (
-        "b" in causalities["parameter"] and "j" in causalities["parameter"]
+        "b" in causalities["parameter"] and "J" in causalities["parameter"]
     ), "no valid parameter"
 
 
@@ -86,11 +87,27 @@ def test_model_name(em_fmu_path):
     ), f"Wrong model name: {model_desc.modelName}, correct: {model_name}"
 
 
-def test_model_exchange(em_fmu_path):
-    """Test that the FMU modelDescription.xml has the correct model exchange identifier"""
+def test_co_simulate(em_fmu_path):
+    """Test that the FMU modelDescription.xml has the correct co-simulated identifier"""
     fmu_path = em_fmu_path
     model_desc = fmpy.read_model_description(fmu_path)
-    assert model_desc.modelExchange != None, f"Model exchange not found!"
+    assert model_desc.coSimulation != None, f"Co-simulation not found!"
+
+
+def test_simulate_electric_motor_fmu_does_not_crash(em_fmu_path):
+    """Smoke test that the generated FMU can be instantiated and stepped."""
+    time = np.linspace(0.0, 1.0, 10)
+    inputs = np.zeros(len(time), dtype=[("time", float), ("yw", float), ("yT", float)])
+    inputs["time"] = time
+    inputs["yw"] = 2.0
+    inputs["yT"] = 200.0
+
+    fmpy.simulate_fmu(
+        em_fmu_path,
+        start_time=0.0,
+        stop_time=1.0,
+        input=inputs,
+    )
 
 
 def test_OS_binaries(em_fmu_path):

@@ -87,7 +87,7 @@ class FMURuntime:
         self,
         known_signals: dict[str, float],
         parameters: dict[str, float] | None = None,
-        Ts: float = 0.1,
+        ts: float = 0.1,
     ):
         """Compute one residual output for the given signals and parameters.
 
@@ -97,11 +97,12 @@ class FMURuntime:
             Signal values keyed by model known signal names (`model.z`).
         parameters : dict[str, float], optional
             Parameter values keyed by model parameter names.
-        Ts : float, optional
+        ts : float, optional
             Sampling time used by generated residual functions.
         """
+        required_signals = self.metadata.get("signals", [])
         missing_signals = [
-            signal for signal in self.model.z if signal not in known_signals
+            signal for signal in required_signals if signal not in known_signals
         ]
         if missing_signals:
             raise KeyError(
@@ -118,12 +119,15 @@ class FMURuntime:
                 f"Missing parameters for residual evaluation: {missing_parameters}"
             )
 
-        # Generated residual functions index z by positions in model.z.
-        z = np.array([known_signals[signal] for signal in self.model.z], dtype=float)
+        # Generated residual functions index z by positions in model.z, so keep the
+        # full vector shape while only requiring the signals used by this residual.
+        z = np.array(
+            [known_signals.get(signal, 0.0) for signal in self.model.z], dtype=float
+        )
 
         residual_function = getattr(self.module, self.residual_name)
         state = self.states.get(self.residual_name, {})
-        residual_value, updated_state = residual_function(z, state, params, Ts)
+        residual_value, updated_state = residual_function(z, state, params, ts)
         self.states[self.residual_name] = updated_state
         return float(residual_value)
 
@@ -158,7 +162,7 @@ def build_runtime(
         are dicts of state variable names to initial values. Defaults to None (no states).
     """
 
-    metadata = extract_fmu_variable_metadata(model, Gamma, res_eq)
+    metadata = extract_fmu_variable_metadata(model, Gamma, res_eq, diffres=diffres)
 
     destination = Path(output_dir).resolve()
     destination.mkdir(parents=True, exist_ok=True)
@@ -182,6 +186,10 @@ def build_runtime(
         if initial_state_by_residual
         else {}
     )
+    state_keys = metadata.get("state_keys", [])
+    for state_key in state_keys:
+        initial_states.setdefault(state_key, 0.0)
+
     states = {residual_name: initial_states}
 
     return FMURuntime(
