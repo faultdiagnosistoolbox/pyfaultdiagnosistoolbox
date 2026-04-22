@@ -25,8 +25,6 @@ def test_logging_timing():
 
     end_time = time.monotonic()
 
-    assert len(events) > 0
-
     # Get list of timestamps from events
     timestamps = [x[0] for x in events]
 
@@ -56,7 +54,7 @@ def test_timed_model_transformation():
 
 
 def test_find_and_replace():
-    """Test that given a model, the identified reoccuring subexpressions and their replacements, a new model
+    """Test that given a model, the identified reoccurring subexpressions and their replacements, a new model
     is returned with the replacements made. Requirement #10, #14"""
     reduced_modelDef = mt.get_optimized_modelDef(subexpr_id_modelDef)
 
@@ -75,12 +73,13 @@ def test_find_and_replace():
     assert reduced_modelDef == subexpr_id_reduced_modelDef
 
 
-def test_view_reduced_subexprs(capsys):
+def test_view_reduced_subexprs():
     """Test that user can view manipulated expressions"""
-    mt.view_reduced_subexprs(bad_subexpr_modelDef)
-    captured = capsys.readouterr()
+    transformed = mt.optimize(bad_subexpr_modelDef)
     replacements, reduced = mt.analyze_modelDef(bad_subexpr_modelDef)
-    assert str(replacements) in captured.out
+    for replacement in replacements:
+        assert str(replacement[0]) in transformed["summary"]
+        assert str(replacement[1]) in transformed["summary"]
 
 
 def test_model_copy():

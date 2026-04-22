@@ -32,7 +32,7 @@ def analyze_modelDef(model_def):
     # (these are the more complex expressions worth storing as temporary variables)
     kept_replacements = []
 
-    # Tracks each temporary symbol fully expanded using earlier replacements
+    # Tracks each temporary symbol fully expanded using earlier replacements.
     # {'symbol': expression}
     fully_expanded = {}
 
@@ -84,13 +84,17 @@ def analyze_modelDef(model_def):
     return kept_replacements, reduced_equations
 
 
-def get_optimized_modelDef(input_model):
-    """Returns model transformed to representation that satisfies toolbox limitations"""
+def optimize(input_model_def):
+    """Transforms the model_def to a new representation with reduced expressions
+    and returns a dictionary with the new model_def and a summary. The transformation
+    status is printed as it progresses."""
+
+    print("Starting model transformation")
     # Create model copy
-    model = create_model_copy(input_model)
-
+    model = create_model_copy(input_model_def)
+    print("The model was copied successfully")
     replacements, reduced = analyze_modelDef(model)
-
+    print("Possible replacement equations have been extracted")
     # Remove all old equations
     model["rels"] = []
 
@@ -100,19 +104,75 @@ def get_optimized_modelDef(input_model):
         model["x"].append(str(replacement[0]))
         model["x"].sort()
 
-        # The replacements are pairs, e.g. (x0, x1*x2) which can be interpreted as the equation x0 = x1*x2. Since every function in rels should equal 0, x0 is moved to the other side and negated.
+        # The replacements are pairs, e.g. (x0, x1*x2) which can be interpreted as the equation x0 = x1*x2.
+        # Since every function in rels should equal 0, x0 is moved to the other side and negated.
         model["rels"].append(-replacement[0] + replacement[1])
 
     #  Add replacement equations
     for element in reduced:
         model["rels"].append(element)
 
-    return model
+    print("Created model_def from replacement equations")
+    result = {"model_def": model, "summary": create_summary(replacements, reduced)}
+
+    return result
 
 
-def logging():
-    """Logs the transformations performed on the model"""
-    # TODO implement function
-    # använd time biblioteket för att logga tidpunkt för transformationer
-    current_time = None
-    pass
+def get_optimized_modelDef(input_model):
+    """Returns model transformed to representation that satisfies toolbox limitations"""
+    return optimize(input_model)["model_def"]
+
+
+def create_summary(replacements, reduced):
+    """Create a pretty summary string for printing that includes replacements and reduced equations"""
+
+    def expression_object_to_string(obj):
+        """Create and return a string from expressions"""
+        if isinstance(obj, str):
+            return obj
+        return sym.sstr(obj)
+
+    lines = []
+    lines.append("Model reduction summary")
+    lines.append("=" * 80)
+
+    lines.append("Replacements")
+    lines.append("-" * 80)
+    if replacements:
+        for index, (left_hand_side, right_hand_side) in enumerate(
+            replacements, start=1
+        ):
+            left_hand_side_str = expression_object_to_string(left_hand_side)
+            right_hand_side_str = expression_object_to_string(right_hand_side)
+            lines.append(f"{index:>3}. {left_hand_side_str} = {right_hand_side_str}")
+    else:
+        lines.append("  None")
+
+    lines.append("")
+    lines.append("Reduced model relations")
+    lines.append("-" * 80)
+    if reduced:
+        for index, equation in enumerate(reduced, start=1):
+            # Check if equation is derivative
+            if (
+                isinstance(equation, (list, tuple))
+                and len(equation) == 3
+                and equation[2] == "diff"
+            ):
+                left_hand_side_str = expression_object_to_string(equation[1])
+                right_hand_side_str = expression_object_to_string(equation[0])
+                lines.append(
+                    f"{index:>3}. d/dt({left_hand_side_str}) = {right_hand_side_str}   [DiffConstraint]"
+                )
+            else:
+                lines.append(f"{index:>3}. {expression_object_to_string(equation)}")
+    else:
+        lines.append("  None")
+
+    lines.append("")
+    lines.append("Statistics")
+    lines.append("-" * 80)
+    lines.append(f"  Number of replacements      : {len(replacements)}")
+    lines.append(f"  Number of reduced relations : {len(reduced)}")
+
+    return "\n".join(lines)
