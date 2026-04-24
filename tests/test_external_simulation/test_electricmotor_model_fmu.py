@@ -6,7 +6,7 @@ import numpy as np
 from fmpy.validation import validate_fmu, validate_model_description
 from fmpy import extract, read_model_description
 import pytest
-from faultdiagnosistoolbox.ExternalSimulation import FMUGenerator
+from faultdiagnosistoolbox.ExternalSimulation import generate_fmu
 
 
 def _load_model(model_file_name):
@@ -27,13 +27,12 @@ model_name = "electricmotor_model"
 def em_fmu_path():
     em_path = "tests/electricmotor_model.py"
     output_path = "generated/electricmotor_model.fmu"
-    generator = FMUGenerator(
+    generate_fmu(
         model=em_model,
         model_path=em_path,
         Gamma=em_model.Matching(em_model.MTES()[0][1:]),
         res_eq=em_model.MTES()[0][0],
     )
-    generator.generate_fmu()
     return output_path
 
 

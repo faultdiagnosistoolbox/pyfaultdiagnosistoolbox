@@ -6,7 +6,7 @@ import numpy as np
 from fmpy.validation import validate_fmu, validate_model_description
 from fmpy import extract, read_model_description
 import pytest
-from faultdiagnosistoolbox.ExternalSimulation import FMUGenerator
+from faultdiagnosistoolbox.ExternalSimulation import generate_fmu
 
 
 def _load_model(model_file_name):
@@ -27,13 +27,12 @@ model_name = "small_example"
 def tiny_fmu_path():
     small_model_path = "tests/test_external_simulation/small_example.py"
     output_path = "generated/small_example.fmu"
-    generator = FMUGenerator(
+    generate_fmu(
         model=small_model,
         model_path=small_model_path,
         Gamma=small_model.Matching(small_model.MTES()[0][1:]),
         res_eq=small_model.MTES()[0][0],
     )
-    generator.generate_fmu()
     return output_path
 
 

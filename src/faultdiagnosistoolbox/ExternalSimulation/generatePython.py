@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def generate_fmu_python_file(
-    metadata, model_path, model_name, res_eq, residual_name="r", output_path="temp.py"
+    metadata, model_path, model_name, res_eq, output_path, residual_name="r"
 ):
     """Generate a Python file that defines an FMU class for the given model and metadata."""
     code = []
@@ -19,9 +19,13 @@ def generate_fmu_python_file(
     code.append(write_init(metadata, residual_name, res_eq))
     code.append(write_do_step(metadata, residual_name))
     result = "".join(code)
+
     output_path = Path(output_path)
-    with open(output_path, "w", encoding="utf-8") as f:
+    # Allow callers to pass paths in directories that do not exist yet.
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
         f.write(result)
+
     return output_path
 
 
@@ -121,7 +125,7 @@ def import_module_from_path(module_name, path):
 def write_class_definition(name):
     """Write the class definition for the generated Python code."""
     code = f"""class {name}(Fmi2Slave):
-    author = "you"
+    author = "Fault Diagnosis Toolbox"
     description = "Residual FMU"
 
 """

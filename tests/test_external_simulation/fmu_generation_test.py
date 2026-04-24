@@ -1,8 +1,10 @@
+from pathlib import Path
+
 from faultdiagnosistoolbox.ExternalSimulation.metadata_helpers import (
     extract_fmu_variable_metadata,
 )
 from electricmotor_model import model
-from faultdiagnosistoolbox.ExternalSimulation import FMUGenerator
+from faultdiagnosistoolbox.ExternalSimulation import generate_fmu
 
 
 def _get_Gamma_and_res_eq():
@@ -16,13 +18,15 @@ def _get_Gamma_and_res_eq():
 def test_generated_fmu():
     Gamma, red_eq = _get_Gamma_and_res_eq()
     model_path = "tests/test_external_simulation/electricmotor_model.py"
-    generator = FMUGenerator(
+    fmu_path = generate_fmu(
         model=model,
         model_path=model_path,
         Gamma=Gamma,
         res_eq=red_eq,
+        fmu_name="custom_electricmotor_model",
     )
-    generator.generate_fmu()
+    assert fmu_path == Path("generated/custom_electricmotor_model.fmu")
+    assert fmu_path.exists()
 
 
 if __name__ == "__main__":

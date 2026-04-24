@@ -10,6 +10,7 @@ import faultdiagnosistoolbox.StructurePlotting as smplot
 import faultdiagnosistoolbox.CodeGeneration as codegen
 import faultdiagnosistoolbox.SensorPlacement as sensplace
 import faultdiagnosistoolbox.TestSelection as testselection
+import faultdiagnosistoolbox.ExternalSimulation as extsim
 
 from faultdiagnosistoolbox.VarIdGen import VarIdGen
 import sys
@@ -1230,6 +1231,23 @@ class DiagnosisModel:
 
         print(f"  Model validation finished with {err} errors and {war} warnings.")
 
+    def GenerateFMU(self, model_path, Gamma, res_eq, fmu_name=None):
+        """Generate an FMU for a residual generator.
+
+        Parameters
+        ----------
+        model_path : Path to the Python file that defines the model
+        Gamma    : Matching for the residual generator
+        res_eq   : Index to equation to use as residual equation
+        fmu_name : Optional output filename for the generated FMU
+
+        Returns
+        -------
+        fmu_file : Path to the generated FMU file
+        """
+        return extsim.generate_fmu(
+            self, model_path, Gamma, res_eq, fmu_name=fmu_name
+        )
 
 def DiffConstraint(dvar, ivar):
     """Define a differential constraint."""
