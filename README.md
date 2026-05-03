@@ -18,6 +18,8 @@ For a quick introduction, see the [use case](https://faultdiagnosistoolbox.readt
 size example, an automotive engine, is analyzed, C-code for residual generators is generated, and the resulting 
 diagnosis system is evaluated on test-cell measurements from our engine laboratory.
 
+To build the documentation locally, see [docs/README.md](docs/README.md).
+
 ## Installation 
 The toolbox is available on [pip](https://pypi.org/project/faultdiagnosistoolbox/) and can be installed as:
 ```
