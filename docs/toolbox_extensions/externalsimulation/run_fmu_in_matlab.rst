@@ -27,7 +27,7 @@ Linux:
 
 Windows Command Prompt:
 
-.. code-block:: cmd
+.. code-block:: bat
 
    build_scripts\start_matlab_with_preload.bat
 

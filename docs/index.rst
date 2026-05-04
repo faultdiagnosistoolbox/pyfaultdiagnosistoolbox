@@ -45,5 +45,5 @@ Table of Contents
    Basic Usage <basicusage>
    Examples <examples/examples>
    Larger Use case <usecase>
-   Run FMU in MATLAB <run_fmu_in_matlab>
+   Toolbox Extension <toolbox-extension>
    API <faultdiagnosistoolbox>
