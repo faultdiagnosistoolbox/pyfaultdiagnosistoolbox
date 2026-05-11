@@ -2,83 +2,56 @@
 
 import numpy as np
 import os
-import yaml
-from typing import Dict, Any
-from faultdiagnosistoolbox import DiagnosisModel
+from faultdiagnosistoolbox import DiagnosisModel, Matching
 import faultdiagnosistoolbox.NeuralNetworkIntegration.helpers as h
-
-# Added formats to yaml
-yaml.add_representer(h.FlowDict, h.flow_dict_representer)
-yaml.add_representer(h.QuotedString, h.quoted_representer)
 
 
 class NeuralNetworkIntegration:
     """
     Contains the logic and creator of config files in .yml format
-    that is used for the neuralresidual toolbox
+    that is used for the neuralresidual toolbox.
     """
 
-    def __init__(self, model=None):
+    def __init__(self, model):
+        """
+        Init function for a NeuralNetworkIntegration object
+
+        Parameters:
+        ----------
+        model (DiagnosisModel) : Symbolic diagnosis model
+
+        """
+
+        if model is None:
+            raise ValueError("Model cannot be None")
+
         self.model: DiagnosisModel = model
         self.equations = []
         self.variables = []
 
-    def analyze_mso(self, mso: np.ndarray) -> Dict[str, Any]:
-        return {
-            "signals": [
-                "y_p_ic",
-                "y_T_ic",
-                "y_p_im",
-                "y_W_af",
-                "y_omega_e",
-                "y_alpha_th",
-                "y_u_wg",
-                "y_wfc",
-                "y_T_amb",
-            ],
-            "predictors": ["y_p_ic"],
-            "states": [
-                "T_ic",
-                "T_af",
-                "T_c",
-                "T_im",
-                "T_em",
-                "T_t",
-                "omega_tc",
-                "wg_pos",
-                "m_af",
-                "m_c",
-                "m_ic",
-                "m_im",
-                "m_em",
-                "m_t",
-            ],
-        }
-
-    def get_int_causality_model(self, model, matching, red_eq):
+    def get_int_causality_model(self, matching, res_eq):
         """
-        Build a state-space–like model under integer causality assumptions.
-            The function analyzes the structural X and Z matrices together with
-            a matching to identify state, derivative, and output equations.
-            Variable dependencies are extracted and stored in a structured
-            representation.
+        Build a state-space–like model under integer causality assumptions. The
+         function analyzes the structural X and Z matrices together with a
+         matching to identify state, derivative, and output equations. Variable
+         dependencies are extracted and stored in a structured representation.
 
-        Args:
-            model (DiagnosisModel): model containing X, Z, and var names.
-            matching (Matching): matching info defining equation–variable pairs.
-            red_eq (int): index of the reduced residual equation.
+        Parameters:
+        ----------
+        model (DiagnosisModel)  : model containing X, Z, and var names.
+        matching (Matching)     : matching info defining equation–variable pairs.
+        res_eq (int)            : index of the residual equation.
 
         Returns:
-            ssmodel (list[SsmodelElement]: structured description of states,
-                derivatives, and outputs with their variable dependencies.
+        list : a structured description of states, derivatives, and outputs
+         with their variable dependencies.
         """
 
-        self.model = model
         self.analyze_matching(matching)  # Get variables and equations matching
         self.generate_sub_matrices()  # Generate submatrices x0 and z0 for the reduced equation
 
         # Skip residuals that are differential constraints not equations
-        red_eq_text = self.model.syme[red_eq]
+        red_eq_text = self.model.syme[res_eq]
         if np.size(red_eq_text) != 1:
             return None
 
@@ -96,7 +69,6 @@ class NeuralNetworkIntegration:
 
             elif var_name in str(red_eq_text):
                 elem_type = "out"
-
             else:
                 continue  # Skip variables that are not part of the model under the given causality
 
@@ -120,24 +92,22 @@ class NeuralNetworkIntegration:
     def find_state_dependencies(self, idx, u_idx=None):
         """
         Recursively determine state and sensor dependencies for a given variable.
-            Starting from a specified index, this function traverses the
-            structural X and Z matrices to find all state variables and sensor
-            dependencies that influence the selected variable.
+        Starting from a specified index, this function traverses the structural
+        X and Z matrices to find all state variables and sensor dependencies that
+        influence the selected variable.
 
-        Args:
-            idx (int): index of the variable/equation to analyze.
-            u_idx (list[int] or None): indices of all variables visited during
-                the recursive search.
+        Parameters:
+        ----------
+        idx (int)           : index of the variable/equation to analyze.
+        u_idx (list | None) : indices of all variables visited during the
+         recursive search, is by default set to None
 
         Returns:
-            state_idx (list[int]): indices of state variables affecting the
-                selected variable.
-            sensor_idx (list[int]): indices of sensor/input variables affecting
-                the selected variable.
-            used_idx (list[int]): indices of all variables visited during the
-                recursive search.
+        tuple (list, list, list) : containg state_idx (indices of state variables
+         affecting the selected variable), sensor_idx (indices of sensor/input
+         variables affecting the selected variable) and used_idx (indices of all
+         variables visited during the recursive search)
         """
-
         sensor_idx = set()
         state_idx = set()
         used_idx = set() if u_idx is None else u_idx
@@ -169,15 +139,16 @@ class NeuralNetworkIntegration:
 
     def analyze_matching(self, matching):
         """
-        Analyzes the given matchings and saves the idexes of the equations
-            (match rows) in self.equations and variables (match columns) in
-            self.variables
+        Analyzes the given matchings and saves the idexes of the equations (match
+         rows) in self.equations and variables (match columns) in self.variables
 
-        Args:
-            matching (Matching): matching info defining equation–variable pairs.
+        Parameters:
+        ----------
+        matching (Matching) : matching info defining equation–variable pairs.
 
         Returns:
-            void
+        ----------
+        void
         """
         self.equations = []
         self.variables = []
@@ -193,12 +164,14 @@ class NeuralNetworkIntegration:
     def generate_sub_matrices(self):
         """
         Generates the submatrices of model.X (the relation between unknown
-            variables and the models equations) in self.x0 and model.Z (the
-            relation between known variables and the models equations) in self.z0
+         variables and the models equations) in self.x0 and model.Z (the relation
+         between known variables and the models equations) in self.z0
 
         Returns:
-            void
+        ----------
+        void
         """
+
         self.x0 = []
         self.z0 = []
 
@@ -219,18 +192,21 @@ class NeuralNetworkIntegration:
     def get_io_variables(self, state, sensor, var):
         """
         Get the names of the variables identified as the output and intput
-        signals of the model
+         signals of the model
 
-        Args:
-            state (list[int]): variables representing the state of the model
-            sensor (list[int]): variables of the signals that affect the model
-            var (list[int]): the variable(s) of the output(s)
+        Parameters:
+        ----------
+        state (list[int])  : variables representing the state of the model
+        sensor (list[int]) : variables of the signals that affect the model
+        var (list[int])    : the variable(s) of the output(s)
 
         Returns:
-            tuple (list[str], list[str], list[str]): containing the x_input
-                (names of the x input variables), x_output (names of the output
-                variables), z_input (names of the z input variables)
+        ----------
+        tuple (list, list, list) : containing x_input (names
+         of the x input variables), x_output (names of the outputvariables) and
+         z_input (names of the z input variables)
         """
+
         x_input = [self.model.x[self.variables[v]] for v in state]
         x_output = [self.model.x[self.variables[var]]]
         z_input = [self.model.z[v] for v in sensor]
@@ -239,92 +215,179 @@ class NeuralNetworkIntegration:
 
     def generate_config_file(
         self,
-        mso: np.ndarray,
-        mso_number: int,
-        model_name: str,
-        file_name: str = "config",
-        path: str = "",
-        model_type: str = "Latent",
-    ) -> str:
+        gamma: Matching,
+        path: str,
+        res_eq: int,
+        params: h.GenConfigParams,
+        file_name: str,
+        type: str,
+    ):
         """
-        Generates a YAML configuration file for a given MSO
-        Supports 'Blackbox' and 'Greybox' structures as requested by the user (either "Latent" or "Greybox")
+        Generates a configuration file in YAML format
+
+        Parameters:
+        ----------
+        path (str)               : directory path where the file should be saved.
+        gamma (Matching)         : Matching for the residual generator
+        params (GenConfigParams) : en GenConfigParams instans
+        res_eq (int)             : index to equation to use as residual equation
+        file_name (str)          : base name for the output file
+        type (str)               : structure type, either 'Latent' or 'Greybox'
+
+        Returns:
+        ----------
+        str : the path to the generated YAML file
         """
-        # Preprocess filename (Remove .yml or .yaml if user included it)
+        self.validate_config_input(path, gamma, params, res_eq, file_name, type)
+
+        ssmodel = self.get_int_causality_model(gamma.matching, res_eq)
+        if not ssmodel:
+            raise RuntimeError(
+                "Could not generate config file for given data due to empty causility model"
+            )
+
+        # Check if more than one out
+        num_out = sum(1 for elem in ssmodel if elem.elem_type.lower() == "out")
+        if num_out > 2:
+            raise RuntimeError(
+                "Could not generate config file for given data, to many out states in causility model"
+            )
+
+        # Preprocess filename
         if file_name.lower().endswith(".yml"):
             file_name = file_name[:-4]
         elif file_name.lower().endswith(".yaml"):
             file_name = file_name[:-5]
 
-        analysis = self.analyze_mso(mso)
-
         # Contents of the file
         data = {
-            "description": f"Generated {model_type} configuration for MSO: {mso_number}",
-            "dataset": model_name,
-            "signals": h.FlowDict(
-                {signal: h.QuotedString(f"{signal}") for signal in analysis["signals"]}
+            "description": h.QuotedString(
+                f"Generated {type.lower()} configuration file: {file_name} for model: {self.model.name}"
             ),
-            "zeroed_signals": None,
+            "dataset": self.model.name,
+            "signals": h.FlowDict(
+                {
+                    name: h.QuotedString(f"{var}")
+                    for name, var in zip(params.signals, params.y_vars)
+                }
+            ),
+            "zeroed_signals": "null",
         }
+        # Map x variables with y variables
+        x_to_y = {x.lower(): y for x, y in zip(params.x_vars, params.y_vars)}
 
-        # Blackbox or Greybox according to user input
-        if model_type.lower() == "latent":
+        # Latent model type
+        if type.lower() == "latent":
+            all_zin = sorted(list(set(z for eq in ssmodel for z in eq.zin)))
+            num_states = sum(1 for eq in ssmodel if eq.elem_type.lower() == "state")
+
             data["dynamic"] = h.FlowDict(
                 {
                     "latent": h.FlowDict(
                         {
                             "states": ["latent"],
-                            "num_latents": (
-                                len(analysis["states"]) if analysis["states"] else 1
-                            ),
-                            "inputs": list(analysis["signals"]),
+                            "num_latents": num_states if num_states > 0 else 1,
+                            "inputs": all_zin,
                         }
                     )
                 }
             )
+
             data["predictors"] = h.FlowDict(
                 {
-                    pred: h.FlowDict(
+                    y_var: h.FlowDict(
                         {
                             "states": ["latent"],
                             "use_latent": True,
-                            "inputs": list(),
+                            "inputs": list(z for z in eq.zin),
                         }
                     )
-                    for pred in analysis["predictors"]
+                    for eq in ssmodel
+                    if eq.elem_type.lower() == "out"
+                    for y_var in [x_to_y.get(eq.xout[0].lower())]
+                    if y_var is not None
                 }
             )
-        elif model_type.lower() == "greybox":
+
+        # Greybox model type
+        elif type.lower() == "greybox":
             data["dynamic"] = h.FlowDict(
                 {
-                    "states": list(analysis["states"]),
-                    "inputs": list(analysis["signals"]),
-                }
-            )
-            data["predictors"] = h.FlowDict(
-                {
-                    pred: h.FlowDict(
+                    eq.xout_int[0]: h.FlowDict(
                         {
-                            "states": list(analysis["states"]),
-                            "inputs": list(analysis["signals"]),
+                            "states": list(x for x in eq.xin),
+                            "inputs": list(z for z in eq.zin),
                         }
                     )
-                    for pred in analysis["predictors"]
+                    for eq in ssmodel
+                    if eq.elem_type.lower() == "state"
                 }
             )
 
-        full_path = os.path.join(path, f"{file_name}_{model_type.lower()}.yml")
+            data["predictors"] = h.FlowDict(
+                {
+                    y_var: h.FlowDict(
+                        {
+                            "states": list(x for x in eq.xin),
+                            "inputs": list(z for z in eq.zin),
+                        }
+                    )
+                    for eq in ssmodel
+                    if eq.elem_type.lower() == "out"
+                    for y_var in [x_to_y.get(eq.xout[0].lower())]
+                    if y_var is not None
+                }
+            )
 
-        # Ensure directory exists
+        full_path = os.path.join(path, f"{file_name}_{type.lower()}.yml")
         if path and not os.path.exists(path):
             os.makedirs(path)
 
+        if os.path.isfile(full_path):
+            raise ValueError("File already exists!")
+
+        # Create the path and file with the content
         with open(full_path, "w") as file:
-            yaml.dump(data, file, sort_keys=False, default_flow_style=False)
+            # Write to file formating and line breaks
+            file.write("# General Description\n")
+            file.write(f"description: {data['description']}\n\n")
+            file.write(f"dataset: {data['dataset']}\n\n")
+            file.write(f"signals: {data['signals']}\n\n")
+            file.write("# Signals to be zeroed\n")
+            file.write(f"zeroed_signals: {data['zeroed_signals']}\n\n")
+            file.write("# Dynamic Equations\n")
+            file.write(f"dynamic: {data['dynamic']}\n\n")
+            file.write("# Predictors\n")
+            file.write(f"predictors: {data['predictors']}")
 
         return full_path
 
-    def error_handling(self, mso: np.ndarray) -> bool:
-        """Checks if the MSO is valid for config generation."""
-        pass
+    def validate_config_input(self, path, gamma, params, res_eq, file_name, type):
+        """Validates the input given to generate_config_file"""
+
+        required = ["signals", "y_vars", "x_vars"]
+        for attr in required:
+            if not hasattr(params, attr):
+                raise AttributeError(f"params missing attribute '{attr}'")
+
+        # If params.signals is empty set
+        params.signals = params.signals if params.signals else params.y_vars
+
+        if len(params.x_vars) != len(params.y_vars):
+            raise ValueError("params must have the same amount of x_vars and y_vars")
+        elif len(params.signals) != len(params.y_vars):
+            raise ValueError("params must have the same amount of signals and y_vars")
+        elif not isinstance(type, str):
+            raise ValueError("type must be a string")
+        elif type.lower() not in ["latent", "greybox"]:
+            raise ValueError("model_type must be 'latent' or 'greybox'")
+        elif gamma is None:
+            raise ValueError("gamma cannot be None")
+        elif not isinstance(path, str):
+            raise ValueError("path must be a string")
+        elif not isinstance(file_name, str):
+            raise ValueError("file_name must be a string")
+        elif not isinstance(res_eq, int):
+            raise TypeError("res_eq must be an integer")
+        elif res_eq < 0 or res_eq >= len(self.model.syme):
+            raise IndexError("res_eq out of range")

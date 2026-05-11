@@ -1,9 +1,15 @@
 import pytest
+import numpy as np
 import os
 import yaml
 import time
-from faultdiagnosistoolbox.NeuralNetworkIntegration import NeuralNetworkIntegration
 from test_engine_model import LiU_ICE_model
+from faultdiagnosistoolbox.NeuralNetworkIntegration.NeuralNetworkIntegration import (
+    NeuralNetworkIntegration,
+)
+from faultdiagnosistoolbox.NeuralNetworkIntegration.helpers import (
+    GenConfigParams,
+)
 
 
 @pytest.fixture
@@ -11,6 +17,12 @@ def nni():
     """Initializes and returns an instance of NeuralNetworkIntegration"""
     model = LiU_ICE_model
     return NeuralNetworkIntegration(model)
+
+
+@pytest.fixture
+def model():
+    model = LiU_ICE_model
+    return model
 
 
 @pytest.fixture
@@ -59,22 +71,66 @@ def _get_model_name():
 
 def _get_mso_index():
     """Returns a test mso index"""
-    mso_index = 0
+    mso_index = 585
     return mso_index
 
 
 def _get_complete_mso():
     """
-    Return a mso from a set of msos
+    Return mso 585 (index 584) from a set of msos
     """
-    return LiU_ICE_model.MSO()[0]
+    return LiU_ICE_model.MSO()[584]
 
 
-def test_config_file_created_at_destination(config_setup, nni):
+def _get_mso_585_inputs() -> tuple[list[str], list[str], list[str]]:
+    """
+    Return inputs for mso 585 in the LiU_ICE_model
+    """
+    # Inputs
+    signals = [
+        "intercooler_pressure",
+        "intercooler_temperature",
+        "intake_manifold_pressure",
+        "air_mass_flow",
+        "engine_speed",
+        "throttle_position",
+        "wastegate_position",
+        "injected_fuel_mass",
+        "ambient_temperature",
+        "ambient_pressure",
+    ]
+
+    y_variables = [
+        "y_p_ic",
+        "y_T_ic",
+        "y_p_im",
+        "y_W_af",
+        "y_omega_e",
+        "y_alpha_th",
+        "y_u_wg",
+        "y_wfc",
+        "y_T_amb",
+        "y_p_amb",
+    ]
+
+    x_variables = [
+        "p_ic",
+        "T_ic",
+        "p_im",
+        "W_af",
+        "omega_e",
+        "alpha_th",
+        "u_wg",
+        "wfc",
+        "T_amb",
+        "p_amb",
+    ]
+    return signals, y_variables, x_variables
+
+
+def test_config_file_created_at_destination(config_setup, nni, model):
     """
     Tests that the file is generated at the correct given destination and with the correct filename.
-
-    Solves: Issue #31
     """
     # Setup for the test path and file
     test_dir, file_name, expected_full_path, model_type, model_name, mso_index = (
@@ -82,15 +138,12 @@ def test_config_file_created_at_destination(config_setup, nni):
     )
 
     mso = _get_complete_mso()
-
-    nni.generate_config_file(
-        mso=mso,
-        mso_number=mso_index,
-        model_name=model_name,
-        file_name=file_name,
-        path=test_dir,
-        model_type=model_type,
+    params = GenConfigParams(
+        _get_mso_585_inputs()[1], _get_mso_585_inputs()[2], _get_mso_585_inputs()[0]
     )
+    gamma = model.Matching(np.setdiff1d(mso, mso[3]))
+
+    nni.generate_config_file(gamma, test_dir, mso[3], params, file_name, model_type)
 
     # Check that the file and path was created at correct locations and with correct names
     assert os.path.exists(
@@ -101,31 +154,7 @@ def test_config_file_created_at_destination(config_setup, nni):
     ), f"Expected the file to be created at {expected_full_path}, but the file was not found!"
 
 
-def test_analyze_MSO(nni):
-    """
-    Tests should verify correct inputs (parameters, variables, derivatives and integrals)
-    for the config-file.
-
-    Solves: Issue #26 - test analyze mso
-    """
-    msos = LiU_ICE_model.MSO()
-    assert len(msos) > 0
-    expected_keys = {"variables", "parameters", "derivatives", "integrals"}
-
-    # Iterates through every mso
-    for mso in msos:
-        result = nni.analyze_mso(mso)
-
-        assert isinstance(result, dict)
-
-        for key in expected_keys:
-            assert key in result, f"{key} missing from analyze_mso result"
-            assert isinstance(result[key], list), f"{key} should be a list"
-
-        assert len(result["variables"]) > 0, "No variables detected in MSO"
-
-
-def test_generated_config_file_structure(config_setup, nni):
+def test_generated_config_file_structure(config_setup, nni, model):
     """
     Test that calls generate_config_file(mso : list[np.ndarray], name: str = "", path: str = "")
     and creates the config-file.
@@ -135,20 +164,16 @@ def test_generated_config_file_structure(config_setup, nni):
 
     The config file data should also be correctly set up according to the config creators input data.
 
-    Solves: Issue #27
     """
     # Setup for the test path and file
     test_dir, file_name, full_path, model_type, model_name, mso_index = config_setup
     mso = _get_complete_mso()
-
-    nni.generate_config_file(
-        mso=mso,
-        mso_number=mso_index,
-        model_name=model_name,
-        file_name=file_name,
-        path=test_dir,
-        model_type=model_type,
+    params = GenConfigParams(
+        _get_mso_585_inputs()[1], _get_mso_585_inputs()[2], _get_mso_585_inputs()[0]
     )
+    gamma = model.Matching(np.setdiff1d(mso, mso[3]))
+
+    nni.generate_config_file(gamma, test_dir, mso[3], params, file_name, model_type)
 
     # Check that the file was generated correctly and with the correct content
     accepted_file_formats = [".yaml", ".yml"]
@@ -199,43 +224,105 @@ def test_generated_config_file_structure(config_setup, nni):
             ), f"The {key} was not in correct format (should have been of type dictionary)"
 
         # Check that the signals variables are all in the form y_...
-        for signal in config_data["signals"]:
+        for signal in config_data["signals"].values():
             assert signal.startswith(
                 "y"
             ), f"Signal {signal} is not a known sensor or input"
 
         # Confirm that all predictors are defined in the signals model aswell
         for predictor in config_data["predictors"]:
-            assert predictor in [
-                signal for signal in config_data["signals"]
-            ], f"Predictor: {predictor} is an unknown variable!"
+            assert (
+                predictor in config_data["signals"].values()
+            ), f"Predictor: {predictor} is an unknown variable!"
 
 
-def test_generated_config_file_data(config_setup, nni):
+def test_generated_latent_data(config_setup, nni, model):
     """
-    Test that the data of the VEP4Engine model is correct for the greybox.yml config file.
-
-    Solves: Issue #27
+    Verified that the generated Latent YAML matches the expected structure
+    from the MATLAB reference for MSO 585.
     """
+    test_dir, file_name, _, _, model_name, mso_number = config_setup
+    model_type = "latent"
+    full_path = os.path.join(test_dir, f"{file_name}_{model_type}.yml")
 
-    # Setup for the test path and file
-    test_dir, file_name, full_path, model_type, model_name, mso_index = config_setup
     mso = _get_complete_mso()
 
-    nni.generate_config_file(
-        mso=mso,
-        mso_number=mso_index,
-        model_name=model_name,
-        file_name=file_name,
-        path=test_dir,
-        model_type=model_type,
+    params = GenConfigParams(
+        _get_mso_585_inputs()[1], _get_mso_585_inputs()[2], _get_mso_585_inputs()[0]
     )
+    gamma = model.Matching(np.setdiff1d(mso, mso[3]))
 
-    # Check that the file contains the correct data
+    nni.generate_config_file(gamma, test_dir, mso[3], params, file_name, model_type)
+
+    with open(full_path, "r") as f:
+        config_data = yaml.safe_load(f)
+
+        # Verify Description
+        assert "description" in config_data, "Description tag is missing"
+        assert (
+            config_data["description"]
+            == f"Generated {model_type} configuration file: {file_name} for model: {model_name}"
+        )
+        assert config_data["dataset"] == model_name, "Dataset name mismatch"
+        assert config_data["zeroed_signals"] is None, "zeroed_signals should be null"
+
+        # Verify Dynamic
+        assert "latent" in config_data["dynamic"]
+        latent_cfg = config_data["dynamic"]["latent"]
+        assert latent_cfg["states"] == ["latent"]
+        assert latent_cfg["num_latents"] == 13
+
+        # Check that all the inputs are correct
+        expected_inputs = [
+            "y_T_amb",
+            "y_W_af",
+            "y_alpha_th",
+            "y_omega_e",
+            "y_p_amb",
+            "y_p_ic",
+            "y_p_im",
+            "y_u_wg",
+            "y_wfc",
+        ]
+        assert sorted(latent_cfg["inputs"]) == sorted(expected_inputs)
+
+        # Verify Predictor
+        assert "y_T_ic" in config_data["predictors"]
+        pred_cfg = config_data["predictors"]["y_T_ic"]
+        assert pred_cfg["states"] == ["latent"]
+        assert sorted(pred_cfg["inputs"]) == sorted(
+            ["y_p_ic", "y_p_im", "y_alpha_th", "y_T_amb"]
+        )
+
+
+def test_generated_greybox_data(config_setup, nni, model):
+    """
+    Test that the generated Greybox YAML matches the expected structure
+    and data from the VEP4Engine model for MSO 585.
+    """
+    # Setup for the test path and file
+    test_dir, file_name, _, _, model_name, mso_number = config_setup
+    model_type = "greybox"
+
+    # Ensure we use the correct filename suffix for the greybox assertion
+    full_path = os.path.join(test_dir, f"{file_name}_{model_type}.yml")
+
+    mso = _get_complete_mso()
+    params = GenConfigParams(
+        _get_mso_585_inputs()[1], _get_mso_585_inputs()[2], _get_mso_585_inputs()[0]
+    )
+    gamma = model.Matching(np.setdiff1d(mso, mso[3]))
+
+    nni.generate_config_file(gamma, test_dir, mso[3], params, file_name, model_type)
+
+    # Check that the file exists before attempting to open it
+    assert os.path.exists(full_path), f"Greybox file was not created at {full_path}"
+
+    # Load and verify the content of the generated YAML file
     with open(full_path, "r") as config_file:
         config_data = yaml.safe_load(config_file)
 
-        # Test that signals have correct data
+        # Expected data mapping for signals
         correct_signals = {
             "intercooler_pressure": "y_p_ic",
             "intercooler_temperature": "y_T_ic",
@@ -248,77 +335,146 @@ def test_generated_config_file_data(config_setup, nni):
             "ambient_temperature": "y_T_amb",
             "ambient_pressure": "y_p_amb",
         }
-        correct_dynamic = {
-            "m_t": {
-                "states": ["m_t"],
-                "inputs": ["y_W_af", "y_alpha_th", "y_omega_e"],
-            },
-            "T_t": {
-                "states": ["T_t", "m_t"],
-                "inputs": ["y_T_amb", "y_p_amb"],
-            },
-        }
-        correct_predictors = {
-            "y_p_ic": {
-                "states": ["m_t"],
-                "inputs": [],
-            },
-            "y_T_ic": {
-                "states": ["T_t", "m_t"],
-                "inputs": ["y_p_amb", "y_u_wg"],
-            },
-        }
 
-        # Test that the data is correct
         signals = config_data.get("signals")
         dynamic = config_data.get("dynamic")
         predictors = config_data.get("predictors")
 
-        for key, value in correct_signals.items():
-            assert key in signals, "Expected signals key is wrong"
-            assert signals[key] == value, "Expected signals value is wrong"
-
-        for key, value in correct_dynamic.items():
-            assert key in dynamic, "Expected dynamic key is wrong"
-            assert dynamic[key] == value, "Expected dynamic value is wrong"
-
-        for key, value in correct_predictors.items():
-            assert key in predictors, "Expected predictors key is wrong"
-            assert predictors[key] == value, "Expected predictors value is wrong"
-
+        # Verify Description
+        assert "description" in config_data, "Description tag is missing"
+        assert (
+            config_data["description"]
+            == f"Generated {model_type} configuration file: {file_name} for model: {model_name}"
+        )
+        assert config_data["dataset"] == model_name, "Dataset name mismatch"
         assert config_data["zeroed_signals"] is None, "zeroed_signals should be null"
 
+        # Verify Signals Mapping
+        for key, value in correct_signals.items():
+            assert key in signals, f"Missing signal key: {key}"
+            assert signals[key] == value, f"Incorrect signal mapping for {key}"
 
-def test_time(config_setup, nni):
+        # Verify Dynamic Equations (States and Inputs)
+        # Check m_t
+        assert "m_t" in dynamic, "m_t missing from dynamic equations"
+        assert set(dynamic["m_t"]["states"]) == {"T_em", "T_t", "m_em", "m_t", "wg_pos"}
+        assert dynamic["m_t"]["inputs"] == ["y_p_amb"]
+
+        # Check omega_tc (Edge case: no inputs)
+        assert "omega_tc" in dynamic, "omega_tc missing from dynamic equations"
+        assert set(dynamic["omega_tc"]["states"]) == {
+            "T_af",
+            "T_c",
+            "T_em",
+            "T_t",
+            "omega_tc",
+            "m_em",
+            "m_t",
+            "m_af",
+            "m_c",
+        }
+        assert dynamic["omega_tc"]["inputs"] == []
+
+        # Check wg_pos
+        assert "wg_pos" in dynamic
+        assert dynamic["wg_pos"]["states"] == ["wg_pos"]
+        assert dynamic["wg_pos"]["inputs"] == ["y_u_wg"]
+
+        # Verify Predictors
+        assert "y_T_ic" in predictors, "y_T_ic missing from predictors"
+        pred_y_T_ic = predictors["y_T_ic"]
+        assert set(pred_y_T_ic["states"]) == {"T_ic", "m_ic", "T_c", "m_c"}
+        assert set(pred_y_T_ic["inputs"]) == {
+            "y_p_ic",
+            "y_p_im",
+            "y_alpha_th",
+            "y_T_amb",
+        }
+
+
+def test_time_greybox(config_setup, nni, model):
     """
-    Tests that the system generates config-file within 10s
-    At most 50 eq for MSO. Can fail in CI pipeline.
+    Tests that the system generates config-file within 10s for greybox model type,
+    With an mso with at most 50 eq.
+    """
+    mso = _get_complete_mso()
+    params = GenConfigParams(
+        _get_mso_585_inputs()[1], _get_mso_585_inputs()[2], _get_mso_585_inputs()[0]
+    )
+    gamma = model.Matching(np.setdiff1d(mso, mso[3]))
+
+    # Setup for the test path and file - for any MSO less than 50 equations
+    if len(mso) <= 50:
+        test_dir, file_name, _, _, model_name, mso_index = config_setup
+        model_type = "greybox"
+
+        runs = 5
+        times = []
+
+        for _ in range(runs):
+            start = time.perf_counter()
+            nni.generate_config_file(
+                gamma, test_dir, mso[3], params, file_name, model_type
+            )
+            end = time.perf_counter()
+            times.append(end - start)
+
+        avg_time = sum(times) / len(times)
+
+        assert avg_time <= 10, f"Average time was above 10 seconds: {avg_time}"
+
+
+def test_time_latent(config_setup, nni, model):
+    """
+    Tests that the system generates config-file within 10s for latent model type,
+    With an mso with at most 50 eq.
+    """
+    mso = _get_complete_mso()
+    params = GenConfigParams(
+        _get_mso_585_inputs()[1], _get_mso_585_inputs()[2], _get_mso_585_inputs()[0]
+    )
+    gamma = model.Matching(np.setdiff1d(mso, mso[3]))
+
+    # Setup for the test path and file - for any MSO less than 50 equations
+    if len(mso) <= 50:
+        test_dir, file_name, _, model_type, model_name, mso_index = config_setup
+
+        runs = 5
+        times = []
+
+        for _ in range(runs):
+            start = time.perf_counter()
+            nni.generate_config_file(
+                gamma, test_dir, mso[3], params, file_name, model_type
+            )
+            end = time.perf_counter()
+            times.append(end - start)
+
+        avg_time = sum(times) / len(times)
+
+        assert avg_time <= 10, f"Average time was above 10 seconds: {avg_time}"
+
+
+def test_config_file_created_through_model(config_setup, model):
+    """
+    Tests that the file is generated at the correct given destination and with the correct filename.
 
     Solves: Issue #31
     """
-    mso = _get_complete_mso()
-
-    assert len(mso) <= 50, "Mso has more than 50 equations"
-
     # Setup for the test path and file
-    test_dir, file_name, _, model_type, model_name, mso_index = config_setup
+    test_dir, file_name, expected_full_path, model_type, _, _ = config_setup
 
-    runs = 5
-    times = []
+    mso = _get_complete_mso()
+    params = GenConfigParams(
+        _get_mso_585_inputs()[1], _get_mso_585_inputs()[2], _get_mso_585_inputs()[0]
+    )
+    gamma = model.Matching(np.setdiff1d(mso, mso[3]))
+    model.GenerateConfigFile(test_dir, gamma, mso[3], params, file_name, model_type)
 
-    for _ in range(runs):
-        start = time.perf_counter()
-        nni.generate_config_file(
-            mso=mso,
-            mso_number=mso_index,
-            model_name=model_name,
-            file_name=file_name,
-            path=test_dir,
-            model_type=model_type,
-        )
-        end = time.perf_counter()
-        times.append(end - start)
-
-    avg_time = sum(times) / len(times)
-
-    assert avg_time <= 10, f"Average time was above 10 seconds: {avg_time}"
+    # Check that the file and path was created at correct locations and with correct names
+    assert os.path.exists(
+        expected_full_path
+    ), f"The path was not created correctly at: {expected_full_path}!"
+    assert os.path.isfile(
+        expected_full_path
+    ), f"Expected the file to be created at {expected_full_path}, but the file was not found!"

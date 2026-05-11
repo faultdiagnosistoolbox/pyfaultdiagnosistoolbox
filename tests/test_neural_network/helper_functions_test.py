@@ -1,13 +1,23 @@
+import pytest
 import numpy as np
 from test_engine_model import LiU_ICE_model
 from faultdiagnosistoolbox.NeuralNetworkIntegration.NeuralNetworkIntegration import (
     NeuralNetworkIntegration,
 )
-from faultdiagnosistoolbox.NeuralNetworkIntegration.helpers import SsmodelElement
+from faultdiagnosistoolbox.NeuralNetworkIntegration.helpers import (
+    SsmodelElement,
+)
 import helpers_test_data as data
 
 
-def test_get_icm(subtests):
+@pytest.fixture
+def nni():
+    """Initializes and returns an instance of NeuralNetworkIntegration"""
+    model = LiU_ICE_model
+    return NeuralNetworkIntegration(model)
+
+
+def test_get_icm(subtests, nni):
     matching, x, z, expected_out = data.TEST_ALL
 
     class match:
@@ -15,13 +25,13 @@ def test_get_icm(subtests):
             self.col = c
             self.row = r
 
-    model = LiU_ICE_model
-    model.X = x
-    model.Z = z
+    X = nni.model.X
+    Z = nni.model.Z
+    nni.model.X = x
+    nni.model.Z = z
     test_match = [match(m["col"], m["row"]) for m in matching]
-    n = NeuralNetworkIntegration()
 
-    test_ssmodel = n.get_int_causality_model(model, test_match, 85)
+    test_ssmodel = nni.get_int_causality_model(test_match, 85)
     expected_xout = [o["xout"] for o in expected_out]
 
     assert test_ssmodel is not None, "SSModel should not be None"
@@ -70,15 +80,18 @@ def test_get_icm(subtests):
                     [x for x in test.xout_int if x in ret["xout_int"]]
                 ), f"XOUT_INT: Expected xin to contain {ret['xout_int']} but got {test.xout_int}"
 
+    # Clean up
+    nni.model.X = X
+    nni.model.Z = Z
 
-def test_find_state_dependencies_for_state_variable(subtests):
+
+def test_find_state_dependencies_for_state_variable(subtests, nni):
     # Test data
     X, Z, expected_state_vars, expected_sensor_vars, idx, causality = data.FSD_INT_DATA
-    nn = NeuralNetworkIntegration()
-    nn.x0 = np.asarray(X)
-    nn.z0 = np.asarray(Z)
+    nni.x0 = np.asarray(X)
+    nni.z0 = np.asarray(Z)
 
-    state_vars, sensor_vars, xx = nn.find_state_dependencies(idx)
+    state_vars, sensor_vars, xx = nni.find_state_dependencies(idx)
     print("RECURSION: ", xx)
     assert len(state_vars) == len(expected_state_vars)
     assert len(sensor_vars) == len(expected_sensor_vars)
@@ -96,13 +109,12 @@ def test_find_state_dependencies_for_state_variable(subtests):
             ), f"Expected state variable at index {idx} to be {var} got {sensor_vars[idx]}"
 
 
-def test_find_state_dependencies_for_output(subtests):
+def test_find_state_dependencies_for_output(subtests, nni):
     X, Z, expected_state_vars, expected_sensor_vars, idx, causality = data.FSD_OUT_DATA
-    nn = NeuralNetworkIntegration()
-    nn.x0 = np.asarray(X)
-    nn.z0 = np.asarray(Z)
+    nni.x0 = np.asarray(X)
+    nni.z0 = np.asarray(Z)
 
-    state_vars, sensor_vars, xx = nn.find_state_dependencies(idx)
+    state_vars, sensor_vars, xx = nni.find_state_dependencies(idx)
     print("RECURSION: ", xx)
     assert len(state_vars) == len(expected_state_vars)
     assert len(sensor_vars) == len(expected_sensor_vars)
@@ -120,37 +132,36 @@ def test_find_state_dependencies_for_output(subtests):
             ), f"Expected state variable at index {idx} to be {var} got {sensor_vars[idx]}"
 
 
-def test_get_sub_matricies(subtests):
+def test_get_sub_matricies(subtests, nni):
     x, z, expected_x0, expected_z0, eqs, var = data.SUB_MATRIX_DATA
 
     class sub_matrix:
         X = x
         Z = z
 
-    nn = NeuralNetworkIntegration(sub_matrix())
-    nn.equations = eqs
-    nn.variables = var
+    nni.equations = eqs
+    nni.variables = var
 
-    nn.generate_sub_matrices()
+    nni.generate_sub_matrices()
 
     with subtests.test(msg="Expected X0 and Z0 dimensions"):
-        assert nn.x0.shape[0] == len(expected_x0)
-        assert nn.z0.shape[0] == len(expected_z0)
-        assert nn.x0.shape[1] == len(expected_x0[0])
-        assert nn.z0.shape[1] == len(expected_z0[0])
+        assert nni.x0.shape[0] == len(expected_x0)
+        assert nni.z0.shape[0] == len(expected_z0)
+        assert nni.x0.shape[1] == len(expected_x0[0])
+        assert nni.z0.shape[1] == len(expected_z0[0])
 
     with subtests.test(msg="Expected X0 data"):
-        for r in range(nn.x0.shape[0]):
-            for c in range(nn.x0.shape[1]):
-                assert nn.x0[r][c] == expected_x0[r][c]
+        for r in range(nni.x0.shape[0]):
+            for c in range(nni.x0.shape[1]):
+                assert nni.x0[r][c] == expected_x0[r][c]
 
     with subtests.test(msg="Expected Z0 data"):
-        for r in range(nn.z0.shape[0]):
-            for c in range(nn.z0.shape[1]):
-                assert nn.z0[r][c] == expected_z0[r][c]
+        for r in range(nni.z0.shape[0]):
+            for c in range(nni.z0.shape[1]):
+                assert nni.z0[r][c] == expected_z0[r][c]
 
 
-def test_analyze_matching(subtests):
+def test_analyze_matching(subtests, nni):
     matching, expected_eq, expected_var = data.TEST_MATHCING_DATA
 
     class match:
@@ -160,16 +171,15 @@ def test_analyze_matching(subtests):
 
     test_match = [match(m["col"], m["row"]) for m in matching]
 
-    nn = NeuralNetworkIntegration()
-    nn.analyze_matching(test_match)
+    nni.analyze_matching(test_match)
 
-    assert len(nn.equations) == len(expected_eq)
-    assert len(nn.variables) == len(expected_var)
+    assert len(nni.equations) == len(expected_eq)
+    assert len(nni.variables) == len(expected_var)
 
     with subtests.test(msg="Expected equations"):
-        for e in range(len(nn.equations)):
-            assert nn.equations[e] == expected_eq[e]
+        for e in range(len(nni.equations)):
+            assert nni.equations[e] == expected_eq[e]
 
     with subtests.test(msg="Expected variables"):
-        for v in range(len(nn.variables)):
-            assert nn.variables[v] == expected_var[v]
+        for v in range(len(nni.variables)):
+            assert nni.variables[v] == expected_var[v]
