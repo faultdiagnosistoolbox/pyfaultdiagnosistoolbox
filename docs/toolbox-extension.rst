@@ -1,10 +1,34 @@
 Toolbox Extension
 =================
-This section describes three user accessibility features of the toolbox.
+This section describes three user accessibility features of the optional toolbox extension.
 
 
 Model transformation
 --------------------
+
+The model transformation extension rewrites symbolic model definitions by
+introducing auxiliary variables for repeated subexpressions. This can make
+models easier to validate and analyze with the structural methods in the
+toolbox, especially when the same nonlinear expression occurs in several
+relations.
+
+The main entry points are available through
+``faultdiagnosistoolbox.ModelTransforming``:
+
+.. code-block:: python
+
+   import faultdiagnosistoolbox as fdt
+
+   transformed = fdt.ModelTransforming.optimize(model_def)
+   model = fdt.DiagnosisModel(transformed["model_def"])
+
+Read more:
+
+.. toctree::
+   :maxdepth: 1
+
+   Use cases </toolbox_extensions/modeltransformation/model_transformation_usecase>
+   Transformation details </toolbox_extensions/modeltransformation/model_transformation_details>
 
 
 
