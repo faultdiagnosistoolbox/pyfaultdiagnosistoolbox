@@ -63,7 +63,7 @@ Progress output
 ---------------
 
 The transformation functions print progress while running. This is useful for
-larger symbolic models where common-subexpression elimination can take
+very large symbolic models where common-subexpression elimination can take
 noticeable time.
 
 Usage and limitations
