@@ -87,8 +87,8 @@ def test_codegen():
             assert False
 
     # Cleanup
-    files_to_remove = [fi for fi in os.listdir() if re.match("r[1-5]*", fi)] + [
-        "src/" + fi for fi in os.listdir("src") if re.match("r[1-5]*", fi)
+    files_to_remove = [fi for fi in os.listdir() if re.match(r"^r[1-5](?:$|[._].+)", fi)] + [
+        "src/" + fi for fi in os.listdir("src") if re.match(r"^r[1-5](?:$|[._].+)", fi)
     ]
     for fi in files_to_remove:
         os.remove(fi)

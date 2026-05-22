@@ -11,3 +11,5 @@ nanobind
 pytest
 pytest-cov
 twine
+fmpy
+pythonfmu

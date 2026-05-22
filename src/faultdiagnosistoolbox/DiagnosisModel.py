@@ -10,7 +10,9 @@ import faultdiagnosistoolbox.StructurePlotting as smplot
 import faultdiagnosistoolbox.CodeGeneration as codegen
 import faultdiagnosistoolbox.SensorPlacement as sensplace
 import faultdiagnosistoolbox.TestSelection as testselection
-
+import faultdiagnosistoolbox.ExternalSimulation as extsim
+import faultdiagnosistoolbox.NeuralNetworkIntegration as nni
+from faultdiagnosistoolbox.NeuralNetworkIntegration.helpers import GenConfigParams
 from faultdiagnosistoolbox.VarIdGen import VarIdGen
 import sys
 
@@ -1230,6 +1232,62 @@ class DiagnosisModel:
 
         print(f"  Model validation finished with {err} errors and {war} warnings.")
 
+    def GenerateFMU(self, model_path, Gamma, res_eq, fmu_name=None):
+        """Generate an FMU for a residual generator.
+
+        Parameters
+        ----------
+        model_path : Path to the Python file that defines the model
+        Gamma    : Matching for the residual generator
+        res_eq   : Index to equation to use as residual equation
+        fmu_name : Optional output filename for the generated FMU
+
+        Returns
+        -------
+        fmu_file : Path to the generated FMU file
+        """
+        return extsim.generate_fmu(
+            self, model_path, Gamma, res_eq, fmu_name=fmu_name
+        )
+    
+    def GenerateConfigFile(
+        self,
+        path,
+        gamma,
+        res_eq,
+        params,
+        file_name="config",
+        model_type="latent",
+    ) -> str:
+        """
+        Generates a configuration file for the neural residual toolbox
+        which can be found at https://github.com/westny/neural-residual.
+
+        Parameters
+        ----------
+        path (str)          : directory path where the file should be saved.
+        gamma (Matching)    : Matching for the residual generator
+        params (dict)       : with the keys:
+            signals (list)  : signal names from the source dataset.
+            y_var (list)    : external/public variable names (e.g., 'y_p_ic').
+            x_var (list)    : internal model variable names to be mapped to y_vars.
+        res_eq (int)        : Index to equation to use as residual equation.
+        file_name (str)     : base name for the output file (default is 'config').
+        model_type (str)    : structure type, either 'Latent' or 'Greybox' (default is 'Latent').
+
+        Returns
+        ----------
+        str | None : the path to the generated YAML file, None if file_name already exists
+
+        """
+        return nni.NeuralNetworkIntegration(self).generate_config_file(
+            gamma,
+            path,
+            res_eq,
+            params,
+            file_name,
+            model_type,
+        )
 
 def DiffConstraint(dvar, ivar):
     """Define a differential constraint."""

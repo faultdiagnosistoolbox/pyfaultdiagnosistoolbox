@@ -9,6 +9,10 @@ build
 pypi_token.txt
 pypi_test_token.txt
 
+.vscode/
+venv/
+.venv/
+
 .coverage
 *.a
 *.ipynb_checkpoints
@@ -223,3 +227,10 @@ Temporary Items
 .apdisk
 
 # End of https://www.toptal.com/developers/gitignore/api/macos
+
+
+
+# generated files
+/generated
+*.fmu
+slprj/
