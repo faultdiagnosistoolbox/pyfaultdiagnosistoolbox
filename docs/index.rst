@@ -45,4 +45,5 @@ Table of Contents
    Basic Usage <basicusage>
    Examples <examples/examples>
    Larger Use case <usecase>
+   Toolbox Extension <toolbox-extension>
    API <faultdiagnosistoolbox>
