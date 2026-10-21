@@ -4,14 +4,14 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "faultdiagnosistoolbox"
-version = "0.12.5"
+version = "0.12.6"
 authors = [
   { name="Erik Frisk", email="erik.frisk@liu.se" },
 ]
 dependencies=['sympy', 'numpy', 'scipy', 'matplotlib', 'scikit-learn', 'setuptools']
 description = "A toolbox for Model Based Fault Diagnosis of dynamic systems based on structural analysis"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",

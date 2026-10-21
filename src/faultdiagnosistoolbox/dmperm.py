@@ -592,7 +592,7 @@ def MTES_addResults(S, Sn):
 
 def TSS(self):
     """Compute set of Testable Signal Sets (TSS).
- 
+
     For details of the algorithm see the paper
     Structural Methods for Testable Signal Sets in Data-Driven
     Fault Diagnosis. Mattias Krysander, Daniel Jung (2026).
@@ -610,18 +610,18 @@ def TSS_initModel(model):
     dm = GetDMParts(model.X)
     row_over = dm.Mp.row
     col_over = dm.Mp.col
- 
+
     if len(row_over) == 0:
         return None
- 
+
     # For each equation in the overdetermined part, find the column index of
     # the first sensor signal (z-variable) present. This mirrors the MATLAB
     # "Hack": only the first z-variable per equation is used.
     ef = np.argwhere(np.any(model.Z[row_over, :] > 0, axis=1)).flatten()
- 
+
     idx = np.hstack((ef, np.setdiff1d(np.arange(len(row_over)), ef)))
     row_over = row_over[idx]
- 
+
     m = {
         "sr": len(row_over) - len(col_over),
         "X": model.X[row_over, :][:, col_over],
@@ -630,17 +630,17 @@ def TSS_initModel(model):
         "delrow": 0,
         "e": [np.array([row_over[i]]) for i in range(len(row_over))],
     }
- 
+
     return m
 
- 
+
 def TSS_storeFS(m):
     """internal."""
     eq = np.sort(np.hstack(m["e"]))
     z = np.sort(np.hstack(m["z"]))
     return {"eq": [eq], "z": [z], "sr": [m["sr"]]}
 
- 
+
 def TSS_GetPartialModel(m, rows):
     """internal."""
     n = {}
@@ -652,7 +652,7 @@ def TSS_GetPartialModel(m, rows):
     n["delrow"] = np.sum(rows < m["delrow"])
     return n
 
- 
+
 def TSS_FindTSS(m, p):
     """internal."""
     m, _ = TSS_LumpExt(m, 0)
@@ -679,36 +679,36 @@ def TSS_FindTSS(m, p):
 def TSS_LumpExt(m, row):
     """TSS lumping."""
     n = {}
- 
+
     no_rows = m["X"].shape[0]
     remRows = np.hstack((np.arange(0, row), np.arange(row + 1, no_rows)))
     remRowsz = np.hstack((np.arange(0, row), np.arange(row + 1, len(m["z"]))))
- 
+
     dm = GetDMParts(m["X"][remRows, :])
     row_just = dm.M0eqs
     row_over = np.array(dm.Mp.row, dtype=np.int64)
     col_over = np.array(dm.Mp.col, dtype=np.int64)
- 
+
     if len(row_just) > 0:
         eqcls = np.hstack((remRows[row_just], [row]))
         no_rows_before_row = np.sum(eqcls < row)
         row = row - no_rows_before_row
         no_rows_before = np.sum(eqcls < m["delrow"])
         n["delrow"] = m["delrow"] - no_rows_before
- 
+
         eqclsz = eqcls[eqcls < len(m["z"])]
         row_overz = row_over[row_over < len(remRowsz)]
- 
+
         if no_rows_before > 0:
             rowinsert = n["delrow"]
         else:
             rowinsert = row
- 
+
         x1 = m["X"][remRows[row_over[0:rowinsert]], :][:, col_over]
         x3 = m["X"][remRows[row_over[rowinsert:]], :][:, col_over]
         x2 = np.any(m["X"][eqcls, :][:, col_over], axis=0).astype(np.int64)
         n["X"] = np.vstack((x1, x2, x3))
- 
+
         foo = (
             remRows[row_over[0:rowinsert]].astype(np.int64)
             if len(row_over[0:rowinsert]) > 0
@@ -723,7 +723,7 @@ def TSS_LumpExt(m, row):
         )
         e3 = [m["e"][idx] for idx in foo]
         n["e"] = e1 + e2 + e3
- 
+
         foo = (
             remRowsz[row_overz[0:rowinsert]].astype(np.int64)
             if len(row_overz[0:rowinsert]) > 0
@@ -738,18 +738,18 @@ def TSS_LumpExt(m, row):
         )
         z3 = list(np.array(m["z"], dtype=np.ndarray)[foo])
         n["z"] = z1 + z2 + z3
- 
+
         n["sr"] = m["sr"]
- 
+
         if no_rows_before > 0:
             n["delrow"] = n["delrow"] + 1
     else:
         n = m
- 
+
     row = row + 1
     return n, row
 
- 
+
 def TSS_addResults(S, Sn):
     """internal."""
     return {"eq": S["eq"] + Sn["eq"], "z": S["z"] + Sn["z"], "sr": S["sr"] + Sn["sr"]}
