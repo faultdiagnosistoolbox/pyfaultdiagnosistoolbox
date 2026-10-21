@@ -200,6 +200,16 @@ class DiagnosisModel:
         """
         return dmperm.MTES(self)
 
+    def TSS(self) -> list[np.ndarray]:
+        """Return the set of Testable Signal Sets (TSS).
+
+        For details of the algorithm see the paper
+        Structural Methods for Testable Signal Sets in Data-Driven
+        Fault Diagnosis. Mattias Krysander, Daniel Jung (2026).
+        IFAC World Congress. Busan, South Korea.
+        """
+        return dmperm.TSS(self)
+
     def TestSelection(self, arr, method="aminc", isolabilitymatrix="") -> list[np.ndarray]:
         """A minimal hitting set based test selection.
 

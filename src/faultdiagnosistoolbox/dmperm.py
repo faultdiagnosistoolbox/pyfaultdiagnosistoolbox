@@ -588,3 +588,168 @@ def MTES_LumpExt(m, row):
 def MTES_addResults(S, Sn):
     """internal."""
     return {"eq": S["eq"] + Sn["eq"], "f": S["f"] + Sn["f"], "sr": S["sr"] + Sn["sr"]}
+
+
+def TSS(self):
+    """Compute set of Testable Signal Sets (TSS).
+ 
+    For details of the algorithm see the paper
+    Structural Methods for Testable Signal Sets in Data-Driven
+    Fault Diagnosis. Mattias Krysander, Daniel Jung (2026).
+    IFAC World Congress. Busan, South Korea.
+    """
+    S = {"eq": [], "z": [], "sr": []}
+    m = TSS_initModel(self)
+    if not (m is None) and m["sr"] > 0 and len(m["z"]) > 0:
+        S = TSS_FindTSS(m, 1)
+    return S["eq"]
+
+
+def TSS_initModel(model):
+    """internal."""
+    dm = GetDMParts(model.X)
+    row_over = dm.Mp.row
+    col_over = dm.Mp.col
+ 
+    if len(row_over) == 0:
+        return None
+ 
+    # For each equation in the overdetermined part, find the column index of
+    # the first sensor signal (z-variable) present. This mirrors the MATLAB
+    # "Hack": only the first z-variable per equation is used.
+    ef = np.argwhere(np.any(model.Z[row_over, :] > 0, axis=1)).flatten()
+ 
+    idx = np.hstack((ef, np.setdiff1d(np.arange(len(row_over)), ef)))
+    row_over = row_over[idx]
+ 
+    m = {
+        "sr": len(row_over) - len(col_over),
+        "X": model.X[row_over, :][:, col_over],
+        # For each sensor equation, store the index of its first z-variable.
+        "z": [np.argwhere(model.Z[row_over[i], :] > 0)[0] for i in range(len(ef))],
+        "delrow": 0,
+        "e": [np.array([row_over[i]]) for i in range(len(row_over))],
+    }
+ 
+    return m
+
+ 
+def TSS_storeFS(m):
+    """internal."""
+    eq = np.sort(np.hstack(m["e"]))
+    z = np.sort(np.hstack(m["z"]))
+    return {"eq": [eq], "z": [z], "sr": [m["sr"]]}
+
+ 
+def TSS_GetPartialModel(m, rows):
+    """internal."""
+    n = {}
+    variables = np.any(m["X"][rows, :], axis=0)
+    n["X"] = m["X"][rows, :][:, variables]
+    n["e"] = [m["e"][k] for k in range(len(m["e"])) if k in rows]
+    n["z"] = [m["z"][ei] for ei in rows if ei < len(m["z"])]
+    n["sr"] = n["X"].shape[0] - n["X"].shape[1]
+    n["delrow"] = np.sum(rows < m["delrow"])
+    return n
+
+ 
+def TSS_FindTSS(m, p):
+    """internal."""
+    m, _ = TSS_LumpExt(m, 0)
+    if len(m["z"]) == 1:  # m is a TSS (single sensor signal remaining)
+        S = TSS_storeFS(m)
+    else:  # recurse
+        if p == 1:
+            S = TSS_storeFS(m)
+        else:
+            S = {"eq": [], "z": [], "sr": []}
+        row = m["delrow"]
+        while len(m["z"]) > row:
+            m, row = TSS_LumpExt(m, row)
+        for delrow in np.arange(m["delrow"], len(m["z"])):
+            # create the model where delrow has been removed
+            m["delrow"] = delrow
+            rows = np.delete(np.arange(0, m["X"].shape[0]), delrow)
+            n = TSS_GetPartialModel(m, rows)
+            Sn = TSS_FindTSS(n, p)  # recursive call
+            S = TSS_addResults(S, Sn)
+    return S
+
+
+def TSS_LumpExt(m, row):
+    """TSS lumping."""
+    n = {}
+ 
+    no_rows = m["X"].shape[0]
+    remRows = np.hstack((np.arange(0, row), np.arange(row + 1, no_rows)))
+    remRowsz = np.hstack((np.arange(0, row), np.arange(row + 1, len(m["z"]))))
+ 
+    dm = GetDMParts(m["X"][remRows, :])
+    row_just = dm.M0eqs
+    row_over = np.array(dm.Mp.row, dtype=np.int64)
+    col_over = np.array(dm.Mp.col, dtype=np.int64)
+ 
+    if len(row_just) > 0:
+        eqcls = np.hstack((remRows[row_just], [row]))
+        no_rows_before_row = np.sum(eqcls < row)
+        row = row - no_rows_before_row
+        no_rows_before = np.sum(eqcls < m["delrow"])
+        n["delrow"] = m["delrow"] - no_rows_before
+ 
+        eqclsz = eqcls[eqcls < len(m["z"])]
+        row_overz = row_over[row_over < len(remRowsz)]
+ 
+        if no_rows_before > 0:
+            rowinsert = n["delrow"]
+        else:
+            rowinsert = row
+ 
+        x1 = m["X"][remRows[row_over[0:rowinsert]], :][:, col_over]
+        x3 = m["X"][remRows[row_over[rowinsert:]], :][:, col_over]
+        x2 = np.any(m["X"][eqcls, :][:, col_over], axis=0).astype(np.int64)
+        n["X"] = np.vstack((x1, x2, x3))
+ 
+        foo = (
+            remRows[row_over[0:rowinsert]].astype(np.int64)
+            if len(row_over[0:rowinsert]) > 0
+            else np.array([], dtype=np.int64)
+        )
+        e1 = [m["e"][idx] for idx in foo]
+        e2 = list([np.hstack([m["e"][idx] for idx in eqcls])])
+        foo = (
+            remRows[row_over[rowinsert:]].astype(np.int64)
+            if len(row_over[rowinsert:]) > 0
+            else np.array([], dtype=np.int64)
+        )
+        e3 = [m["e"][idx] for idx in foo]
+        n["e"] = e1 + e2 + e3
+ 
+        foo = (
+            remRowsz[row_overz[0:rowinsert]].astype(np.int64)
+            if len(row_overz[0:rowinsert]) > 0
+            else np.array([], dtype=np.int64)
+        )
+        z1 = list(np.array(m["z"], dtype=np.ndarray)[foo])
+        z2 = list([np.hstack(np.array(m["z"], dtype=np.ndarray)[eqclsz])])
+        foo = (
+            remRowsz[row_overz[rowinsert:]].astype(np.int64)
+            if len(row_overz[rowinsert:]) > 0
+            else np.array([], dtype=np.int64)
+        )
+        z3 = list(np.array(m["z"], dtype=np.ndarray)[foo])
+        n["z"] = z1 + z2 + z3
+ 
+        n["sr"] = m["sr"]
+ 
+        if no_rows_before > 0:
+            n["delrow"] = n["delrow"] + 1
+    else:
+        n = m
+ 
+    row = row + 1
+    return n, row
+
+ 
+def TSS_addResults(S, Sn):
+    """internal."""
+    return {"eq": S["eq"] + Sn["eq"], "z": S["z"] + Sn["z"], "sr": S["sr"] + Sn["sr"]}
