@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sym
 import copy
+import itertools
+from collections.abc import Mapping
 import faultdiagnosistoolbox.dmperm as dmperm
 import faultdiagnosistoolbox.Matching as match
 import faultdiagnosistoolbox.StructurePlotting as smplot
@@ -337,29 +339,174 @@ class DiagnosisModel:
                 differential-algebraic systems." SIAM Journal on Scientific and
                 Statistical Computing 9.2 (1988): 213-231.
         """
-        X = self.X.copy()
-        ne, nx = X.shape
-        if dmperm.srank(X) < nx:
+        ne, nx = self.X.shape
+        if ne != nx or dmperm.srank(self.X) < nx:
             print("Error: Pantelides can only be called for square, " + "exactly determined models")
             return None
-        der = np.zeros((ne, 1), dtype=int)
-        X[X == 3] = 1
-        X = X - 1
-        cmatching = False
-        hd = None
-        while not cmatching:
-            Xder = X + der @ np.ones((1, nx))
-            Xder[X < 0] = -1
+        return _Pantelides(self.X)
 
-            hd = np.max(Xder, axis=0)
-            hod = Xder == (np.ones((ne, 1)) @ hd.reshape((1, -1)))
-            if dmperm.srank(hod) == nx:
-                cmatching = True
-            else:
-                dm = dmperm.GetDMParts(hod)
-                der[dm.Mp.row] = der[dm.Mp.row] + 1
-        idx = np.max(der) + np.any(hd == 0)
-        return idx, der.reshape(-1)
+    def _EquationSet(self, eq, name):
+        """Validate a set of equations and return it with its incidence matrix.
+
+        An empty or missing eq means all equations. The set must not contain
+        repeated equations or have an underdetermined part.
+        """
+        if eq is None or len(eq) == 0:
+            eq = np.arange(0, self.X.shape[0])
+        eq = np.asarray(list(eq), dtype=int)
+        if len(np.unique(eq)) < len(eq):
+            raise ValueError(f"{name}: the set of equations contains repeated equations.")
+        X = _SubStructure(self.X, eq)
+        if dmperm.srank(X) < X.shape[1]:
+            raise ValueError(f"{name} requires a set of equations without underdetermined part.")
+        return eq, X
+
+    def DifferentialIndex(self, eq=None, residuals=False):
+        """Compute the structural differential index of an exactly determined, MSO, or PSO set.
+
+        idx = model.DifferentialIndex(eq)
+        idx, R = model.DifferentialIndex(eq, residuals=True)
+
+        For an exactly determined set of equations, the index is computed with
+        Pantelides' algorithm. For a set M with redundancy phi > 0 and no
+        underdetermined part, the index is
+
+          idx = min_R index(M \\ R)
+
+        over all sets R of phi equations such that M \\ R is exactly determined,
+        see Definition 11 and Proposition 12 in Frisk, Krysander, and Åslund,
+        "Analysis and design of diagnosis systems based on the structural
+        differential index", IFAC World Congress, 2017. With explicit
+        differential constraints, a set has low index if idx <= 1.
+
+        For models with explicit, first order differential constraints, the
+        minimum is obtained by one application of Pantelides' algorithm to M
+        extended with phi residual variables that occur in every equation. The
+        equations matched to the residual variables form an optimal R. Otherwise,
+        all sets R are enumerated.
+
+        Parameters
+        ----------
+          eq        : Set of equations to analyze. (default: all equations)
+          residuals : If True, also return a set R of residual equations with
+                      index(eq \\ R) = idx. R is empty for an exactly
+                      determined set. Use MinimalIndexResidualSets to obtain
+                      all such sets.
+        """
+        eq, X = self._EquationSet(eq, "DifferentialIndex")
+        ne, nx = X.shape
+        if _HasExplicitDifferentialConstraints(X):
+            Xr = np.hstack([X, np.ones((ne, ne - nx), dtype=X.dtype)])
+            idx, _, m = _Pantelides(Xr, matching=True)
+            R = eq[np.where(m >= nx)[0]]
+        else:
+            idx, Rs = _MinimalIndexResidualSets(X)
+            R = eq[list(Rs[0])]
+        if residuals:
+            return int(idx), R
+        return int(idx)
+
+    def MinimalIndexResidualSets(self, eq=None) -> tuple[int, list[np.ndarray]]:
+        """Compute all sets of residual equations that give the lowest differential index.
+
+        idx, Rs = model.MinimalIndexResidualSets(eq)
+
+        idx is model.DifferentialIndex(eq) and Rs is a list of all sets R of
+        phi equations, phi being the redundancy of eq, such that eq \\ R is
+        exactly determined with index idx. The function enumerates all
+        candidate sets, so the computation time and the number of returned sets
+        grow quickly with the redundancy. Use DifferentialIndex(eq,
+        residuals=True) if one optimal set is enough.
+
+        Parameters
+        ----------
+          eq : Set of equations to analyze. (default: all equations)
+        """
+        eq, X = self._EquationSet(eq, "MinimalIndexResidualSets")
+        idx, Rs = _MinimalIndexResidualSets(X)
+        return int(idx), [eq[list(Ri)] for Ri in Rs]
+
+    def ResidualSetAnalysis(self, eq=None, max_zorder=None) -> list[dict]:
+        """Analyze all sequential residual generators of a set of equations.
+
+        res = model.ResidualSetAnalysis(eq)
+        res = model.ResidualSetAnalysis(eq, max_zorder=0)
+        res = model.ResidualSetAnalysis(eq, max_zorder={"y1": 0, "u": 1})
+
+        For every set R of phi equations, phi being the redundancy of eq, such
+        that eq \\ R is exactly determined, consider the sequential residual
+        generator that solves eq \\ R and evaluates the residual equations R.
+        Its differentiations are given by Pantelides' algorithm applied to eq,
+        with one residual variable for each equation in R that occurs only in
+        that equation. Each element of res is a dictionary with keys
+
+          R      : the residual equations
+          index  : structural differential index of eq \\ R, as in DifferentialIndex
+          deg    : the largest number of differentiations of an equation in
+                   the residual generator. min deg over all R equals
+                   DifferentialIndex(eq) - 1 for models with explicit
+                   differential constraints, and the set returned by
+                   DifferentialIndex(eq, residuals=True) attains it.
+          zorder : dictionary with the highest derivative order of each known
+                   signal in eq that the residual generator uses
+
+        The list is sorted by deg and index. The derivative orders are those
+        of the differentiation scheme given by Pantelides' algorithm. The
+        function enumerates all candidate sets, so the computation time grows
+        quickly with the redundancy.
+
+        Parameters
+        ----------
+          eq         : Set of equations to analyze. (default: all equations)
+          max_zorder : If given, only residual generators with zorder within
+                       the bound are returned. An integer bounds all known
+                       signals; a dictionary bounds the named signals and
+                       leaves the others unbounded.
+        """
+        eq, X = self._EquationSet(eq, "ResidualSetAnalysis")
+        ne, nx = X.shape
+        Z = self.Z[eq]
+        zidx = np.where(np.any(Z > 0, axis=0))[0]
+        if max_zorder is None:
+            bound = {}
+        elif isinstance(max_zorder, Mapping):
+            unknown = set(max_zorder) - set(self.z)
+            if unknown:
+                raise ValueError(f"Unknown known signals in max_zorder: {sorted(unknown)}")
+            bound = max_zorder
+        else:
+            bound = {self.z[k]: max_zorder for k in zidx}
+
+        res = []
+        for Ri in _ResidualSets(X):
+            Ri = list(Ri)
+            idx = _Pantelides(np.delete(X, Ri, axis=0))[0]
+            XR = np.hstack([X, np.zeros((ne, len(Ri)), dtype=X.dtype)])
+            XR[Ri, nx + np.arange(len(Ri))] = 1
+            c = _Pantelides(XR)[1]
+            zorder = {self.z[k]: int(np.max(c[Z[:, k] > 0])) for k in zidx}
+            if all(zorder.get(z, 0) <= b for z, b in bound.items()):
+                res.append({"R": eq[Ri], "index": int(idx), "deg": int(np.max(c, initial=0)), "zorder": zorder})
+        res.sort(key=lambda r: (r["deg"], r["index"], r["R"].tolist()))
+        return res
+
+    def ResidualEquationIndex(self, mso) -> np.ndarray:
+        """Compute the structural differential index of M \\ {e} for each equation e in an MSO set M.
+
+        idx = model.ResidualEquationIndex(mso)
+
+        idx[k] is the index of the exactly determined set obtained when mso[k] is
+        used as residual equation. Residual equations with idx[k] <= 1 give
+        residual generators in integral causality.
+
+        Parameters
+        ----------
+          mso : MSO set of equations
+        """
+        mso, X = self._EquationSet(mso, "ResidualEquationIndex")
+        if self.Redundancy(mso) != 1 or not self.IsPSO(mso):
+            raise ValueError("The provided set of equations is not an MSO set.")
+        return np.array([_Pantelides(np.delete(X, k, axis=0))[0] for k in range(len(mso))], dtype=int)
 
     def IsHighIndex(self, eq=None) -> bool:
         """Return true if the model is high structural differential index.
@@ -1244,6 +1391,75 @@ class DiagnosisModel:
 def DiffConstraint(dvar, ivar):
     """Define a differential constraint."""
     return [dvar, ivar, "diff"]
+
+
+def _SubStructure(X, eq):
+    """Incidence matrix of equations eq restricted to the unknown variables in eq."""
+    Xeq = X[eq, :]
+    return Xeq[:, np.any(Xeq > 0, axis=0)]
+
+
+def _HasExplicitDifferentialConstraints(X):
+    """Return True if derivatives only occur in first order differential constraints with a derivative variable.
+
+    Each row and column has at most one differentiated incidence (entry 2), and
+    a row with such an incidence contains a variable that is never differentiated.
+    """
+    D = X == 2
+    if np.any(D.sum(axis=0) > 1) or np.any(D.sum(axis=1) > 1):
+        return False
+    algebraic = ~np.any(D, axis=0)
+    return all(np.any((X[i] > 0) & algebraic) for i in np.where(np.any(D, axis=1))[0])
+
+
+def _ResidualSets(X):
+    """Generate all sets R of ne - nx rows such that the remaining rows are exactly determined."""
+    ne, nx = X.shape
+    for R in itertools.combinations(range(ne), ne - nx):
+        if dmperm.srank(np.delete(X, list(R), axis=0)) == nx:
+            yield R
+
+
+def _MinimalIndexResidualSets(X):
+    """Lowest index of X without R, and all row sets R that attain it, by enumeration."""
+    res = [(_Pantelides(np.delete(X, list(R), axis=0))[0], R) for R in _ResidualSets(X)]
+    idx = min(nu for nu, _ in res)
+    return idx, [R for nu, R in res if nu == idx]
+
+
+def _Pantelides(X, matching=False):
+    """Structural index and differentiation vector for a square, structurally nonsingular incidence matrix.
+
+    If matching is True, also return m with m[i] the column matched to row i in
+    a highest value transversal.
+    """
+    ne, nx = X.shape
+    if ne == 0:
+        if matching:
+            return 0, np.zeros(0, dtype=int), np.zeros(0, dtype=int)
+        return 0, np.zeros(0, dtype=int)
+    X = X.copy()
+    der = np.zeros((ne, 1), dtype=int)
+    X[X == 3] = 1
+    X = X - 1
+    cmatching = False
+    hd = None
+    while not cmatching:
+        Xder = X + der @ np.ones((1, nx))
+        Xder[X < 0] = -1
+
+        hd = np.max(Xder, axis=0)
+        hod = Xder == (np.ones((ne, 1)) @ hd.reshape((1, -1)))
+        m = dmperm.dmperm(hod)[6]
+        if np.sum(m >= 0) == nx:
+            cmatching = True
+        else:
+            dm = dmperm.GetDMParts(hod)
+            der[dm.Mp.row] = der[dm.Mp.row] + 1
+    idx = np.max(der) + np.any(hd == 0)
+    if matching:
+        return idx, der.reshape(-1), m
+    return idx, der.reshape(-1)
 
 
 def _ModelStructure(rels, x):
