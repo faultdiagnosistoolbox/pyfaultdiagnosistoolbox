@@ -19,7 +19,6 @@ if [ ! -d "build_envs" ]; then
     python3.15 -m venv build_envs/env315
     source build_envs/env315/bin/activate
     pip install -U pip build
-
 fi
 
 # Python 3.12

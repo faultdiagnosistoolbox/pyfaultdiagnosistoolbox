@@ -28,8 +28,8 @@ def dmperm(A) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarra
     such that A[p][:, q] has block upper triangular form.  r and s are vectors
     indicating the block boundaries for the fine decomposition.  cc and rr
     are vectors of length five indicating the block boundaries of the
-    coarse decomposition. m is a maximum matching such that m[j] = i if column j
-    is matched to row i, or -1 if column j is unmatched.
+    coarse decomposition. m is a maximum matching such that m[i] = j if row i
+    is matched to column j, or -1 if row i is unmatched.
     """
 
     if sp.issparse(A):

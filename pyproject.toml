@@ -7,6 +7,11 @@ name = "faultdiagnosistoolbox"
 version = "0.12.6"
 authors = [
   { name="Erik Frisk", email="erik.frisk@liu.se" },
+  { name="Mattias Krysander", email="mattias.krysander@liu.se" },
+]
+
+maintainers = [
+  { name="Erik Frisk", email="erik.frisk@liu.se" },
 ]
 dependencies=['sympy', 'numpy', 'scipy', 'matplotlib', 'scikit-learn', 'setuptools']
 description = "A toolbox for Model Based Fault Diagnosis of dynamic systems based on structural analysis"

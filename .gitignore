@@ -1,11 +1,7 @@
 doc_build/
 build_envs
 env
-fdt_310
-fdt_311
-fdt_312
-fdt_313
-fdt_314
+fdt_*
 build
 pypi_token.txt
 pypi_test_token.txt
