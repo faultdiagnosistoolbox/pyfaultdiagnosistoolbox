@@ -232,6 +232,40 @@ In this case there are 6 MSO sets and 5 MTES sets. Here, the focus will be on th
 
 This shows that all MSOs are observable and that 5 out of the 6 MSO sets are low-index. This means that one of the MSO sets can't be used for residual generation without numerical differentiation. This is also the reason why the isolability analysis differs between integral causality and no causality assumption.
 
+The structural differential index itself, and not only the distinction between low and high index, can be computed with the ``DifferentialIndex`` class method. It accepts exactly determined sets, MSO sets, and PSO sets. For an overdetermined set, the index is the lowest index among the exactly determined subsets obtained by removing as many residual equations as the redundancy. With explicit differential constraints, as here, low index means an index of at most 1.
+
+.. code-block:: python
+
+    [model.DifferentialIndex(m) for m in msos]
+
+    >> [2, 1, 1, 1, 1, 1]
+
+With ``residuals=True``, the method also returns a set of residual equations that attains the lowest index. It comes directly from the same computation and costs nothing extra. For the high-index MSO set, and for the whole model with redundancy 2, this gives
+
+.. code-block:: python
+
+    model.DifferentialIndex(msos[0], residuals=True)
+    model.DifferentialIndex(residuals=True)
+
+    >> (2, array([7]))
+    >> (1, array([6, 7]))
+
+Several sets of residual equations can attain the lowest index. ``MinimalIndexResidualSets`` returns all of them, and ``ResidualSetAnalysis`` returns, for every possible set of residual equations, the index, the largest number of differentiations of an equation in the sequential residual generator, and the highest derivative order of each known signal. Both methods enumerate all candidate sets, so they can be slow for models with high redundancy. The argument ``max_zorder`` keeps only residual generators that do not differentiate known signals more than allowed, for example to avoid derivatives of noisy measurements.
+
+.. code-block:: python
+
+    model.ResidualSetAnalysis(msos[0])[0]
+
+    >> {'R': array([1]), 'index': 2, 'deg': 1, 'zorder': {'y1': 1, 'y2': 0, 'y3': 0}}
+
+    [r["R"] for r in model.ResidualSetAnalysis(max_zorder=0)]
+
+    >> [array([1, 6]), array([6, 7])]
+
+The smallest number of differentiations over all residual generators equals the index minus one. A low-index set therefore always has a residual generator without differentiations. For the theory, see
+
+    Frisk, E., Krysander, M., Åslund, J. (2017). "*Analysis and design of diagnosis systems based on the structural differential index*". IFAC-PapersOnLine, 50(1), 12236-12242.
+
 Now, all MSO sets are not needed to achieve the best (structural) isolability performance. The method ``TestSelection`` can be used to find sets of MSO sets that can be used to find residuals. 
 The code below runs the test selection algorithm resulting in 3 required MSOs/residuals. The code also computes the Fault Signature Matrix (FSM) and the corresponding isolability performance of the selected set of MSOs and it can be verified that isolation performance equals the initial isolability analysis using integral causality.
 
