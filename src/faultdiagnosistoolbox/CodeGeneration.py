@@ -824,9 +824,15 @@ def WriteResGenCPython(
         f.write("\n")
         f.write("  PyObject *newState = PyDict_New();\n\n")
         for sv in resGenState:
-            f.write('  PyDict_SetItemString(newState, "' + sv + '", PyFloat_FromDouble(state.' + sv + "));\n")
+            # PyDict_SetItemString does not steal the reference, release it after insertion
+            f.write("  {\n")
+            f.write("    PyObject *val = PyFloat_FromDouble(state." + sv + ");\n")
+            f.write('    PyDict_SetItemString(newState, "' + sv + '", val);\n')
+            f.write("    Py_DECREF(val);\n")
+            f.write("  }\n")
         f.write("\n")
-        f.write('  return Py_BuildValue("(f,O)", r, newState);\n')
+        # "N" passes ownership of newState to the returned tuple ("O" would leak it)
+        f.write('  return Py_BuildValue("(d,N)", r, newState);\n')
         f.write("}\n")
 
         f.write("\n")
@@ -968,6 +974,9 @@ def WriteResGenCPython(
         f.write("  npy_intp N = shape[0];\n\n")
 
         f.write("  PyObject* pyR = PyArray_SimpleNew(1, &N, NPY_FLOAT64);\n")
+        f.write("  if (pyR == NULL) {\n")
+        f.write("    return NULL;\n")
+        f.write("  }\n")
         f.write("  double *r = (double *)PyArray_DATA((PyArrayObject *)pyR);\n\n")
         f.write("\n")
         if len(resGenState) > 0:
@@ -989,7 +998,8 @@ def WriteResGenCPython(
         f.write("Ts );\n")
         f.write("}\n")
         f.write("\n")
-        f.write('  return Py_BuildValue("O", pyR);\n')
+        # pyR is a new reference, return it directly (Py_BuildValue("O", ...) would leak it)
+        f.write("  return pyR;\n")
         f.write("}\n")
 
         f.write("\n")
