@@ -429,7 +429,7 @@ SparseMatrix::DMPerm(DMPermResult &res)
     copy(D->r, D->r + D->nb + 1, inserter(res.r, res.r.begin()));
     copy(D->s, D->s + D->nb + 1, inserter(res.s, res.s.begin()));
     res.nb = (int)D->nb;
-    copy(D->rr, D->s + 5, inserter(res.rr, res.rr.begin()));
+    copy(D->rr, D->rr + 5, inserter(res.rr, res.rr.begin()));
     copy(D->cc, D->cc + 5, inserter(res.cc, res.cc.begin()));
 
     // Free allocated space

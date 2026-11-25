@@ -248,13 +248,23 @@ MSOAlg::FindMSO(MSOResult &msos)
 void
 MSOAlg::MSO(MSOResult &msos)
 {
+    msos.Clear();
+
+    // Restrict to the overdetermined part M+. If it is empty (redundancy <= 0)
+    // there are no MSO sets; FindMSO must not be called on a structure with
+    // fewer rows than columns (e.g. with zero columns), it corrupts memory.
+    std::list<int> rows, cols;
+    if (SM.Plus(rows, cols) <= 0) {
+        return;
+    }
+
     int nEq = SM.NRows();
-    SM.Plus();
+    rows.sort(); // as in StructuralAnalysisModel::Plus()
+    SM.Get(rows, cols);
     if (nEq != SM.NRows()) {
         // Reinitialize list of removable equations
         InitR();
     }
-    msos.Clear();
     FindMSO(msos);
 }
 
