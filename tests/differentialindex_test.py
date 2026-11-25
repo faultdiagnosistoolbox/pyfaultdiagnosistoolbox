@@ -194,3 +194,45 @@ def test_residual_set_analysis_mapping_bound():
     expected = [r["R"].tolist() for r in storages.ResidualSetAnalysis(range(6), max_zorder={"y2": 0})]
     res = storages.ResidualSetAnalysis(range(6), max_zorder=MappingProxyType({"y2": 0}))
     assert [r["R"].tolist() for r in res] == expected
+
+
+def test_pantelides_empty_set():
+    from faultdiagnosistoolbox.DiagnosisModel import _Pantelides
+
+    idx, c, m = _Pantelides(np.zeros((0, 0), dtype=int), matching=True)
+    assert idx == 1 and len(c) == 0 and len(m) == 0
+
+
+@pytest.mark.parametrize(
+    "X",
+    [
+        [[1, 1], [0, 0]],  # zero row, used to loop forever
+        [[1, 0], [1, 0]],  # zero column, used to return index 1
+        [[3, 2, 0], [0, 1, 0], [0, 1, 0]],  # zero column, used to return index 2
+        [[1, 1, 0], [0, 1, 1]],  # not square
+    ],
+)
+def test_pantelides_singular(X):
+    from faultdiagnosistoolbox.DiagnosisModel import _Pantelides
+
+    with pytest.raises(ValueError):
+        _Pantelides(np.array(X))
+
+
+def test_pantelides_nonsingular():
+    from faultdiagnosistoolbox.DiagnosisModel import _Pantelides
+
+    idx, c = _Pantelides(np.array([[3, 2], [0, 1]]))
+    assert idx == 2 and c.tolist() == [0, 1]
+    idx, c = _Pantelides(np.array([[1, 1], [0, 1]]))
+    assert idx == 1 and c.tolist() == [0, 0]
+
+
+def test_mso_without_unknowns():
+    # e3 relates known signals only (e.g. y2 = u): an algebraic MSO set with index 1
+    m = fdt.DiagnosisModel({"type": "MatrixStruc", "X": [[1], [1], [0]], "F": [], "Z": np.eye(3, dtype=int)})
+    assert m.DifferentialIndex([2]) == 1
+    assert m.MinimalIndexResidualSets([2])[0] == 1
+    assert m.ResidualEquationIndex([2]).tolist() == [1]
+    res = m.ResidualSetAnalysis([2])
+    assert [r["index"] for r in res] == [1] and [r["deg"] for r in res] == [0]

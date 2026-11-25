@@ -1432,12 +1432,18 @@ def _Pantelides(X, matching=False):
 
     If matching is True, also return m with m[i] the column matched to row i in
     a highest value transversal.
+
+    The empty set has index 1, the index of an algebraic set, so that a set of
+    equations without unknowns gets the same index in all methods. A structure
+    that is not square or not structurally nonsingular raises ValueError.
     """
     ne, nx = X.shape
-    if ne == 0:
+    if ne == 0 and nx == 0:
         if matching:
-            return 0, np.zeros(0, dtype=int), np.zeros(0, dtype=int)
-        return 0, np.zeros(0, dtype=int)
+            return 1, np.zeros(0, dtype=int), np.zeros(0, dtype=int)
+        return 1, np.zeros(0, dtype=int)
+    if ne != nx or dmperm.srank(X > 0) < nx:
+        raise ValueError("_Pantelides requires a square, structurally nonsingular structure.")
     X = X.copy()
     der = np.zeros((ne, 1), dtype=int)
     X[X == 3] = 1
@@ -1449,7 +1455,8 @@ def _Pantelides(X, matching=False):
         Xder[X < 0] = -1
 
         hd = np.max(Xder, axis=0)
-        hod = Xder == (np.ones((ne, 1)) @ hd.reshape((1, -1)))
+        # Highest order positions; missing entries (X < 0) are never highest
+        hod = (Xder == (np.ones((ne, 1)) @ hd.reshape((1, -1)))) & (X >= 0)
         m = dmperm.dmperm(hod)[6]
         if np.sum(m >= 0) == nx:
             cmatching = True
