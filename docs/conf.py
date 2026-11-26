@@ -22,10 +22,10 @@ copyright = "Erik Frisk"
 author = "Erik Frisk"
 
 # The short X.Y version
-version = "0.12.5"
+version = "0.12.6"
 
 # The full version, including alpha/beta/rc tags
-release = "0.12.5"
+release = "0.12.6"
 
 
 # -- General configuration ---------------------------------------------------
@@ -66,11 +66,9 @@ language = "en"
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 # exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-latex_elements = {
-    "preamble": r"""
+latex_elements = {"preamble": r"""
 \usepackage{enumitem}\setlistdepth{99}
-"""
-}
+"""}
 
 # pygments_style = "sphinx"
 
