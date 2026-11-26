@@ -1,5 +1,7 @@
 # Build instructions
 
+Make sure version number is correct in `pyproject.toml`, `src/faultdiagnosistoolbox/_version.py` and `docs/conf.py` before building.
+
 ## Build wheels
 Binaries for the 4 latest Python releases shall be compiled for platforms MacOS, Windows, Linux-arm and Linux x86.
 
